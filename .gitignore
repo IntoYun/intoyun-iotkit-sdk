@@ -1,0 +1,9 @@
+# 平台相关隐藏文件
+.DS_Store
+
+# gtags相关文件
+GPATH
+GRTAGS
+GTAGS
+ctags
+
