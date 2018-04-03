@@ -51,7 +51,10 @@ static void cloud_data_receive_callback(void *pcontext, void *pclient, iotx_mqtt
     iotx_mqtt_topic_info_pt ptopic_info = (iotx_mqtt_topic_info_pt) msg->msg;
 
     log_debug("cloud_data_receive_callback");
-    intoyunParseReceiveDatapoints(ptopic_info->payload + 1, ptopic_info->payload_len - 1);
+#if CONFIG_CLOUD_DATAPOINT_ENABLED == 1
+    intoyunParseReceiveDatapoints(ptopic_info->payload, ptopic_info->payload_len);
+#endif
+    IOT_SYSTEM_NotifyEvent(event_cloud_data, ep_cloud_data, ptopic_info->payload, ptopic_info->payload_len);
 }
 
 static void cloud_action_callback(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)

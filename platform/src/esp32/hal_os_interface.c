@@ -84,6 +84,11 @@ void HAL_Free(void *ptr)
     return free(ptr);
 }
 
+void HAL_SystemReboot(void)
+{
+
+}
+
 uint32_t HAL_UptimeMs(void)
 {
     struct timeval tv = { 0 };

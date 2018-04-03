@@ -9,7 +9,6 @@
 #include "iot_export.h"
 #include "project_config.h"
 
-//这些宏在project_config.h中定义
 #define DEVICE_ID_DEF                             "0dvo0bdoy00000000000068f"         //设备标识
 #define DEVICE_SECRET_DEF                         "c08e66a8b08fd8436dac0dce9cc3bca9" //设备密钥
 
@@ -30,10 +29,10 @@ int dpEnumBirds;                                  // 鸟类危害程度
 bool dpBoolSprinkler_switch;                      // 洒水器开关
 
 
-void eventProcess(event_type_t event, uint8_t *data, uint32_t len)
+void eventProcess(system_event_t event, system_events_param_t param, uint8_t *data, uint32_t len)
 {
-    switch(event) {
-        case EVENT_DATAPOINT:    //处理平台数据
+    if(event == event_cloud_data) {
+        if(ep_cloud_data == param) {
             //光照强度
             if (RESULT_DATAPOINT_NEW == Cloud.readDatapointNumberDouble(DPID_NUMBER_ILLUMINATION, &dpDoubleIllumination)) {
                 //用户代码
@@ -45,19 +44,24 @@ void eventProcess(event_type_t event, uint8_t *data, uint32_t len)
                 //用户代码
                 log_info("dpBoolSprinkler_switch = %d\r\n", dpBoolSprinkler_switch);
             }
-            break;
-
-        case EVENT_CUSTOM_DATA:  //接受到透传数据
-            break;
-
-        case EVENT_CON_SERVER:   //模组已连服务器
-            break;
-
-        case EVENT_DISCON_SERVER://模组已断开服务器
-            break;
-
-        default:
-            break;
+        }
+    } else if(event == event_network_status) {
+        switch(param){
+            case ep_network_status_disconnected:  //模组已断开路由器
+                log_info("event network disconnect router\r\n");
+                break;
+            case ep_network_status_connected:     //模组已连接路由器
+                log_info("event network connect router\r\n");
+                break;
+            case ep_cloud_status_disconnected:  //模组已断开平台
+                log_info("event network disconnect server\r\n");
+                break;
+            case ep_cloud_status_connected:     //模组已连接平台
+                log_info("event network connect server\r\n");
+                break;
+            default:
+                break;
+        }
     }
 }
 
@@ -68,7 +72,7 @@ void userInit(void)
 
     //初始设备信息
     System.init();
-    System.setDeviceInfo(DEVICE_ID_DEF, DEVICE_SECRET_DEF, PRODUCT_ID_DEF, PRODUCT_SECRET_DEF, HARDWARE_VERSION_DEF, SOFTWARE_VERSION_DEF, COMM_TYPE_WIFI);
+    System.setDeviceInfo(DEVICE_ID_DEF, DEVICE_SECRET_DEF, PRODUCT_ID_DEF, PRODUCT_SECRET_DEF, HARDWARE_VERSION_DEF, SOFTWARE_VERSION_DEF);
     System.setEventCallback(eventProcess);
 
     //添加数据点定义

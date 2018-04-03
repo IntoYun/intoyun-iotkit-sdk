@@ -24,6 +24,12 @@
 
 static iotx_device_info_t   iotx_device_info;
 static int                  iotx_devinfo_inited = 0;
+static event_handler_t      eventHandler = NULL;
+
+iotx_device_info_pt iotx_device_info_get(void)
+{
+    return &iotx_device_info;
+}
 
 int IOT_SYSTEM_DeviceInit(void)
 {
@@ -39,14 +45,13 @@ int IOT_SYSTEM_DeviceInit(void)
     return SUCCESS_RETURN;
 }
 
-int IOT_SYSTEM_SetDeviceInfo(char *deviceId, char *deviceSecret, char *productID, char *productSecret, char *hardwareVersion, char *softwareVersion, iotx_comm_type_t commType)
+int IOT_SYSTEM_SetDeviceInfo(char *deviceId, char *deviceSecret, char *productID, char *productSecret, char *hardwareVersion, char *softwareVersion)
 {
     iotx_conn_info_pt pconn_info = iotx_conn_info_get();
 
     log_debug("start to set device info!");
     memset(&iotx_device_info, 0x0, sizeof(iotx_device_info));
 
-    iotx_device_info.comm_type = commType;
     strncpy(iotx_device_info.device_id, deviceId, DEVICE_ID_LEN);
     strncpy(iotx_device_info.device_secret, deviceSecret, DEVICE_SECRET_LEN);
     strncpy(iotx_device_info.product_id, productID, PRODUCT_ID_LEN);
@@ -60,11 +65,6 @@ int IOT_SYSTEM_SetDeviceInfo(char *deviceId, char *deviceSecret, char *productID
     return SUCCESS_RETURN;
 }
 
-iotx_device_info_pt iotx_device_info_get(void)
-{
-    return &iotx_device_info;
-}
-
 void IOT_SYSTEM_Init(void)
 {
     IOT_SYSTEM_DeviceInit();
@@ -74,5 +74,19 @@ void IOT_SYSTEM_Init(void)
 void IOT_SYSTEM_Loop(void)
 {
     IOT_Comm_Yield();
+}
+
+void IOT_SYSTEM_SetEventCallback(event_handler_t handler)
+{
+    if(handler != NULL) {
+        eventHandler = handler;
+    }
+}
+
+void IOT_SYSTEM_NotifyEvent(system_event_t event, system_events_param_t param, uint8_t *data, uint32_t len)
+{
+    if(eventHandler != NULL) {
+        eventHandler(event, param, data, len);
+    }
 }
 

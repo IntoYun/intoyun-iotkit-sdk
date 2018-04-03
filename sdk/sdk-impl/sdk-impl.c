@@ -75,8 +75,10 @@ const iot_system_if_t System =
     IOT_SYSTEM_Init,
     IOT_SYSTEM_Loop,
     IOT_SYSTEM_SetDeviceInfo,
-    systemSetEventCallback,
+    IOT_SYSTEM_SetEventCallback,
+#if CONFIG_CLOUD_DATAPOINT_ENABLED == 1
     IOT_DataPoint_Control
+#endif
 };
 
 const iot_log_if_t Log =
@@ -115,7 +117,8 @@ const iot_cloud_if_t Cloud =
     IOT_Comm_Connect,
     IOT_Comm_IsConnected,
     IOT_Comm_Disconnect,
-
+    intoyunTransmitData,
+#if CONFIG_CLOUD_DATAPOINT_ENABLED == 1
     IOT_DataPoint_DefineBool,
     IOT_DataPoint_DefineNumber,
     IOT_DataPoint_DefineEnum,
@@ -143,6 +146,7 @@ const iot_cloud_if_t Cloud =
     IOT_DataPoint_SendString,
     IOT_DataPoint_SendBinary,
     intoyunSendAllDatapointManual,
+#endif
 };
 
 const iot_coap_client_if_t CoAPClient =

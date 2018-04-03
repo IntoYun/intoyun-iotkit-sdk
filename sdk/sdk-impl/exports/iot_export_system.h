@@ -32,7 +32,7 @@ typedef struct
     void (*init)(void);
     void (*loop)(void);
     //应用操作接口
-    void (*setDeviceInfo)(char *productID, char *productSecret, char *hardwareVersion, char *softwareVersion, char *deviceId, char *deviceSecret, iotx_comm_type_t commType);
+    void (*setDeviceInfo)(char *productID, char *productSecret, char *hardwareVersion, char *softwareVersion, char *deviceId, char *deviceSecret);
     void (*setEventCallback)(event_handler_t handler);
     void (*setDatapointControl)(dp_transmit_mode_t mode, uint32_t lapse);
 } iot_system_if_t;

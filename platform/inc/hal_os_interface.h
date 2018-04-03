@@ -108,6 +108,20 @@ void HAL_Free(void *ptr);
  */
 
 /**
+ * @brief system reboot.
+ *
+ * @param None.
+ * @return None.
+ * @see None.
+ * @note None.
+ */
+void HAL_SystemReboot(void);
+
+/** @defgroup group_platform_other other
+ *  @{
+ */
+
+/**
  * @brief Retrieves the number of milliseconds that have elapsed since the system was boot.
  *
  * @param None.

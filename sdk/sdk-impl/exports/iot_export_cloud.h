@@ -31,6 +31,9 @@ typedef struct
     bool (*connected)(void);
     int (*disconnect)(void);
 
+    //发送自定义数据
+    int (*sendCloudData)(const uint8_t *buffer, uint16_t length);
+
     //数据点格式编程API接口
     //定义数据点
     void (*defineDatapointBool)(const uint16_t dpID, dp_permission_t permission, const bool value);
@@ -60,8 +63,6 @@ typedef struct
     int (*sendDatapointString)(const uint16_t dpID, const char *value);
     int (*sendDatapointBinary)(const uint16_t dpID, const uint8_t *value, uint16_t len);
     int (*sendDatapointAll)(void);
-    //用户自定义编程API接口
-    int (*sendCustomData)(const uint8_t *buffer, uint16_t length);
 } iot_cloud_if_t;
 
 extern const iot_cloud_if_t Cloud;

@@ -37,13 +37,7 @@ extern "C"
 #define PRODUCT_KEY_LEN                   (20)
 #define DEVICE_NAME_LEN                   (32)
 
-typedef enum {
-    COMM_TYPE_WIFI,
-    COMM_TYPE_GPRS
-} iotx_comm_type_t;
-
 typedef struct {
-    iotx_comm_type_t comm_type;
     char device_id[DEVICE_ID_LEN + 1];
     char device_secret[DEVICE_SECRET_LEN + 1];
     char product_id[PRODUCT_ID_LEN + 1];
@@ -55,13 +49,32 @@ typedef struct {
     char device_name[DEVICE_NAME_LEN + 1];
 } iotx_device_info_t, *iotx_device_info_pt;
 
+typedef enum {
+    event_network_status = 1,
+    event_cloud_data     = 2,
+} system_event_t;
+
+typedef enum {
+    //network status
+    ep_network_status_disconnected     = 1, //已断开路由器
+    ep_network_status_connected        = 2, //已连接路由器
+    ep_cloud_status_disconnected       = 3, //已断开连服务器
+    ep_cloud_status_connected          = 4, //已连服务器
+
+    //cloud data
+    ep_cloud_data                      = 1, //接收到云端数据
+} system_events_param_t;
+
+typedef void (*event_handler_t)(system_event_t event, system_events_param_t param, uint8_t *data, uint32_t len);
+
 iotx_device_info_pt iotx_device_info_get(void);
 
 int IOT_SYSTEM_DeviceInit(void);
-int IOT_SYSTEM_SetDeviceInfo(char *productID, char *productSecret, char *hardwareVersion, char *softwareVersion, char *deviceId, char *deviceSecret, iotx_comm_type_t commType);
+int IOT_SYSTEM_SetDeviceInfo(char *deviceId, char *deviceSecret, char *productID, char *productSecret, char *hardwareVersion, char *softwareVersion);
 void IOT_SYSTEM_Init(void);
 void IOT_SYSTEM_Loop(void);
-
+void IOT_SYSTEM_SetEventCallback(event_handler_t handler);
+void IOT_SYSTEM_NotifyEvent(system_event_t event, system_events_param_t param, uint8_t *data, uint32_t len);
 
 #ifdef __cplusplus
 }

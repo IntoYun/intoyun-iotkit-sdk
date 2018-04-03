@@ -36,18 +36,8 @@ static int iotx_get_device_info(char *buf, uint16_t buflen)
     iotx_device_info_pt pdev_info = iotx_device_info_get();
 
     root = cJSON_CreateObject();
-    if(COMM_TYPE_WIFI == pdev_info->comm_type) {
-        cJSON_AddItemToObject(root, "board", cJSON_CreateString("888000"));
-    } else {
-        cJSON_AddItemToObject(root, "board", cJSON_CreateString("878000"));
-    }
-#if CONFIG_CLOUD_CHANNEL == 1     //MQTT
-    cJSON_AddItemToObject(root, "proto", cJSON_CreateString("mqtt"));
-#else
-    cJSON_AddItemToObject(root, "proto", cJSON_CreateString("coap"));
-#endif
-    cJSON_AddItemToObject(root, "mode", cJSON_CreateString("master"));
     cJSON_AddItemToObject(root, "productId", cJSON_CreateString(pdev_info->product_id));
+    cJSON_AddItemToObject(root, "bc", cJSON_CreateNumber(1));
     cJSON_AddItemToObject(root, "swVer", cJSON_CreateString(pdev_info->software_version));
     cJSON_AddItemToObject(root, "hwVer", cJSON_CreateString(pdev_info->hardware_version));
     cJSON_AddItemToObject(root, "online", cJSON_CreateBool(true));

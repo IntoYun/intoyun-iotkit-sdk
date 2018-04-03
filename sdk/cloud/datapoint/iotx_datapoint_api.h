@@ -19,16 +19,12 @@
 #ifndef __IOTX_DATAPOINT_API_H__
 #define __IOTX_DATAPOINT_API_H__
 
+#if CONFIG_CLOUD_DATAPOINT_ENABLED == 1
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
-#include "intoyun_config.h"
-
-#define DATA_PROTOCOL_DATAPOINT_JSON              0x30
-#define DATA_PROTOCOL_DATAPOINT_BINARY            0x31
-#define DATA_PROTOCOL_CUSTOM                      0x32
 
 #define DPID_DEFAULT_BOOL_RESET                   0x7F80        //默认数据点  复位
 #define DPID_DEFAULT_BOOL_GETALLDATAPOINT         0x7F81        //默认数据点  获取所有数据点
@@ -37,14 +33,14 @@ extern "C"
 typedef enum {
     DP_TRANSMIT_MODE_MANUAL = 0,       // 用户控制发送
     DP_TRANSMIT_MODE_AUTOMATIC,        // 系统自动发送
-}dp_transmit_mode_t;
+} dp_transmit_mode_t;
 
 // Permission
 typedef enum {
     DP_PERMISSION_UP_ONLY = 0,   //只上送
     DP_PERMISSION_DOWN_ONLY,     //只下发
     DP_PERMISSION_UP_DOWN        //可上送下发
-}dp_permission_t;
+} dp_permission_t;
 
 typedef enum{
     DATA_TYPE_BOOL = 0,   //bool型
@@ -52,26 +48,26 @@ typedef enum{
     DATA_TYPE_ENUM,       //枚举型
     DATA_TYPE_STRING,     //字符串型
     DATA_TYPE_BINARY      //透传型
-}data_type_t;
+} data_type_t;
 
 typedef enum{
     RESULT_DATAPOINT_OLD  = 0,   // 旧数据
     RESULT_DATAPOINT_NEW  = 1,   // 新收取数据
     RESULT_DATAPOINT_NONE = 2,   // 没有该数据点
-}read_datapoint_result_t;
+} read_datapoint_result_t;
 
 //float型属性
 typedef struct {
     double minValue;
     double maxValue;
     int resolution;
-}number_property_t;
+} number_property_t;
 
 //透传型属性
 typedef struct {
     uint8_t *value;
     uint16_t len;
-}binary_property_t;
+} binary_property_t;
 
 // Property configuration
 typedef struct {
@@ -88,24 +84,14 @@ typedef struct {
     int enumValue;
     char *stringValue;
     binary_property_t binaryValue;
-}property_conf;
+} property_conf;
 
 //datapoint control
 typedef struct {
     dp_transmit_mode_t datapoint_transmit_mode;  // 数据点发送类型
     uint32_t datapoint_transmit_lapse;           // 数据点自动发送 时间间隔
     long runtime;                                // 数据点间隔发送的运行时间
-}datapoint_control_t;
-
-/** 事件枚举*/
-typedef enum
-{
-    EVENT_CON_SERVER,         //已连服务器
-    EVENT_DISCON_SERVER,      //已断开连服务器
-    EVENT_DATAPOINT,          //接收到数据点
-    EVENT_CUSTOM_DATA,        //接受到透传数据
-    EVENT_TYPE_MAX            //事件最大值 (用户误删)
-} event_type_t;
+} datapoint_control_t;
 
 void IOT_DataPoint_Control(dp_transmit_mode_t mode, uint32_t lapse);
 
@@ -140,22 +126,16 @@ void intoyunParseReceiveDatapoints(const uint8_t *payload, uint32_t len);
 static uint16_t intoyunFormDataPointBinary(int property_index, uint8_t *buffer);
 static uint16_t intoyunFormSingleDatapoint(int property_index, uint8_t *buffer, uint16_t len);
 static uint16_t intoyunFormAllDatapoint(uint8_t *buffer, uint16_t len, bool dpForm);
+int intoyunTransmitData(const uint8_t *buffer, uint16_t len);
 int intoyunSendSingleDatapoint(const uint16_t dpID);
 int IOT_DataPoint_SendAll(bool dpForm);
-int IOT_DataPoint_SendCustomData(const uint8_t *buffer, uint16_t len);
-int intoyunTransmitData(const uint8_t *buffer, uint16_t len);
-
 int intoyunSendAllDatapointManual(void);
 int intoyunSendDatapointAutomatic(void);
-
-typedef void (*event_handler_t)(event_type_t event, uint8_t *data, uint32_t len);
-extern event_handler_t eventHandler;
-void systemSetEventCallback(event_handler_t handler);
-void systemNotifyEvent(event_type_t event, uint8_t *data, uint32_t len);
 
 #ifdef __cplusplus
 }
 #endif
 
+#endif
 #endif
 

@@ -132,7 +132,6 @@ int iotx_guider_authenticate(void)
     pconn_info->down_packetid = 0;
 
     Uint32ToHex(ramdom_hex, sizeof(ramdom_hex), HAL_Random(INT_MAX));
-    //Uint32ToHex(ramdom_hex, sizeof(ramdom_hex), 0x756c5406);
     HexToString(ramdom_hex, sizeof(ramdom_hex), pconn_info->random_str, sizeof(pconn_info->random_str), false);
 
     memset(pconn_info->password, 0, sizeof(pconn_info->password));
