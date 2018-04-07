@@ -43,6 +43,11 @@ static int iotx_comm_senddata(const uint8_t *data, uint16_t datalen)
     return 0;
 }
 
+static int iotx_comm_reportprogress(uint8_t type, iotx_ota_reply_t reply, uint8_t progress)
+{
+    return 0;
+}
+
 static int iotx_comm_yield(void)
 {
     iotx_coap_context_t *pclient = (iotx_coap_context_t *)iotx_conn_info_get()->pclient;

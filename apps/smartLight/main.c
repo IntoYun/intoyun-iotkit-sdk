@@ -31,8 +31,8 @@ bool dpBoolSprinkler_switch;                      // 洒水器开关
 
 void eventProcess(system_event_t event, system_events_param_t param, uint8_t *data, uint32_t len)
 {
-    if(event == event_cloud_data) {
-        if(ep_cloud_data == param) {
+    if(event == event_cloud_comm) {
+        if(ep_cloud_comm_data == param) {
             //光照强度
             if (RESULT_DATAPOINT_NEW == Cloud.readDatapointNumberDouble(DPID_NUMBER_ILLUMINATION, &dpDoubleIllumination)) {
                 //用户代码
@@ -91,11 +91,11 @@ void userHandle(void)
 {
     if(Cloud.connected()) {
         //处理需要上送到云平台的数据
-        dpDoubleSoil_humidity+=0.1;
-        dpDoubleAir_humidity+=0.1;
-        dpDoubleTemperature+=0.1;
-        dpDoubleIllumination+=0.1;
-        dpIntCO2+=1;
+        dpDoubleSoil_humidity += 0.1;
+        dpDoubleAir_humidity += 0.1;
+        dpDoubleTemperature += 0.1;
+        dpDoubleIllumination += 0.1;
+        dpIntCO2 += 1;
 
         Cloud.writeDatapointNumberDouble(DPID_NUMBER_SOIL_HUMIDITY, dpDoubleSoil_humidity);
         Cloud.writeDatapointNumberDouble(DPID_NUMBER_AIR_HUMIDITY, dpDoubleAir_humidity);

@@ -54,14 +54,16 @@ static void cloud_data_receive_callback(void *pcontext, void *pclient, iotx_mqtt
 #if CONFIG_CLOUD_DATAPOINT_ENABLED == 1
     intoyunParseReceiveDatapoints(ptopic_info->payload, ptopic_info->payload_len);
 #endif
-    IOT_SYSTEM_NotifyEvent(event_cloud_data, ep_cloud_data, ptopic_info->payload, ptopic_info->payload_len);
+    IOT_SYSTEM_NotifyEvent(event_cloud_comm, ep_cloud_comm_data, ptopic_info->payload, ptopic_info->payload_len);
 }
 
 static void cloud_action_callback(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
 {
     log_debug("cloud_action_callback");
     iotx_mqtt_topic_info_pt ptopic_info = (iotx_mqtt_topic_info_pt) msg->msg;
+    IOT_SYSTEM_NotifyEvent(event_cloud_comm, ep_cloud_comm_ota, ptopic_info->payload, ptopic_info->payload_len);
 }
+
 static int iotx_mqtt_pre_auth_process(void)
 {
     return iotx_guider_authenticate();
@@ -324,6 +326,61 @@ static int iotx_comm_senddata(const uint8_t *data, uint16_t datalen)
     topic_msg.dup = 0;
     topic_msg.payload = (void *)payload;
     topic_msg.payload_len = datalen;
+
+    int rc = IOT_MQTT_Publish(pclient, topic_name, &topic_msg);
+    HAL_Free(payload);
+    return rc;
+}
+
+static int iotx_comm_reportprogress(uint8_t type, iotx_ota_reply_t reply, uint8_t progress)
+{
+    char topic_name[TOPIC_NAME_LEN] = {0}, temp[128] = {0};
+    iotx_mqtt_topic_info_t topic_msg;
+
+    void *pclient = iotx_conn_info_get()->pclient;
+    if(NULL == pclient) {
+        log_err("not connect");
+        return -1;
+    }
+
+    if (gen_mqt_topic(topic_name, TOPIC_NAME_LEN, PUB_REPLY_TOPIC) < 0) {
+        log_err("generate topic name of info failed");
+        return -1;
+    }
+
+    switch(reply) {
+        case IOTX_OTA_REPLY_READY_PROGRESS:     /* 下载中 */
+            sprintf(temp, "{\"type\":\"%d\",\"status\":\"10\",\"progress\":\"%d\"}", type, progress);
+        case IOTX_OTA_REPLY_FETCH_FAILED:       /* 获取文件失败 */
+            sprintf(temp, "{\"type\":\"%d\",\"status\":\"11\"}", type);
+        case IOTX_OTA_REPLY_FETCH_SUCCESS:      /* 获取文件成功 */
+            sprintf(temp, "{\"type\":\"%d\",\"status\":\"15\"}", type);
+        case IOTX_OTA_REPLY_BURN_FAILED:        /* 烧录程序失败 */
+            sprintf(temp, "{\"type\":\"%d\",\"status\":\"13\"}", type);
+        case IOTX_OTA_REPLY_BURN_SUCCESS:       /* 烧录程序成功 */
+            sprintf(temp, "{\"type\":\"%d\",\"status\":\"14\"}", type);
+        default:
+            log_err("reply type error");
+            return -1;
+            break;
+    }
+
+    uint16_t templen = strlen(temp);
+    uint16_t payloadlen = templen + 6; //预留填充 package(2个字节) + mic(4个字节)
+    uint8_t *payload = (uint8_t *)HAL_Malloc(templen);
+    if(NULL == payload) {
+        log_err("mem malloc failed");
+        return -1;
+    }
+    memset(payload, 0, payloadlen);
+    memcpy(payload, temp, templen);
+
+    memset(&topic_msg, 0x0, sizeof(iotx_mqtt_topic_info_t));
+    topic_msg.qos = IOTX_MQTT_QOS0;
+    topic_msg.retain = 0;
+    topic_msg.dup = 0;
+    topic_msg.payload = (void *)payload;
+    topic_msg.payload_len = templen;
 
     int rc = IOT_MQTT_Publish(pclient, topic_name, &topic_msg);
     HAL_Free(payload);

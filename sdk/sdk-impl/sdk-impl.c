@@ -175,12 +175,9 @@ const iot_ota_if_t OTAUpdate =
 {
     IOT_OTA_Init,
     IOT_OTA_Deinit,
-    IOT_OTA_ReportVersion,
+    IOT_OTA_SetProgressCallback,
+    IOT_OTA_Update,
     IOT_OTA_ReportProgress,
-    IOT_OTA_IsFetching,
-    IOT_OTA_IsFetchFinish,
-    IOT_OTA_FetchYield,
-    IOT_OTA_Ioctl,
-    IOT_OTA_GetLastError,
+    IOT_OTA_GetLastError
 };
 

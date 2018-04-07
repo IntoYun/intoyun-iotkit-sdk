@@ -51,7 +51,7 @@ typedef struct {
 
 typedef enum {
     event_network_status = 1,
-    event_cloud_data     = 2,
+    event_cloud_comm     = 2,
 } system_event_t;
 
 typedef enum {
@@ -61,8 +61,9 @@ typedef enum {
     ep_cloud_status_disconnected       = 3, //已断开连服务器
     ep_cloud_status_connected          = 4, //已连服务器
 
-    //cloud data
-    ep_cloud_data                      = 1, //接收到云端数据
+    //cloud
+    ep_cloud_comm_data                 = 1, //接收到云端数据
+    ep_cloud_comm_ota                  = 1, //接收到云端OTA升级事件
 } system_events_param_t;
 
 typedef void (*event_handler_t)(system_event_t event, system_events_param_t param, uint8_t *data, uint32_t len);

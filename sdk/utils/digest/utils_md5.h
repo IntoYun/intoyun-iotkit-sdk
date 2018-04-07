@@ -16,10 +16,6 @@
  *
  */
 
-
-
-
-
 #ifndef _IOTX_COMMON_MD5_H_
 #define _IOTX_COMMON_MD5_H_
 

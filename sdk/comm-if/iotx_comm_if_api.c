@@ -50,6 +50,8 @@ static int iotx_get_device_info(char *buf, uint16_t buflen)
     }
     memset(buf, 0, buflen);
     memcpy(buf, json_out, json_len);
+    HAL_Free(json_out);
+    cJSON_Delete(root);
     return json_len;
 }
 
@@ -165,6 +167,20 @@ int IOT_Comm_SendData(const uint8_t *data, uint16_t datalen)
     }
 
     int rst = iotx_comm_senddata(data, datalen);
+    if(rst < 0) {
+        iotx_set_conn_state(IOTX_CONN_STATE_DISCONNECTED);
+    }
+    return rst;
+}
+
+int IOT_Comm_ReportProgress(uint8_t type, iotx_ota_reply_t reply, uint8_t progress)
+{
+    log_debug("IOT_Comm_SendData");
+    if(IOTX_CONN_STATE_CONNECTED != iotx_get_conn_state()) {
+        return -1;
+    }
+
+    int rst = iotx_comm_reportprogress(type, reply, progress);
     if(rst < 0) {
         iotx_set_conn_state(IOTX_CONN_STATE_DISCONNECTED);
     }

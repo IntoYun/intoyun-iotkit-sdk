@@ -84,6 +84,15 @@ typedef struct {
     iotx_conn_reconnect_param_t reconnect_param;
 } iotx_conn_info_t, *iotx_conn_info_pt;
 
+/* Progress of OTA */
+typedef enum {
+    IOTX_OTA_REPLY_READY_PROGRESS = 0,     /* 下载中 */
+    IOTX_OTA_REPLY_FETCH_FAILED = 1,       /* 获取文件失败 */
+    IOTX_OTA_REPLY_FETCH_SUCCESS = 2,      /* 获取文件成功 */
+    IOTX_OTA_REPLY_BURN_FAILED = 3,        /* 烧录程序失败 */
+    IOTX_OTA_REPLY_BURN_SUCCESS = 4,       /* 烧录程序成功 */
+} iotx_ota_reply_t;
+
 iotx_conn_info_pt iotx_conn_info_get(void);
 
 int IOT_Comm_Connect(void);
@@ -93,6 +102,8 @@ bool IOT_Comm_IsConnected(void);
 int IOT_Comm_Disconnect(void);
 
 int IOT_Comm_SendData(const uint8_t *data, uint16_t dataLen);
+
+int IOT_Comm_ReportProgress(uint8_t type, iotx_ota_reply_t reply, uint8_t progress);
 
 int IOT_Comm_Yield(void);
 

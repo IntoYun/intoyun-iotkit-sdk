@@ -27,14 +27,11 @@ extern "C" {
 
 typedef struct
 {
-    void *(*init)(const char *product_key, const char *device_name, void *ch_signal);
+    void *(*init)(const char *url, const char *md5, const uint32_t size);
     int (*deInit)(void *handle);
-    int (*reportVersion)(void *handle, const char *version);
-    int (*reportProgress)(void *handle, IOT_OTA_Progress_t progress, const char *msg);
-    bool (*isFetching)(void *handle);
-    bool (*isFetchFinish)(void *handle);
-    int (*fetchYield)(void *handle, char *buf, uint32_t buf_len, uint32_t timeout_s);
-    int (*ioctl)(void *handle, IOT_OTA_CmdType_t type, void *buf, size_t buf_len);
+    int (*setProgressCallback)(void *handle, THandlerFunction_Progress fn);
+    int (*update)(void *handle);
+    int (*reportProgress)(void *handle, uint8_t type, iotx_ota_reply_t reply, uint8_t progress);
     int (*getLastError)(void *handle);
 } iot_ota_if_t;
 
