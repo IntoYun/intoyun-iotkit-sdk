@@ -20,13 +20,16 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <memory.h>
+
+#include "hal_import.h"
+
 #include <process.h>
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <memory.h>
 
-#include "hal_import.h"
 
 #define PLATFORM_WINOS_PERROR printf
 
