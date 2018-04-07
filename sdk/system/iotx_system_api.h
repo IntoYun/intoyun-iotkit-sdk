@@ -63,7 +63,7 @@ typedef enum {
 
     //cloud
     ep_cloud_comm_data                 = 1, //接收到云端数据
-    ep_cloud_comm_ota                  = 1, //接收到云端OTA升级事件
+    ep_cloud_comm_ota                  = 2, //接收到云端OTA升级事件
 } system_events_param_t;
 
 typedef void (*event_handler_t)(system_event_t event, system_events_param_t param, uint8_t *data, uint32_t len);

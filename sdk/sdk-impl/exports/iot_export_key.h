@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-#include "iotx_key_api.h"
+#include "utils_key.h"
 
 typedef struct {
     void (*init)(void);

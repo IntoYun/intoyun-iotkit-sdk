@@ -28,6 +28,7 @@
 
 typedef struct  {
     IOT_OTA_State_t state;         /* OTA state */
+    uint8_t type_file;                  /* firmware type */
     char *purl;                    /* point to URL */
     char *pmd5;                    /* point to MD5 */
     uint32_t size_last_fetched;    /* size of last downloaded */
@@ -41,7 +42,7 @@ typedef struct  {
 
 
 /* Initialize OTA module */
-void *IOT_OTA_Init(const char *url, const char *md5, const uint32_t size)
+void *IOT_OTA_Init(uint8_t fileType, const char *url, const char *md5, uint32_t size)
 {
     OTA_Struct_pt h_ota = NULL;
 
@@ -49,6 +50,11 @@ void *IOT_OTA_Init(const char *url, const char *md5, const uint32_t size)
         log_err("one or more parameters is invalid");
         return NULL;
     }
+
+    log_info("type : %d", fileType);
+    log_info("url  : %s", url);
+    log_info("md5  : %s", md5);
+    log_info("size : %d", size);
 
     if (NULL == (h_ota = HAL_Malloc(sizeof(OTA_Struct_t)))) {
         log_err("allocate failed");
@@ -66,7 +72,8 @@ void *IOT_OTA_Init(const char *url, const char *md5, const uint32_t size)
         log_err("allocate md5 failed");
         goto do_exit;
     }
-
+    strcpy(h_ota->purl, url);
+    strcpy(h_ota->pmd5, md5);
     h_ota->size_file = size;
     h_ota->md5 = otalib_MD5Init();
     if (NULL == h_ota->md5) {
@@ -152,21 +159,14 @@ int IOT_OTA_SetProgressCallback(void *handle, THandlerFunction_Progress fn)
 
 bool IOT_OTA_Update(void *handle)
 {
-#define OTA_BUF_LEN        (2000)
-
-    bool ret = false;
+#define OTA_BUF_LEN        (5000)
+    int ret;
+    int ok = false;
     char buf[OTA_BUF_LEN];
     OTA_Struct_pt h_ota = (OTA_Struct_pt) handle;
 
     if (NULL == handle) {
         log_err("invalid parameter");
-        ret = false;
-        goto do_exit;
-    }
-
-    if (IOT_OTAS_FETCHING != h_ota->state) {
-        h_ota->err = IOT_OTAE_INVALID_STATE;
-        ret = false;
         goto do_exit;
     }
 
@@ -176,11 +176,10 @@ bool IOT_OTA_Update(void *handle)
             log_err("Fetch firmware failed");
             h_ota->state = IOT_OTAS_FETCHED;
             h_ota->err = IOT_OTAE_FETCH_FAILED;
-            ret = false;
             break;
         } else if (0 == h_ota->size_fetched) {
             /* force report status in the first */
-            h_ota->cb(NULL, 0, 0, h_ota->size_file);
+            h_ota->cb(h_ota, NULL, 0, 0, h_ota->size_file);
         }
 
         h_ota->size_last_fetched = ret;
@@ -188,16 +187,15 @@ bool IOT_OTA_Update(void *handle)
 
         otalib_MD5Update(h_ota->md5, buf, ret);
 
-        h_ota->cb(buf, ret, h_ota->size_fetched, h_ota->size_file);
+        h_ota->cb(h_ota, buf, ret, h_ota->size_fetched, h_ota->size_file);
         if (h_ota->size_fetched >= h_ota->size_file) {
             char md5_str[33];
             otalib_MD5Finalize(h_ota->md5, md5_str);
             log_debug("origin=%s, now=%s", h_ota->pmd5, md5_str);
             if (0 == strcmp(h_ota->pmd5, md5_str)) {
-                ret = true;
+                ok = true;
                 h_ota->err = IOT_OTAE_NONE;
             } else {
-                ret = false;
                 h_ota->err = IOT_OTAE_CHECK_FAILED;
             }
             h_ota->state = IOT_OTAS_FETCHED;
@@ -207,11 +205,16 @@ bool IOT_OTA_Update(void *handle)
     } while(1);
 
 do_exit:
-    return ret;
+    if(ok) {
+        IOT_OTA_ReportProgress(h_ota, IOTX_OTA_REPLY_FETCH_SUCCESS, 0);
+    } else {
+        IOT_OTA_ReportProgress(h_ota, IOTX_OTA_REPLY_FETCH_FAILED, 0);
+    }
+    return ok;
 #undef OTA_BUF_LEN
 }
 
-int IOT_OTA_ReportProgress(void *handle, uint8_t type, iotx_ota_reply_t reply, uint8_t progress)
+int IOT_OTA_ReportProgress(void *handle, iotx_ota_reply_t reply, uint8_t progress)
 {
     OTA_Struct_pt h_ota = (OTA_Struct_pt) handle;
 
@@ -226,7 +229,7 @@ int IOT_OTA_ReportProgress(void *handle, uint8_t type, iotx_ota_reply_t reply, u
         return -1;
     }
 
-    return IOT_Comm_ReportProgress(type, reply, progress);
+    return IOT_Comm_SendActionReply(h_ota->type_file, reply, progress);
 }
 
 /* Get last error code */

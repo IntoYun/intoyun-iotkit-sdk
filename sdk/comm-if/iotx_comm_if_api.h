@@ -86,7 +86,13 @@ typedef struct {
 
 /* Progress of OTA */
 typedef enum {
-    IOTX_OTA_REPLY_READY_PROGRESS = 0,     /* 下载中 */
+    IOTX_CONN_SEND_DATA = 0,               /* 发送数据 */
+    IOTX_CONN_SEND_ACTION_REPLY = 1,       /* 发送指令回复 */
+} iotx_conn_send_t;
+
+/* action reply of OTA */
+typedef enum {
+    IOTX_OTA_REPLY_PROGRESS = 0,           /* 下载中 */
     IOTX_OTA_REPLY_FETCH_FAILED = 1,       /* 获取文件失败 */
     IOTX_OTA_REPLY_FETCH_SUCCESS = 2,      /* 获取文件成功 */
     IOTX_OTA_REPLY_BURN_FAILED = 3,        /* 烧录程序失败 */
@@ -103,7 +109,7 @@ int IOT_Comm_Disconnect(void);
 
 int IOT_Comm_SendData(const uint8_t *data, uint16_t dataLen);
 
-int IOT_Comm_ReportProgress(uint8_t type, iotx_ota_reply_t reply, uint8_t progress);
+int IOT_Comm_SendActionReply(uint8_t fileType, iotx_ota_reply_t reply, uint8_t progress);
 
 int IOT_Comm_Yield(void);
 

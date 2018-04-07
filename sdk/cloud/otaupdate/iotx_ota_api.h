@@ -44,7 +44,7 @@ typedef enum {
 } IOT_OTA_State_t;
 
 
-typedef void (*THandlerFunction_Progress)(uint8_t *data, size_t len, uint32_t currentSize, uint32_t totalSize);
+typedef void (*THandlerFunction_Progress)(void *handle, uint8_t *data, size_t len, uint32_t currentSize, uint32_t totalSize);
 
 /** @defgroup group_api api
  *  @{
@@ -58,13 +58,15 @@ typedef void (*THandlerFunction_Progress)(uint8_t *data, size_t len, uint32_t cu
  * @brief Initialize OTA module, and return handle.
  *        The MQTT client must be construct before calling this interface.
  *
+ * @param [in] fileType: the type of firmmware.
  * @param [in] url: the url fetch the firmware.
  * @param [in] md5: the checkout md5 of the firmware.
+ * @param [in] size: the size of the firmware.
  *
  * @return handle: specify the OTA module.
  * @see None.
  */
-void *IOT_OTA_Init(const char *url, const char *md5, const uint32_t size);
+void *IOT_OTA_Init(uint8_t fileType, const char *url, const char *md5, uint32_t size);
 
 /**
  * @brief Deinitialize OTA module specified by the 'handle', and release the related resource.
@@ -107,7 +109,6 @@ bool IOT_OTA_Update(void *handle);
  *        NOTE: please
  *
  * @param [in] handle: specify the OTA module.
- * @param [in] type: specify the file type. defautl: 1.
  * @param [in] reply: specify the reply defined by 'iotx_ota_reply_t'.
  * @param [in] progress: specify the progress.
  *
@@ -115,7 +116,7 @@ bool IOT_OTA_Update(void *handle);
  * @retval < 0 : Failed, the value is error code.
  * @see None.
  */
-int IOT_OTA_ReportProgress(void *handle, uint8_t type, iotx_ota_reply_t reply, uint8_t progress);
+int IOT_OTA_ReportProgress(void *handle, iotx_ota_reply_t reply, uint8_t progress);
 
 /**
  * @brief Get last error code.

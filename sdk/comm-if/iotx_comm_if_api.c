@@ -45,14 +45,52 @@ static int iotx_get_device_info(char *buf, uint16_t buflen)
     json_len = strlen(json_out);
     log_debug("info = %s", json_out);
 
-    if(json_len > buflen) {
+    if(json_len >= buflen) {
         log_err("memory len to short");
+        return -1;
     }
     memset(buf, 0, buflen);
     memcpy(buf, json_out, json_len);
     HAL_Free(json_out);
     cJSON_Delete(root);
     return json_len;
+}
+
+static int iotx_get_action_reply(char *buf, uint16_t buflen, uint8_t fileType, iotx_ota_reply_t reply, uint8_t progress)
+{
+    char temp[128] = {0};
+
+    switch(reply) {
+        case IOTX_OTA_REPLY_PROGRESS:           /* 下载中 */
+            sprintf(temp, "{\"type\":\"%d\",\"status\":\"10\",\"progress\":\"%d\"}", fileType, progress);
+            break;
+        case IOTX_OTA_REPLY_FETCH_FAILED:       /* 获取文件失败 */
+            sprintf(temp, "{\"type\":\"%d\",\"status\":\"11\"}", fileType);
+            break;
+        case IOTX_OTA_REPLY_FETCH_SUCCESS:      /* 获取文件成功 */
+            sprintf(temp, "{\"type\":\"%d\",\"status\":\"15\"}", fileType);
+            break;
+        case IOTX_OTA_REPLY_BURN_FAILED:        /* 烧录程序失败 */
+            sprintf(temp, "{\"type\":\"%d\",\"status\":\"13\"}", fileType);
+            break;
+        case IOTX_OTA_REPLY_BURN_SUCCESS:       /* 烧录程序成功 */
+            sprintf(temp, "{\"type\":\"%d\",\"status\":\"14\"}", fileType);
+            break;
+        default:
+            log_err("reply type error");
+            return -1;
+            break;
+    }
+    log_debug("reply = %s", temp);
+
+    uint16_t templen = strlen(temp);
+    if(templen >= buflen) {
+        log_err("memory len to short");
+        return -1;
+    }
+    memset(buf, 0, buflen);
+    memcpy(buf, temp, templen);
+    return templen;
 }
 
 iotx_conn_info_pt iotx_conn_info_get(void)
@@ -166,24 +204,32 @@ int IOT_Comm_SendData(const uint8_t *data, uint16_t datalen)
         return -1;
     }
 
-    int rst = iotx_comm_senddata(data, datalen);
+    int rst = iotx_comm_send(IOTX_CONN_SEND_DATA, data, datalen);
     if(rst < 0) {
         iotx_set_conn_state(IOTX_CONN_STATE_DISCONNECTED);
     }
     return rst;
 }
 
-int IOT_Comm_ReportProgress(uint8_t type, iotx_ota_reply_t reply, uint8_t progress)
+int IOT_Comm_SendActionReply(uint8_t fileType, iotx_ota_reply_t reply, uint8_t progress)
 {
-    log_debug("IOT_Comm_SendData");
+    char temp[128] = {0};
+
+    log_debug("IOT_Comm_SendActionReply");
     if(IOTX_CONN_STATE_CONNECTED != iotx_get_conn_state()) {
         return -1;
     }
 
-    int rst = iotx_comm_reportprogress(type, reply, progress);
+    int templen = iotx_get_action_reply(temp, sizeof(temp), fileType, reply, progress);
+    if(templen <= 0) {
+        return -1;
+    }
+
+    int rst = iotx_comm_send(IOTX_CONN_SEND_ACTION_REPLY, temp, templen);
     if(rst < 0) {
         iotx_set_conn_state(IOTX_CONN_STATE_DISCONNECTED);
     }
+
     return rst;
 }
 

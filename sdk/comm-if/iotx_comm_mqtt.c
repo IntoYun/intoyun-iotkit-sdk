@@ -99,8 +99,6 @@ static int iotx_mqtt_up_process(char *topic, iotx_mqtt_topic_info_pt topic_msg)
     memcpy((void *)topic_msg->payload, out_buf, out_buf_len);
     topic_msg->payload_len = out_buf_len;
 
-    //HEXDUMP_DEBUG(topic_msg->payload, topic_msg->payload_len);
-
     ret = 0;
 exit:
     HAL_Free(out_buf);
@@ -131,8 +129,6 @@ static int iotx_mqtt_down_process(iotx_mqtt_topic_info_pt topic_msg)
     memset((void *)topic_msg->payload, 0, topic_msg->payload_len);
     memcpy((void *)topic_msg->payload, out_buf, out_buf_len);
     topic_msg->payload_len = out_buf_len;
-
-    //HEXDUMP_DEBUG(topic_msg->payload, topic_msg->payload_len);
 
     ret = 0;
 exit:
@@ -196,7 +192,7 @@ static int iotx_comm_connect(void)
         goto do_exit;
     }
 
-    //数据点接收
+    //订阅数据点接收
     if (gen_mqt_topic(pconn_info->topic_name_tx, TOPIC_NAME_LEN, SUB_TX_TOPIC) < 0) {
         log_err("generate topic name of info failed");
         goto do_exit;
@@ -208,7 +204,7 @@ static int iotx_comm_connect(void)
         goto do_exit;
     }
 
-    //命令控制
+    //订阅命令控制
     if (gen_mqt_topic(pconn_info->topic_name_action, TOPIC_NAME_LEN, SUB_ACTION_TOPIC) < 0) {
         log_err("generate topic name of info failed");
         goto do_exit;
@@ -295,9 +291,9 @@ static int iotx_comm_disconnect(void)
     return 0;
 }
 
-static int iotx_comm_senddata(const uint8_t *data, uint16_t datalen)
+static int iotx_comm_send(iotx_conn_send_t sendType, const uint8_t *data, uint16_t datalen)
 {
-    char topic_name[TOPIC_NAME_LEN];
+    char topic_name[TOPIC_NAME_LEN] = {0}, topic_tail[16] = {0};
     iotx_mqtt_topic_info_t topic_msg;
 
     void *pclient = iotx_conn_info_get()->pclient;
@@ -306,7 +302,13 @@ static int iotx_comm_senddata(const uint8_t *data, uint16_t datalen)
         return -1;
     }
 
-    if (gen_mqt_topic(topic_name, TOPIC_NAME_LEN, PUB_RX_TOPIC) < 0) {
+    if(sendType == IOTX_CONN_SEND_DATA) {
+        strcpy(topic_tail, PUB_RX_TOPIC);
+    } else if(sendType == IOTX_CONN_SEND_ACTION_REPLY) {
+        strcpy(topic_tail, PUB_REPLY_TOPIC);
+    }
+
+    if (gen_mqt_topic(topic_name, TOPIC_NAME_LEN, topic_tail) < 0) {
         log_err("generate topic name of info failed");
         return -1;
     }
@@ -326,61 +328,6 @@ static int iotx_comm_senddata(const uint8_t *data, uint16_t datalen)
     topic_msg.dup = 0;
     topic_msg.payload = (void *)payload;
     topic_msg.payload_len = datalen;
-
-    int rc = IOT_MQTT_Publish(pclient, topic_name, &topic_msg);
-    HAL_Free(payload);
-    return rc;
-}
-
-static int iotx_comm_reportprogress(uint8_t type, iotx_ota_reply_t reply, uint8_t progress)
-{
-    char topic_name[TOPIC_NAME_LEN] = {0}, temp[128] = {0};
-    iotx_mqtt_topic_info_t topic_msg;
-
-    void *pclient = iotx_conn_info_get()->pclient;
-    if(NULL == pclient) {
-        log_err("not connect");
-        return -1;
-    }
-
-    if (gen_mqt_topic(topic_name, TOPIC_NAME_LEN, PUB_REPLY_TOPIC) < 0) {
-        log_err("generate topic name of info failed");
-        return -1;
-    }
-
-    switch(reply) {
-        case IOTX_OTA_REPLY_READY_PROGRESS:     /* 下载中 */
-            sprintf(temp, "{\"type\":\"%d\",\"status\":\"10\",\"progress\":\"%d\"}", type, progress);
-        case IOTX_OTA_REPLY_FETCH_FAILED:       /* 获取文件失败 */
-            sprintf(temp, "{\"type\":\"%d\",\"status\":\"11\"}", type);
-        case IOTX_OTA_REPLY_FETCH_SUCCESS:      /* 获取文件成功 */
-            sprintf(temp, "{\"type\":\"%d\",\"status\":\"15\"}", type);
-        case IOTX_OTA_REPLY_BURN_FAILED:        /* 烧录程序失败 */
-            sprintf(temp, "{\"type\":\"%d\",\"status\":\"13\"}", type);
-        case IOTX_OTA_REPLY_BURN_SUCCESS:       /* 烧录程序成功 */
-            sprintf(temp, "{\"type\":\"%d\",\"status\":\"14\"}", type);
-        default:
-            log_err("reply type error");
-            return -1;
-            break;
-    }
-
-    uint16_t templen = strlen(temp);
-    uint16_t payloadlen = templen + 6; //预留填充 package(2个字节) + mic(4个字节)
-    uint8_t *payload = (uint8_t *)HAL_Malloc(templen);
-    if(NULL == payload) {
-        log_err("mem malloc failed");
-        return -1;
-    }
-    memset(payload, 0, payloadlen);
-    memcpy(payload, temp, templen);
-
-    memset(&topic_msg, 0x0, sizeof(iotx_mqtt_topic_info_t));
-    topic_msg.qos = IOTX_MQTT_QOS0;
-    topic_msg.retain = 0;
-    topic_msg.dup = 0;
-    topic_msg.payload = (void *)payload;
-    topic_msg.payload_len = templen;
 
     int rc = IOT_MQTT_Publish(pclient, topic_name, &topic_msg);
     HAL_Free(payload);

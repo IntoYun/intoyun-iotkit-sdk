@@ -1,13 +1,24 @@
 /*
-*  产品名称：
-*  产品描述：
-*  说    明： 该代码为平台自动根据产品内容生成的代码模板框架，
-*             您可以在此框架下开发。此框架包括数据点的定义和读写。
-*  模板版本： v1.4
-*/
+ * Copyright (c) 2013-2018 Molmc Group. All rights reserved.
+ * License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 
 #include "iot_export.h"
 #include "project_config.h"
+#include "ota_update.h"
 
 #define DEVICE_ID_DEF                             "0dvo0bdoy00000000000068f"         //设备标识
 #define DEVICE_SECRET_DEF                         "c08e66a8b08fd8436dac0dce9cc3bca9" //设备密钥
@@ -28,11 +39,11 @@ int dpIntCO2;                                     // 二氧化碳浓度
 int dpEnumBirds;                                  // 鸟类危害程度
 bool dpBoolSprinkler_switch;                      // 洒水器开关
 
-
 void eventProcess(system_event_t event, system_events_param_t param, uint8_t *data, uint32_t len)
 {
     if(event == event_cloud_comm) {
-        if(ep_cloud_comm_data == param) {
+        switch(param){
+            case ep_cloud_comm_data:
             //光照强度
             if (RESULT_DATAPOINT_NEW == Cloud.readDatapointNumberDouble(DPID_NUMBER_ILLUMINATION, &dpDoubleIllumination)) {
                 //用户代码
@@ -44,6 +55,12 @@ void eventProcess(system_event_t event, system_events_param_t param, uint8_t *da
                 //用户代码
                 log_info("dpBoolSprinkler_switch = %d\r\n", dpBoolSprinkler_switch);
             }
+                break;
+            case ep_cloud_comm_ota:
+                otaUpdate(data, len);
+                break;
+            default:
+                break;
         }
     } else if(event == event_network_status) {
         switch(param){
@@ -67,8 +84,8 @@ void eventProcess(system_event_t event, system_events_param_t param, uint8_t *da
 
 void userInit(void)
 {
-    IOT_OpenLog("mqtt");
-    IOT_SetLogLevel(IOT_LOG_DEBUG);
+    //IOT_OpenLog("mqtt");
+    //IOT_SetLogLevel(IOT_LOG_DEBUG);
 
     //初始设备信息
     System.init();

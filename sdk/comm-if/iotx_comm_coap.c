@@ -38,12 +38,7 @@ static int iotx_comm_disconnect(void)
     return 0;
 }
 
-static int iotx_comm_senddata(const uint8_t *data, uint16_t datalen)
-{
-    return 0;
-}
-
-static int iotx_comm_reportprogress(uint8_t type, iotx_ota_reply_t reply, uint8_t progress)
+static int iotx_comm_send(iotx_conn_send_t type, const uint8_t *data, uint16_t datalen)
 {
     return 0;
 }
