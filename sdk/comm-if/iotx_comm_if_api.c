@@ -98,6 +98,42 @@ iotx_conn_info_pt iotx_conn_info_get(void)
     return &iotx_conn_info;
 }
 
+/* get state of network */
+static iotx_conn_state_t iotx_get_network_state(void)
+{
+    iotx_conn_info_pt pconn_info = iotx_conn_info_get();
+    iotx_network_state_t state;
+
+    HAL_MutexLock(pconn_info->lock_generic);
+    state = pconn_info->network_state;
+    HAL_MutexUnlock(pconn_info->lock_generic);
+
+    return state;
+}
+
+/* set state of network */
+static void iotx_set_network_state(iotx_network_state_t newState)
+{
+    iotx_conn_info_pt pconn_info = iotx_conn_info_get();
+
+    if(pconn_info->network_state != newState) {
+        switch(newState) {
+            case IOTX_NETWORK_STATE_DISCONNECTED:   /* disconnected state */
+                IOT_SYSTEM_NotifyEvent(event_network_status, ep_network_status_disconnected, NULL, 0);
+                break;
+            case IOTX_NETWORK_STATE_CONNECTED:      /* connected state */
+                IOT_SYSTEM_NotifyEvent(event_network_status, ep_network_status_connected, NULL, 0);
+                break;
+            default:
+                break;
+        }
+    }
+
+    HAL_MutexLock(pconn_info->lock_generic);
+    pconn_info->network_state = newState;
+    HAL_MutexUnlock(pconn_info->lock_generic);
+}
+
 /* get state of conn */
 static iotx_conn_state_t iotx_get_conn_state(void)
 {
@@ -116,6 +152,20 @@ static void iotx_set_conn_state(iotx_conn_state_t newState)
 {
     iotx_conn_info_pt pconn_info = iotx_conn_info_get();
 
+    if(pconn_info->conn_state != newState) {
+        switch(newState) {
+            case IOTX_CONN_STATE_INITIALIZED:    /* initializing state */
+            case IOTX_CONN_STATE_DISCONNECTED:   /* disconnected state */
+                IOT_SYSTEM_NotifyEvent(event_network_status, ep_cloud_status_disconnected, NULL, 0);
+                break;
+            case IOTX_CONN_STATE_CONNECTED:      /* connected state */
+                IOT_SYSTEM_NotifyEvent(event_network_status, ep_cloud_status_connected, NULL, 0);
+                break;
+            default:
+                break;
+        }
+    }
+
     HAL_MutexLock(pconn_info->lock_generic);
     pconn_info->conn_state = newState;
     HAL_MutexUnlock(pconn_info->lock_generic);
@@ -128,6 +178,22 @@ static void iotx_set_conn_state(iotx_conn_state_t newState)
 #else
 #error "NOT support yet!"
 #endif
+
+bool IOT_Network_IsConnected(void)
+{
+    iotx_device_info_pt pdev_info = iotx_device_info_get();
+
+    if(IOTX_NETWORK_STATE_CONNECTED != iotx_get_network_state()) {
+        iotx_set_conn_state(IOTX_CONN_STATE_DISCONNECTED);
+        return false;
+    }
+    return true;
+}
+
+void IOT_Network_SetState(iotx_network_state_t state)
+{
+    iotx_set_network_state(state);
+}
 
 int IOT_Comm_Init(void)
 {
@@ -162,8 +228,12 @@ int IOT_Comm_Init(void)
 
 int IOT_Comm_Connect(void)
 {
+    if(!IOT_Network_IsConnected) {
+        return -1;
+    }
+
     if(IOTX_CONN_STATE_CONNECTED == iotx_get_conn_state()) {
-        return true;
+        return 0;
     }
 
     int rst = iotx_comm_connect();
@@ -178,6 +248,10 @@ int IOT_Comm_Connect(void)
 
 bool IOT_Comm_IsConnected(void)
 {
+    if(!IOT_Network_IsConnected) {
+        return false;
+    }
+
     if(IOTX_CONN_STATE_CONNECTED != iotx_get_conn_state()) {
         return false;
     }
@@ -200,6 +274,10 @@ int IOT_Comm_Disconnect(void)
 int IOT_Comm_SendData(const uint8_t *data, uint16_t datalen)
 {
     log_debug("IOT_Comm_SendData");
+    if(!IOT_Network_IsConnected) {
+        return -1;
+    }
+
     if(IOTX_CONN_STATE_CONNECTED != iotx_get_conn_state()) {
         return -1;
     }
@@ -216,6 +294,10 @@ int IOT_Comm_SendActionReply(uint8_t fileType, iotx_ota_reply_t reply, uint8_t p
     char temp[128] = {0};
 
     log_debug("IOT_Comm_SendActionReply");
+    if(!IOT_Network_IsConnected) {
+        return -1;
+    }
+
     if(IOTX_CONN_STATE_CONNECTED != iotx_get_conn_state()) {
         return -1;
     }
@@ -276,6 +358,10 @@ int IOT_Comm_Yield(void)
 {
     int rc = 0;
     iotx_conn_info_pt pconn_info = iotx_conn_info_get();
+
+    if(!IOT_Network_IsConnected) {
+        return -1;
+    }
 
     iotx_comm_yield();
 

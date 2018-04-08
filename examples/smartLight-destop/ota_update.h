@@ -16,30 +16,10 @@
  *
  */
 
-#ifndef __IOT_EXPORT_H__
-#define __IOT_EXPORT_H__
+#ifndef OTA_UPDATE_H_
+#define OTA_UPDATE_H_
 
-#if defined(__cplusplus)
-extern "C" {
+bool otaUpdate(uint8_t *data, uint32_t len);
+
 #endif
-
-#include "iot_import.h"
-
-#include "utils_cJSON.h"
-#include "sdk-impl_internal.h"
-
-#include "exports/iot_export_network.h"
-#include "exports/iot_export_cloud.h"
-#include "exports/iot_export_coap.h"
-#include "exports/iot_export_mqtt.h"
-#include "exports/iot_export_ota.h"
-#include "exports/iot_export_system.h"
-#include "exports/iot_export_log.h"
-#include "exports/iot_export_key.h"
-
-#if defined(__cplusplus)
-}
-#endif
-
-#endif  /* __IOT_EXPORT_H__ */
 

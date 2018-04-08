@@ -36,6 +36,6 @@ int32_t HAL_SSL_Destroy(uintptr_t handle)
 
 uintptr_t HAL_SSL_Establish(const char *host, uint16_t port, const char *ca_crt, size_t ca_crt_len)
 {
-    return NULL;
+    return (uintptr_t)NULL;
 }
 

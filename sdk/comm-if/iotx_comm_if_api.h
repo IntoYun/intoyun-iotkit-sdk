@@ -35,10 +35,10 @@ extern "C"
 #define INTOYUN_HTTP_SERVER_DOMAIN        "www.intoyun.com"
 #define INTOYUN_HTTP_SERVER_PORT          80
 
-/* Minimum interval of MQTT reconnect in millisecond */
+/* Minimum interval of reconnect in millisecond */
 #define IOTX_CONN_RECONNECT_INTERVAL_MIN_MS       (1000)
 
-/* Maximum interval of MQTT reconnect in millisecond */
+/* Maximum interval of reconnect in millisecond */
 #define IOTX_CONN_RECONNECT_INTERVAL_MAX_MS       (60000)
 
 
@@ -48,13 +48,19 @@ extern "C"
 #define NWKSKEY_LEN                       (16)   /* nwkskey 密钥长度 */
 #define TOPIC_NAME_LEN                    (64)
 
-/* State of MQTT client */
+/* State of Network */
 typedef enum {
-    IOTX_CONN_STATE_INVALID = 0,                    /* MQTT in invalid state */
-    IOTX_CONN_STATE_INITIALIZED = 1,                /* MQTT in initializing state */
-    IOTX_CONN_STATE_CONNECTED = 2,                  /* MQTT in connected state */
-    IOTX_CONN_STATE_DISCONNECTED = 3,               /* MQTT in disconnected state */
-    IOTX_CONN_STATE_DISCONNECTED_RECONNECTING = 4,  /* MQTT in reconnecting state */
+    IOTX_NETWORK_STATE_CONNECTED = 0,     /* network in connected state */
+    IOTX_NETWORK_STATE_DISCONNECTED = 1,  /* network in disconnected state */
+} iotx_network_state_t;
+
+/* State of Connect */
+typedef enum {
+    IOTX_CONN_STATE_INVALID = 0,                    /* in invalid state */
+    IOTX_CONN_STATE_INITIALIZED = 1,                /* in initializing state */
+    IOTX_CONN_STATE_CONNECTED = 2,                  /* in connected state */
+    IOTX_CONN_STATE_DISCONNECTED = 3,               /* in disconnected state */
+    IOTX_CONN_STATE_DISCONNECTED_RECONNECTING = 4,  /* in reconnecting state */
 } iotx_conn_state_t;
 
 /* Reconnected parameter*/
@@ -80,11 +86,12 @@ typedef struct {
     char            topic_name_action[TOPIC_NAME_LEN];
 
     void            *lock_generic; /* generic lock */
+    iotx_network_state_t network_state;
     iotx_conn_state_t conn_state;
     iotx_conn_reconnect_param_t reconnect_param;
 } iotx_conn_info_t, *iotx_conn_info_pt;
 
-/* Progress of OTA */
+/* send type */
 typedef enum {
     IOTX_CONN_SEND_DATA = 0,               /* 发送数据 */
     IOTX_CONN_SEND_ACTION_REPLY = 1,       /* 发送指令回复 */
@@ -100,6 +107,10 @@ typedef enum {
 } iotx_ota_reply_t;
 
 iotx_conn_info_pt iotx_conn_info_get(void);
+
+bool IOT_Network_IsConnected(void);
+
+void IOT_Network_SetState(iotx_network_state_t state);
 
 int IOT_Comm_Connect(void);
 

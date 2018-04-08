@@ -81,35 +81,10 @@ const iot_system_if_t System =
 #endif
 };
 
-const iot_log_if_t Log =
+const iot_network_if_t Network =
 {
-    IOT_OpenLog,
-    IOT_CloseLog,
-    IOT_SetLogLevel,
-    IOT_DumpMemoryStats,
-};
-
-const iot_keys_if_t Key =
-{
-    IOT_KEY_Init,
-    IOT_KEY_SetParams,
-    IOT_KEY_Register,
-    IOT_KEY_ClickCb,
-    IOT_KEY_DoubleClickCb,
-    IOT_KEY_PressStartCb,
-    IOT_KEY_PressStopCb,
-    IOT_KEY_PressDuringCb,
-    IOT_KEY_Loop,
-};
-
-const iot_timers_if_t Timer =
-{
-    IOT_TIMER_Register,
-    IOT_TIMER_ChangePeriod,
-    IOT_TIMER_Start,
-    IOT_TIMER_Stop,
-    IOT_TIMER_Reset,
-    IOT_TIMER_Loop,
+    IOT_Network_IsConnected,
+    IOT_Network_SetState,
 };
 
 const iot_cloud_if_t Cloud =
@@ -179,5 +154,36 @@ const iot_ota_if_t OTAUpdate =
     IOT_OTA_Update,
     IOT_OTA_ReportProgress,
     IOT_OTA_GetLastError
+};
+
+const iot_log_if_t Log =
+{
+    IOT_OpenLog,
+    IOT_CloseLog,
+    IOT_SetLogLevel,
+    IOT_DumpMemoryStats,
+};
+
+const iot_keys_if_t Key =
+{
+    IOT_KEY_Init,
+    IOT_KEY_SetParams,
+    IOT_KEY_Register,
+    IOT_KEY_ClickCb,
+    IOT_KEY_DoubleClickCb,
+    IOT_KEY_PressStartCb,
+    IOT_KEY_PressStopCb,
+    IOT_KEY_PressDuringCb,
+    IOT_KEY_Loop,
+};
+
+const iot_timers_if_t Timer =
+{
+    IOT_TIMER_Register,
+    IOT_TIMER_ChangePeriod,
+    IOT_TIMER_Start,
+    IOT_TIMER_Stop,
+    IOT_TIMER_Reset,
+    IOT_TIMER_Loop,
 };
 

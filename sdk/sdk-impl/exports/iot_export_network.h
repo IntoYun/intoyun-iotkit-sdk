@@ -16,30 +16,26 @@
  *
  */
 
-#ifndef __IOT_EXPORT_H__
-#define __IOT_EXPORT_H__
+#ifndef __IOT_EXPORT_NETWORK_H__
+#define __IOT_EXPORT_NETWORK_H__
 
-#if defined(__cplusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "iot_import.h"
+#include "iotx_comm_if_api.h"
 
-#include "utils_cJSON.h"
-#include "sdk-impl_internal.h"
+typedef struct
+{
+    bool (*connected)(void);
+    int (*setState)(iotx_network_state_t state);
+} iot_network_if_t;
 
-#include "exports/iot_export_network.h"
-#include "exports/iot_export_cloud.h"
-#include "exports/iot_export_coap.h"
-#include "exports/iot_export_mqtt.h"
-#include "exports/iot_export_ota.h"
-#include "exports/iot_export_system.h"
-#include "exports/iot_export_log.h"
-#include "exports/iot_export_key.h"
+extern const iot_network_if_t Network;
 
-#if defined(__cplusplus)
+#ifdef __cplusplus
 }
 #endif
 
-#endif  /* __IOT_EXPORT_H__ */
+#endif
 

@@ -16,15 +16,6 @@
  *
  */
 
-#include <errno.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <pthread.h>
-
 #include "hal_import.h"
 
 void *HAL_UDP_create(char *host, unsigned short port)
