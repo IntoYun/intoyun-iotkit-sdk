@@ -20,7 +20,7 @@
 #define __IOT_IMPORT_COAP_H__
 
 #include "iot_import.h"
-#include "sdkconfig.h"
+#include "sdk_config.h"
 
 #define coap_malloc(size) HAL_Malloc(size)
 #define coap_free(ptr)    HAL_Free(ptr)

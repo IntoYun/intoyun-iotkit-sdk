@@ -16,64 +16,74 @@
  *
  */
 
-#include <errno.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <pthread.h>
+#include <stdio.h>
+#include <string.h>
+#include "esp_log.h"
+#include "esp_system.h"
+#include "esp_event.h"
+#include "lwip/sockets.h"
+#include "lwip/sys.h"
+#include "lwip/netdb.h"
 
 #include "hal_import.h"
 
+#define TAG  "MQTT"
+
 void *HAL_UDP_create(char *host, unsigned short port)
 {
-    int                     rc = -1;
-    long                    socket_id = -1;
-    char                    port_ptr[6] = {0};
-    struct addrinfo         hints;
-    char                    addr[NETWORK_ADDR_LEN] = {0};
-    struct addrinfo        *res, *ainfo;
-    struct sockaddr_in     *sa = NULL;
+    struct addrinfo hints;
+    struct addrinfo *addrInfoList = NULL;
+    struct addrinfo *cur = NULL;
+    int fd = 0;
+    int rc = 0;
+    char service[6];
 
-    if (NULL == host) {
-        return (void *)(-1);
-    }
+    memset(&hints, 0, sizeof(hints));
 
-    sprintf(port_ptr, "%u", port);
-    memset((char *)&hints, 0x00, sizeof(hints));
+    ESP_LOGI(TAG, "establish tcp connection with server(host=%s port=%u)", host, port);
+
+    hints.ai_family = AF_INET; //only IPv4
     hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_family = AF_INET;
     hints.ai_protocol = IPPROTO_UDP;
+    sprintf(service, "%u", port);
 
-    rc = getaddrinfo(host, port_ptr, &hints, &res);
-    if (0 != rc) {
-        perror("getaddrinfo error");
-        return (void *)(-1);
+    if ((rc = getaddrinfo(host, service, &hints, &addrInfoList)) != 0) {
+        ESP_LOGE(TAG, "getaddrinfo error");
+        return 0;
     }
 
-    for (ainfo = res; ainfo != NULL; ainfo = ainfo->ai_next) {
-        if (AF_INET == ainfo->ai_family) {
-            sa = (struct sockaddr_in *)ainfo->ai_addr;
-            inet_ntop(AF_INET, &sa->sin_addr, addr, NETWORK_ADDR_LEN);
-            fprintf(stderr, "The host IP %s, port is %d\r\n", addr, ntohs(sa->sin_port));
-
-            socket_id = socket(ainfo->ai_family, ainfo->ai_socktype, ainfo->ai_protocol);
-            if (socket_id < 0) {
-                perror("create socket error");
-                continue;
-            }
-            if (0 == connect(socket_id, ainfo->ai_addr, ainfo->ai_addrlen)) {
-                break;
-            }
-
-            close(socket_id);
+    for (cur = addrInfoList; cur != NULL; cur = cur->ai_next) {
+        if (cur->ai_family != AF_INET) {
+            ESP_LOGE(TAG, "socket type error");
+            rc = 0;
+            continue;
         }
-    }
-    freeaddrinfo(res);
 
-    return (void *)socket_id;
+        fd = socket(cur->ai_family, cur->ai_socktype, cur->ai_protocol);
+        if (fd < 0) {
+            ESP_LOGE(TAG, "create socket error");
+            rc = 0;
+            continue;
+        }
+
+        if (connect(fd, cur->ai_addr, cur->ai_addrlen) == 0) {
+            rc = fd;
+            break;
+        }
+
+        close(fd);
+        ESP_LOGE(TAG, "connect error");
+        rc = 0;
+    }
+
+    if (0 == rc) {
+        ESP_LOGI(TAG, "fail to establish tcp");
+    } else {
+        ESP_LOGI(TAG, "success to establish tcp, fd=%d", rc);
+    }
+    freeaddrinfo(addrInfoList);
+
+    return (uintptr_t)rc;
 }
 
 void HAL_UDP_close(void *p_socket)
@@ -146,44 +156,11 @@ int HAL_UDP_readTimeout(void *p_socket, unsigned char *p_data, unsigned int data
         if (errno == EINTR) {
             return -3;    /* want read */
         }
+
         return -4; /* receive failed */
     }
 
     /* This call will not block */
     return HAL_UDP_read(p_socket, p_data, datalen);
-}
-
-int HAL_UDP_resolveAddress(const char *p_host,  char addr[NETWORK_ADDR_LEN])
-{
-    struct addrinfo *res, *ainfo;
-    struct addrinfo hints;
-    int error = -1;
-    struct sockaddr_in *sa = NULL;
-
-    memset ((char *)&hints, 0x00, sizeof(hints));
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_family = AF_INET;
-    hints.ai_protocol = IPPROTO_UDP;
-
-    error = getaddrinfo(p_host, NULL, &hints, &res);
-
-    if (error != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(error));
-        return error;
-    }
-
-    for (ainfo = res; ainfo != NULL; ainfo = ainfo->ai_next) {
-        switch (ainfo->ai_family) {
-            case AF_INET:
-                sa = (struct sockaddr_in *)ainfo->ai_addr;
-                inet_ntop(AF_INET, &sa->sin_addr, addr, NETWORK_ADDR_LEN);
-                break;
-            default:
-                ;
-        }
-    }
-
-    freeaddrinfo(res);
-    return 0;
 }
 

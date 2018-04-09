@@ -20,7 +20,7 @@
 #define __IOT_IMPORT_MQTT_H__
 
 #include "iot_import.h"
-#include "sdkconfig.h"
+#include "sdk_config.h"
 #include "iot_import_utils.h"
 
 #endif /* _IOT_IMPORT_OTA_H_ */

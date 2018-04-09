@@ -17,7 +17,7 @@
  */
 
 #include "iot_import.h"
-#include "sdkconfig.h"
+#include "sdk_config.h"
 #include "lite-log.h"
 #include "iotx_datapoint_api.h"
 #include "iotx_comm_if_api.h"

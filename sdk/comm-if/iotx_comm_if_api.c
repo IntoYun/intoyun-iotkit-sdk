@@ -17,7 +17,7 @@
  */
 
 #include "iot_import.h"
-#include "sdkconfig.h"
+#include "sdk_config.h"
 #include "lite-log.h"
 #include "lite-utils.h"
 #include "utils_timer.h"
@@ -26,6 +26,7 @@
 #include "iotx_system_api.h"
 #include "iotx_datapoint_api.h"
 
+static iotx_network_state_t iotx_network_state = IOTX_NETWORK_STATE_DISCONNECTED;
 static iotx_conn_info_t iotx_conn_info;
 
 static int iotx_get_device_info(char *buf, uint16_t buflen)
@@ -101,22 +102,13 @@ iotx_conn_info_pt iotx_conn_info_get(void)
 /* get state of network */
 static iotx_conn_state_t iotx_get_network_state(void)
 {
-    iotx_conn_info_pt pconn_info = iotx_conn_info_get();
-    iotx_network_state_t state;
-
-    HAL_MutexLock(pconn_info->lock_generic);
-    state = pconn_info->network_state;
-    HAL_MutexUnlock(pconn_info->lock_generic);
-
-    return state;
+    return iotx_network_state;
 }
 
 /* set state of network */
 static void iotx_set_network_state(iotx_network_state_t newState)
 {
-    iotx_conn_info_pt pconn_info = iotx_conn_info_get();
-
-    if(pconn_info->network_state != newState) {
+    if(iotx_get_network_state() != newState) {
         switch(newState) {
             case IOTX_NETWORK_STATE_DISCONNECTED:   /* disconnected state */
                 IOT_SYSTEM_NotifyEvent(event_network_status, ep_network_status_disconnected, NULL, 0);
@@ -129,9 +121,7 @@ static void iotx_set_network_state(iotx_network_state_t newState)
         }
     }
 
-    HAL_MutexLock(pconn_info->lock_generic);
-    pconn_info->network_state = newState;
-    HAL_MutexUnlock(pconn_info->lock_generic);
+    iotx_network_state = newState;
 }
 
 /* get state of conn */
@@ -181,8 +171,6 @@ static void iotx_set_conn_state(iotx_conn_state_t newState)
 
 bool IOT_Network_IsConnected(void)
 {
-    iotx_device_info_pt pdev_info = iotx_device_info_get();
-
     if(IOTX_NETWORK_STATE_CONNECTED != iotx_get_network_state()) {
         iotx_set_conn_state(IOTX_CONN_STATE_DISCONNECTED);
         return false;
@@ -228,7 +216,7 @@ int IOT_Comm_Init(void)
 
 int IOT_Comm_Connect(void)
 {
-    if(!IOT_Network_IsConnected) {
+    if(!IOT_Network_IsConnected()) {
         return -1;
     }
 
@@ -248,7 +236,7 @@ int IOT_Comm_Connect(void)
 
 bool IOT_Comm_IsConnected(void)
 {
-    if(!IOT_Network_IsConnected) {
+    if(!IOT_Network_IsConnected()) {
         return false;
     }
 
@@ -274,7 +262,7 @@ int IOT_Comm_Disconnect(void)
 int IOT_Comm_SendData(const uint8_t *data, uint16_t datalen)
 {
     log_debug("IOT_Comm_SendData");
-    if(!IOT_Network_IsConnected) {
+    if(!IOT_Network_IsConnected()) {
         return -1;
     }
 
@@ -294,7 +282,7 @@ int IOT_Comm_SendActionReply(uint8_t fileType, iotx_ota_reply_t reply, uint8_t p
     char temp[128] = {0};
 
     log_debug("IOT_Comm_SendActionReply");
-    if(!IOT_Network_IsConnected) {
+    if(!IOT_Network_IsConnected()) {
         return -1;
     }
 
@@ -359,7 +347,7 @@ int IOT_Comm_Yield(void)
     int rc = 0;
     iotx_conn_info_pt pconn_info = iotx_conn_info_get();
 
-    if(!IOT_Network_IsConnected) {
+    if(!IOT_Network_IsConnected()) {
         return -1;
     }
 

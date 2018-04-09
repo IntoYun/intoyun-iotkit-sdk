@@ -20,7 +20,7 @@
 #include <string.h>
 #include <stddef.h>
 #include "iot_import.h"
-#include "sdkconfig.h"
+#include "sdk_config.h"
 #include "lite-log.h"
 #include "utils_httpc.h"
 

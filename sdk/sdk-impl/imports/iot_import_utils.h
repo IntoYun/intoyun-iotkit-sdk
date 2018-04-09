@@ -20,7 +20,7 @@
 #define __IOT_IMPORT_UTILS_H__
 
 #include "iot_import.h"
-#include "sdkconfig.h"
+#include "sdk_config.h"
 #include "lite-utils.h"
 #include "utils_common.h"
 #include "utils_epoch_time.h"

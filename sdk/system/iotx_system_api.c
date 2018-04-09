@@ -83,7 +83,7 @@ void IOT_SYSTEM_SetEventCallback(event_handler_t handler)
     }
 }
 
-void IOT_SYSTEM_NotifyEvent(system_event_t event, system_events_param_t param, uint8_t *data, uint32_t len)
+void IOT_SYSTEM_NotifyEvent(iotx_system_event_t event, iotx_system_events_param_t param, uint8_t *data, uint32_t len)
 {
     if(eventHandler != NULL) {
         eventHandler(event, param, data, len);

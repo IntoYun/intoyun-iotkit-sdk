@@ -25,7 +25,7 @@
 #include <stdarg.h>
 
 #include "iot_import.h"
-#include "sdkconfig.h"
+#include "sdk_config.h"
 
 #define dtls_log_print(level, ...) \
     {\

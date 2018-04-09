@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef __UTILS_KEY_H__
-#define __UTILS_KEY_H__
+#ifndef __IOTX_KEY_API_H__
+#define __IOTX_KEY_API_H__
 
 #ifdef __cplusplus
 extern "C"
@@ -83,5 +83,5 @@ void IOT_KEY_Loop(void);
 }
 #endif
 
-#endif /* INTOYUN_LOG_H__ */
+#endif
 

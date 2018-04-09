@@ -39,7 +39,7 @@ int dpIntCO2;                                     // 二氧化碳浓度
 int dpEnumBirds;                                  // 鸟类危害程度
 bool dpBoolSprinkler_switch;                      // 洒水器开关
 
-void eventProcess(system_event_t event, system_events_param_t param, uint8_t *data, uint32_t len)
+void eventProcess(iotx_system_event_t event, iotx_system_events_param_t param, uint8_t *data, uint32_t len)
 {
     if(event == event_cloud_comm) {
         switch(param){
@@ -84,8 +84,8 @@ void eventProcess(system_event_t event, system_events_param_t param, uint8_t *da
 
 void userInit(void)
 {
-    //IOT_OpenLog("mqtt");
-    //IOT_SetLogLevel(IOT_LOG_DEBUG);
+    IOT_OpenLog("mqtt");
+    IOT_SetLogLevel(IOT_LOG_DEBUG);
 
     //初始设备信息
     System.init();
@@ -125,7 +125,7 @@ void userHandle(void)
     }
 }
 
-int main(void)
+int userMain(void)
 {
     userInit();
     while(1) {

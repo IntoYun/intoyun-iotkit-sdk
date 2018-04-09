@@ -22,7 +22,7 @@
 #include <limits.h>
 #include "utils_cmac.h"
 #include "lite-log.h"
-#include "sdkconfig.h"
+#include "sdk_config.h"
 #include "utils_epoch_time.h"
 #include "iotx_guider_api.h"
 #include "iotx_system_api.h"

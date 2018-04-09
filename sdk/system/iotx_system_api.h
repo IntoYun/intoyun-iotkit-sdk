@@ -52,7 +52,7 @@ typedef struct {
 typedef enum {
     event_network_status = 1,
     event_cloud_comm     = 2,
-} system_event_t;
+} iotx_system_event_t;
 
 typedef enum {
     //network status
@@ -64,9 +64,9 @@ typedef enum {
     //cloud
     ep_cloud_comm_data                 = 1, //接收到云端数据
     ep_cloud_comm_ota                  = 2, //接收到云端OTA升级事件
-} system_events_param_t;
+} iotx_system_events_param_t;
 
-typedef void (*event_handler_t)(system_event_t event, system_events_param_t param, uint8_t *data, uint32_t len);
+typedef void (*event_handler_t)(iotx_system_event_t event, iotx_system_events_param_t param, uint8_t *data, uint32_t len);
 
 iotx_device_info_pt iotx_device_info_get(void);
 
@@ -75,7 +75,7 @@ int IOT_SYSTEM_SetDeviceInfo(char *deviceId, char *deviceSecret, char *productID
 void IOT_SYSTEM_Init(void);
 void IOT_SYSTEM_Loop(void);
 void IOT_SYSTEM_SetEventCallback(event_handler_t handler);
-void IOT_SYSTEM_NotifyEvent(system_event_t event, system_events_param_t param, uint8_t *data, uint32_t len);
+void IOT_SYSTEM_NotifyEvent(iotx_system_event_t event, iotx_system_events_param_t param, uint8_t *data, uint32_t len);
 
 #ifdef __cplusplus
 }

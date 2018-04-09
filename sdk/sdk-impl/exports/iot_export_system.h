@@ -25,6 +25,7 @@ extern "C" {
 
 #include "iotx_system_api.h"
 #include "iotx_timer_api.h"
+#include "iotx_key_api.h"
 
 typedef struct
 {
@@ -46,8 +47,21 @@ typedef struct {
     void (*loop)(void);
 } iot_timers_if_t;
 
+typedef struct {
+    void (*init)(void);
+    void (*setParams)(bool invert, uint32_t debounceTime, uint32_t clickTime, uint32_t pressTime);
+    void (*keyRegister)(uint8_t num, cbInitFunc initFunc, cbGetValueFunc getValFunc);
+    void (*attachClick)(uint8_t num, cbClickFunc cbFunc);           //注册单击处理函数
+    void (*attachDoubleClick)(uint8_t num, cbClickFunc cbFunc);     //注册双击处理函数
+    void (*attachLongPressStart)(uint8_t num, cbPressFunc cbFunc);  //注册按下按键处理函数
+    void (*attachLongPressStop)(uint8_t num, cbPressFunc cbFunc);   //注册释放按键处理函数
+    void (*attachDuringLongPress)(uint8_t num, cbPressFunc cbFunc); //注册按键按下回调函数
+    void (*loop)(void);
+} iot_keys_if_t;
+
 extern const iot_system_if_t System;
 extern const iot_timers_if_t Timer;
+extern const iot_keys_if_t Key;
 
 uint32_t timerGetId(void);
 bool timerIsEnd(uint32_t timerID, uint32_t time);

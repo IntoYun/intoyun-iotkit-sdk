@@ -42,8 +42,3 @@ int HAL_UDP_readTimeout(void *p_socket, unsigned char *p_data, unsigned int data
     return -1;
 }
 
-int HAL_UDP_resolveAddress(const char *p_host,  char addr[NETWORK_ADDR_LEN])
-{
-    return 0;
-}
-

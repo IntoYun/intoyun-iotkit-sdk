@@ -35,7 +35,6 @@ extern "C" {
 #include "exports/iot_export_ota.h"
 #include "exports/iot_export_system.h"
 #include "exports/iot_export_log.h"
-#include "exports/iot_export_key.h"
 
 #if defined(__cplusplus)
 }

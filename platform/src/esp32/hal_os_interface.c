@@ -18,14 +18,18 @@
 
 #include <time.h>
 #include <reent.h>
+
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include "threads_platform.h"
 
 #include "hal_import.h"
 
-static void mygettimeofday(struct timeval *tv, void *tz)
+void mygettimeofday(struct timeval *tv, void *tz)
 {
     struct _reent r;
     _gettimeofday_r(&r, tv, tz);
@@ -33,45 +37,22 @@ static void mygettimeofday(struct timeval *tv, void *tz)
 
 void *HAL_MutexCreate(void)
 {
-    int err_num;
-    pthread_mutex_t *mutex = (pthread_mutex_t *)HAL_Malloc(sizeof(pthread_mutex_t));
-    if (NULL == mutex) {
-        return NULL;
-    }
-
-    if (0 != (err_num = pthread_mutex_init(mutex, NULL))) {
-        perror("create mutex failed");
-        HAL_Free(mutex);
-        return NULL;
-    }
-
-    return mutex;
+    return xSemaphoreCreateMutex();
 }
 
 void HAL_MutexDestroy(void *mutex)
 {
-    int err_num;
-    if (0 != (err_num = pthread_mutex_destroy((pthread_mutex_t *)mutex))) {
-        perror("destroy mutex failed");
-    }
-
-    HAL_Free(mutex);
+    vSemaphoreDelete(mutex);
 }
 
 void HAL_MutexLock(void *mutex)
 {
-    int err_num;
-    if (0 != (err_num = pthread_mutex_lock((pthread_mutex_t *)mutex))) {
-        perror("lock mutex failed");
-    }
+    xSemaphoreTake(mutex, portMAX_DELAY);
 }
 
 void HAL_MutexUnlock(void *mutex)
 {
-    int err_num;
-    if (0 != (err_num = pthread_mutex_unlock((pthread_mutex_t *)mutex))) {
-        perror("unlock mutex failed");
-    }
+    xSemaphoreGive(mutex);
 }
 
 void *HAL_Malloc(uint32_t size)
@@ -103,17 +84,17 @@ uint32_t HAL_UptimeMs(void)
 
 void HAL_SleepMs(uint32_t ms)
 {
-    usleep(1000 * ms);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
 }
 
 void HAL_Srandom(uint32_t seed)
 {
-    srandom(seed);
+    srand(seed);
 }
 
 uint32_t HAL_Random(uint32_t region)
 {
-    return (region > 0) ? (random() % region) : 0;
+    return (region > 0) ? (rand() % region) : 0;
 }
 
 void HAL_Printf(const char *fmt, ...)

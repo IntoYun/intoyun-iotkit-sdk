@@ -30,7 +30,7 @@ extern "C" {
 #include <inttypes.h>
 
 #include "hal_import.h"
-#include "sdkconfig.h"
+#include "sdk_config.h"
 #include "iot_import_config.h"
 #include "iot_import_errno.h"
 

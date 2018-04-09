@@ -50,8 +50,8 @@ extern "C"
 
 /* State of Network */
 typedef enum {
-    IOTX_NETWORK_STATE_CONNECTED = 0,     /* network in connected state */
-    IOTX_NETWORK_STATE_DISCONNECTED = 1,  /* network in disconnected state */
+    IOTX_NETWORK_STATE_DISCONNECTED = 0,  /* network in disconnected state */
+    IOTX_NETWORK_STATE_CONNECTED = 1,     /* network in connected state */
 } iotx_network_state_t;
 
 /* State of Connect */
@@ -86,7 +86,6 @@ typedef struct {
     char            topic_name_action[TOPIC_NAME_LEN];
 
     void            *lock_generic; /* generic lock */
-    iotx_network_state_t network_state;
     iotx_conn_state_t conn_state;
     iotx_conn_reconnect_param_t reconnect_param;
 } iotx_conn_info_t, *iotx_conn_info_pt;
