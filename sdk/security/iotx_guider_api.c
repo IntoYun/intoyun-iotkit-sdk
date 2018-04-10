@@ -65,7 +65,7 @@ static void _guider_get_timestamp_str(char *buf, int len)
     int retry = 0;
 
     do {
-        ret = utils_get_epoch_time_from_ntp(buf, len);
+        ret = utils_get_epoch_time(buf, len);
     } while (ret == 0 && ++retry < 10);
 
     if (retry > 1) {

@@ -85,8 +85,8 @@ void app_main(void)
     }
     ESP_ERROR_CHECK( err );
 
-    IOT_OpenLog("example");
-    IOT_SetLogLevel(IOT_LOG_DEBUG);
+    //IOT_OpenLog("example");
+    //IOT_SetLogLevel(IOT_LOG_DEBUG);
 
     initialise_wifi();
     xTaskCreate(&userMain, "user_main_task", 4096 * 2, NULL, 2, NULL);

@@ -152,11 +152,18 @@ void HAL_Printf(const char *fmt, ...)
 
 int HAL_Snprintf(char *str, const int len, const char *fmt, ...)
 {
-    return 0;
+    va_list args;
+    int     rc;
+
+    va_start(args, fmt);
+    rc = vsnprintf(str, len, fmt, args);
+    va_end(args);
+
+    return rc;
 }
 
 int HAL_Vsnprintf(char *str, const int len, const char *format, va_list ap)
 {
-    return 0;
+    return vsnprintf(str, len, format, ap);
 }
 

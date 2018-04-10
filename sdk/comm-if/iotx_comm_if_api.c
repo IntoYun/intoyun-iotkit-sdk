@@ -63,19 +63,19 @@ static int iotx_get_action_reply(char *buf, uint16_t buflen, uint8_t fileType, i
 
     switch(reply) {
         case IOTX_OTA_REPLY_PROGRESS:           /* 下载中 */
-            sprintf(temp, "{\"type\":\"%d\",\"status\":\"10\",\"progress\":\"%d\"}", fileType, progress);
+            HAL_Snprintf(temp, sizeof(temp), "{\"type\":\"%d\",\"status\":\"10\",\"progress\":\"%d\"}", fileType, progress);
             break;
         case IOTX_OTA_REPLY_FETCH_FAILED:       /* 获取文件失败 */
-            sprintf(temp, "{\"type\":\"%d\",\"status\":\"11\"}", fileType);
+            HAL_Snprintf(temp, sizeof(temp), "{\"type\":\"%d\",\"status\":\"11\"}", fileType);
             break;
         case IOTX_OTA_REPLY_FETCH_SUCCESS:      /* 获取文件成功 */
-            sprintf(temp, "{\"type\":\"%d\",\"status\":\"15\"}", fileType);
+            HAL_Snprintf(temp, sizeof(temp), "{\"type\":\"%d\",\"status\":\"15\"}", fileType);
             break;
         case IOTX_OTA_REPLY_BURN_FAILED:        /* 烧录程序失败 */
-            sprintf(temp, "{\"type\":\"%d\",\"status\":\"13\"}", fileType);
+            HAL_Snprintf(temp, sizeof(temp), "{\"type\":\"%d\",\"status\":\"13\"}", fileType);
             break;
         case IOTX_OTA_REPLY_BURN_SUCCESS:       /* 烧录程序成功 */
-            sprintf(temp, "{\"type\":\"%d\",\"status\":\"14\"}", fileType);
+            HAL_Snprintf(temp, sizeof(temp), "{\"type\":\"%d\",\"status\":\"14\"}", fileType);
             break;
         default:
             log_err("reply type error");
@@ -387,7 +387,7 @@ int IOT_Comm_Yield(void)
             if (SUCCESS_RETURN != rc) {
                 //log_debug("reconnect network fail, rc = %d", rc);
             } else {
-                log_info("network is reconnected!");
+                log_info("cloud is reconnected!");
                 //iotx_mc_reconnect_callback();
                 pconn_info->reconnect_param.reconnect_time_interval_ms = IOTX_MC_RECONNECT_INTERVAL_MIN_MS;
             }
@@ -397,7 +397,7 @@ int IOT_Comm_Yield(void)
 
         /* If network suddenly interrupted, stop pinging packet, try to reconnect network immediately */
         if (IOTX_CONN_STATE_DISCONNECTED == connState) {
-            log_err("network is disconnected!");
+            log_err("cloud is disconnected!");
             //iotx_mc_disconnect_callback(pClient);
 
             pconn_info->reconnect_param.reconnect_time_interval_ms = IOTX_CONN_RECONNECT_INTERVAL_MIN_MS;
