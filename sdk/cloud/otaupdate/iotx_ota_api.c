@@ -159,7 +159,7 @@ int IOT_OTA_SetProgressCallback(void *handle, THandlerFunction_Progress fn)
 
 bool IOT_OTA_Update(void *handle)
 {
-#define OTA_BUF_LEN        (5000)
+#define OTA_BUF_LEN        (1500)
     int ret;
     int ok = false;
     char buf[OTA_BUF_LEN];

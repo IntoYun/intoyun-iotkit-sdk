@@ -114,7 +114,10 @@ void user_init(void)
     stop_wifi_ap();
     start_wifi_station(CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
 
-    if (xTaskCreate(userMain, "user_main_task", 1500, NULL, 5, NULL) != pdPASS) {
+    IOT_OpenLog("example");
+    IOT_SetLogLevel(IOT_LOG_DEBUG);
+
+    if (xTaskCreate(userMain, "user_main_task", 4096*2, NULL, 5, NULL) != pdPASS) {
         os_printf("user_main_task");
     }
 }

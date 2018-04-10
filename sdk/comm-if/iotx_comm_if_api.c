@@ -26,7 +26,7 @@
 #include "iotx_system_api.h"
 #include "iotx_datapoint_api.h"
 
-static iotx_network_state_t iotx_network_state = IOTX_NETWORK_STATE_DISCONNECTED;
+static int iotx_conninfo_inited = 0;
 static iotx_conn_info_t iotx_conn_info;
 
 static int iotx_get_device_info(char *buf, uint16_t buflen)
@@ -96,19 +96,29 @@ static int iotx_get_action_reply(char *buf, uint16_t buflen, uint8_t fileType, i
 
 iotx_conn_info_pt iotx_conn_info_get(void)
 {
+    IOT_Comm_Init();
     return &iotx_conn_info;
 }
 
 /* get state of network */
 static iotx_conn_state_t iotx_get_network_state(void)
 {
-    return iotx_network_state;
+    iotx_conn_info_pt pconn_info = iotx_conn_info_get();
+    iotx_network_state_t state;
+
+    HAL_MutexLock(pconn_info->lock_generic);
+    state = pconn_info->network_state;
+    HAL_MutexUnlock(pconn_info->lock_generic);
+
+    return state;
 }
 
 /* set state of network */
 static void iotx_set_network_state(iotx_network_state_t newState)
 {
-    if(iotx_get_network_state() != newState) {
+    iotx_conn_info_pt pconn_info = iotx_conn_info_get();
+
+    if(pconn_info->network_state != newState) {
         switch(newState) {
             case IOTX_NETWORK_STATE_DISCONNECTED:   /* disconnected state */
                 IOT_SYSTEM_NotifyEvent(event_network_status, ep_network_status_disconnected, NULL, 0);
@@ -121,7 +131,9 @@ static void iotx_set_network_state(iotx_network_state_t newState)
         }
     }
 
-    iotx_network_state = newState;
+    HAL_MutexLock(pconn_info->lock_generic);
+    pconn_info->network_state = newState;
+    HAL_MutexUnlock(pconn_info->lock_generic);
 }
 
 /* get state of conn */
@@ -146,7 +158,9 @@ static void iotx_set_conn_state(iotx_conn_state_t newState)
         switch(newState) {
             case IOTX_CONN_STATE_INITIALIZED:    /* initializing state */
             case IOTX_CONN_STATE_DISCONNECTED:   /* disconnected state */
-                IOT_SYSTEM_NotifyEvent(event_network_status, ep_cloud_status_disconnected, NULL, 0);
+                if(pconn_info->conn_state == IOTX_CONN_STATE_CONNECTED) {
+                    IOT_SYSTEM_NotifyEvent(event_network_status, ep_cloud_status_disconnected, NULL, 0);
+                }
                 break;
             case IOTX_CONN_STATE_CONNECTED:      /* connected state */
                 IOT_SYSTEM_NotifyEvent(event_network_status, ep_cloud_status_connected, NULL, 0);
@@ -185,6 +199,11 @@ void IOT_Network_SetState(iotx_network_state_t state)
 
 int IOT_Comm_Init(void)
 {
+    if (iotx_conninfo_inited) {
+        //log_debug("conninfo already created, return!");
+        return 0;
+    }
+
     iotx_device_info_pt pdev_info = iotx_device_info_get();
 
     memset(&iotx_conn_info, 0x0, sizeof(iotx_conn_info_t));
@@ -201,6 +220,7 @@ int IOT_Comm_Init(void)
     iotx_conn_info.client_id = pdev_info->device_id;
     iotx_conn_info.username = pdev_info->device_id;
     iotx_conn_info.conn_state = IOTX_CONN_STATE_INVALID;
+    iotx_conn_info.network_state = IOTX_NETWORK_STATE_DISCONNECTED;
 
     iotx_time_init(&iotx_conn_info.reconnect_param.reconnect_next_time);
 
@@ -210,6 +230,7 @@ int IOT_Comm_Init(void)
     IOT_DataPoint_DefineBool(DPID_DEFAULT_BOOL_RESET, DP_PERMISSION_UP_DOWN, false);               //reboot
     IOT_DataPoint_DefineBool(DPID_DEFAULT_BOOL_GETALLDATAPOINT, DP_PERMISSION_UP_DOWN, false);     //get all datapoint
 
+    iotx_conninfo_inited = 1;
     log_info("conn_info created successfully!");
     return 0;
 }

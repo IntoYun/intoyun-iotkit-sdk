@@ -22,6 +22,8 @@ extern int userMain(void);
 
 int main(void)
 {
+    IOT_OpenLog("example");
+    IOT_SetLogLevel(IOT_LOG_DEBUG);
     Network.setState(IOTX_NETWORK_STATE_CONNECTED);
     userMain();
     return 0;

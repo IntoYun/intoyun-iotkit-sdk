@@ -28,13 +28,14 @@ static event_handler_t      eventHandler = NULL;
 
 iotx_device_info_pt iotx_device_info_get(void)
 {
+    IOT_SYSTEM_DeviceInit();
     return &iotx_device_info;
 }
 
 int IOT_SYSTEM_DeviceInit(void)
 {
     if (iotx_devinfo_inited) {
-        log_debug("device_info already created, return!");
+        //log_debug("devinfo already created, return!");
         return 0;
     }
 
@@ -47,19 +48,19 @@ int IOT_SYSTEM_DeviceInit(void)
 
 int IOT_SYSTEM_SetDeviceInfo(char *deviceId, char *deviceSecret, char *productID, char *productSecret, char *hardwareVersion, char *softwareVersion)
 {
+    iotx_device_info_pt pdev_info = iotx_device_info_get();
     iotx_conn_info_pt pconn_info = iotx_conn_info_get();
 
-    log_debug("start to set device info!");
-    memset(&iotx_device_info, 0x0, sizeof(iotx_device_info));
+    log_debug("set device info!");
 
-    strncpy(iotx_device_info.device_id, deviceId, DEVICE_ID_LEN);
-    strncpy(iotx_device_info.device_secret, deviceSecret, DEVICE_SECRET_LEN);
-    strncpy(iotx_device_info.product_id, productID, PRODUCT_ID_LEN);
-    strncpy(iotx_device_info.product_secret, productSecret, PRODUCT_SECRET_LEN);
-    strncpy(iotx_device_info.hardware_version, hardwareVersion, HARDWARE_VERSION_LEN);
-    strncpy(iotx_device_info.software_version, softwareVersion, SOFTWARE_VERSION_LEN);
+    strncpy(pdev_info->device_id, deviceId, DEVICE_ID_LEN);
+    strncpy(pdev_info->device_secret, deviceSecret, DEVICE_SECRET_LEN);
+    strncpy(pdev_info->product_id, productID, PRODUCT_ID_LEN);
+    strncpy(pdev_info->product_secret, productSecret, PRODUCT_SECRET_LEN);
+    strncpy(pdev_info->hardware_version, hardwareVersion, HARDWARE_VERSION_LEN);
+    strncpy(pdev_info->software_version, softwareVersion, SOFTWARE_VERSION_LEN);
 
-    strncpy(pconn_info->password, iotx_device_info.device_secret, DEVICE_SECRET_LEN);
+    strncpy(pconn_info->password, pdev_info->device_secret, DEVICE_SECRET_LEN);
 
     log_debug("device_info set successfully!");
     return SUCCESS_RETURN;

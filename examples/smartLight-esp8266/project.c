@@ -39,22 +39,21 @@ int dpIntCO2;                                     // 二氧化碳浓度
 int dpEnumBirds;                                  // 鸟类危害程度
 bool dpBoolSprinkler_switch;                      // 洒水器开关
 
-void eventProcess(system_event_t event, system_events_param_t param, uint8_t *data, uint32_t len)
+void eventProcess(iotx_system_event_t event, iotx_system_events_param_t param, uint8_t *data, uint32_t len)
 {
     if(event == event_cloud_comm) {
         switch(param){
             case ep_cloud_comm_data:
-            //光照强度
-            if (RESULT_DATAPOINT_NEW == Cloud.readDatapointNumberDouble(DPID_NUMBER_ILLUMINATION, &dpDoubleIllumination)) {
-                //用户代码
-                log_info("dpDoubleIllumination = %f\r\n", dpDoubleIllumination);
-            }
-
-            //洒水器开关
-            if (RESULT_DATAPOINT_NEW == Cloud.readDatapointBool(DPID_BOOL_SPRINKLER_SWITCH, &dpBoolSprinkler_switch)) {
-                //用户代码
-                log_info("dpBoolSprinkler_switch = %d\r\n", dpBoolSprinkler_switch);
-            }
+                //光照强度
+                if (RESULT_DATAPOINT_NEW == Cloud.readDatapointNumberDouble(DPID_NUMBER_ILLUMINATION, &dpDoubleIllumination)) {
+                    //用户代码
+                    log_info("dpDoubleIllumination = %f\r\n", dpDoubleIllumination);
+                }
+                //洒水器开关
+                if (RESULT_DATAPOINT_NEW == Cloud.readDatapointBool(DPID_BOOL_SPRINKLER_SWITCH, &dpBoolSprinkler_switch)) {
+                    //用户代码
+                    log_info("dpBoolSprinkler_switch = %d\r\n", dpBoolSprinkler_switch);
+                }
                 break;
             case ep_cloud_comm_ota:
                 otaUpdate(data, len);
@@ -71,10 +70,10 @@ void eventProcess(system_event_t event, system_events_param_t param, uint8_t *da
                 log_info("event network connect router\r\n");
                 break;
             case ep_cloud_status_disconnected:  //模组已断开平台
-                log_info("event network disconnect server\r\n");
+                log_info("event cloud disconnect server\r\n");
                 break;
             case ep_cloud_status_connected:     //模组已连接平台
-                log_info("event network connect server\r\n");
+                log_info("event cloud connect server\r\n");
                 break;
             default:
                 break;
@@ -84,9 +83,6 @@ void eventProcess(system_event_t event, system_events_param_t param, uint8_t *da
 
 void userInit(void)
 {
-    IOT_OpenLog("mqtt");
-    IOT_SetLogLevel(IOT_LOG_DEBUG);
-
     //初始设备信息
     System.init();
     System.setDeviceInfo(DEVICE_ID_DEF, DEVICE_SECRET_DEF, PRODUCT_ID_DEF, PRODUCT_SECRET_DEF, HARDWARE_VERSION_DEF, SOFTWARE_VERSION_DEF);

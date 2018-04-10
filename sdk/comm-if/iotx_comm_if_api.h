@@ -86,6 +86,8 @@ typedef struct {
     char            topic_name_action[TOPIC_NAME_LEN];
 
     void            *lock_generic; /* generic lock */
+
+    iotx_network_state_t network_state;
     iotx_conn_state_t conn_state;
     iotx_conn_reconnect_param_t reconnect_param;
 } iotx_conn_info_t, *iotx_conn_info_pt;
