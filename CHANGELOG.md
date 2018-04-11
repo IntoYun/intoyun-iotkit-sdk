@@ -1,7 +1,7 @@
 ## v1.0.1
 
 ### 新增功能
-- 新增OTA功能
+- 新增OTA关键升级功能
 - 新增网络接口
 - 支持windowns/linux/macos/esp32/esp8266硬件平台支持
 
