@@ -117,7 +117,7 @@ void user_init(void)
     IOT_OpenLog("example");
     IOT_SetLogLevel(IOT_LOG_DEBUG);
 
-    if (xTaskCreate(userMain, "user_main_task", 4096*2, NULL, 5, NULL) != pdPASS) {
+    if (xTaskCreate(&userMain, "user_main_task", 4096*2, NULL, 5, NULL) != pdPASS) {
         os_printf("user_main_task");
     }
 }

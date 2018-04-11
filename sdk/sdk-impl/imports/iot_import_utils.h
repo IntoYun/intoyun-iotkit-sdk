@@ -22,6 +22,7 @@
 #include "iot_import.h"
 #include "sdk_config.h"
 #include "lite-utils.h"
+#include "lite-log.h"
 #include "utils_common.h"
 #include "utils_epoch_time.h"
 #include "utils_list.h"

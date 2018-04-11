@@ -19,9 +19,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "lite-utils.h"
-#include "utils_aes.h"
-#include "utils_cmac.h"
+#include "iot_import_utils.h"
 #include "iotx_crypto_api.h"
 #include "iotx_guider_api.h"
 #include "iotx_system_api.h"
@@ -94,7 +92,7 @@ int iotx_comm_payload_encrypt(uint8_t *dest, uint16_t destlen, uint8_t *src, uin
     uint8_t *ptr = dest;
     iotx_conn_info_pt pconn_info = iotx_conn_info_get();
     iotx_device_info_pt pdev_info = iotx_device_info_get();
-    SECURE_MODE secure_mode = iotx_guider_get_secure_mode();
+    //SECURE_MODE secure_mode = iotx_guider_get_secure_mode();
 
 #if CONFIG_CLOUD_SECURE_MODE == 3 //MODE_TLS_GUIDER_PLAIN
     //防止内存溢出
@@ -132,7 +130,7 @@ int iotx_comm_payload_decrypt(uint8_t *dest, uint16_t destlen, uint8_t *src, uin
     uint8_t mic[4];
     iotx_conn_info_pt pconn_info = iotx_conn_info_get();
     iotx_device_info_pt pdev_info = iotx_device_info_get();
-    SECURE_MODE secure_mode = iotx_guider_get_secure_mode();
+    //SECURE_MODE secure_mode = iotx_guider_get_secure_mode();
 
 #if CONFIG_CLOUD_SECURE_MODE == 3 //MODE_TLS_GUIDER_PLAIN
     //防止内存溢出

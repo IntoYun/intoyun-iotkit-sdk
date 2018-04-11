@@ -40,7 +40,7 @@ bool otaUpdate(uint8_t *data, uint32_t len)
     bool ret = false;
 
     log_info("action data : %s\r\n", data);
-    cJSON *actionJson=cJSON_Parse(data);
+    cJSON *actionJson=cJSON_Parse((char *)data);
     if(NULL == actionJson) {
         goto do_exit;
     }

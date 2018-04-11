@@ -28,7 +28,7 @@ extern "C" {
 typedef struct
 {
     bool (*connected)(void);
-    int (*setState)(iotx_network_state_t state);
+    void (*setState)(iotx_network_state_t state);
 } iot_network_if_t;
 
 extern const iot_network_if_t Network;

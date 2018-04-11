@@ -123,9 +123,6 @@ int IOT_DataPoint_SendString(const uint16_t dpID, const char *value);
 int IOT_DataPoint_SendBinary(const uint16_t dpID, const uint8_t *value, uint16_t len);
 
 void intoyunParseReceiveDatapoints(const uint8_t *payload, uint32_t len);
-static uint16_t intoyunFormDataPointBinary(int property_index, uint8_t *buffer);
-static uint16_t intoyunFormSingleDatapoint(int property_index, uint8_t *buffer, uint16_t len);
-static uint16_t intoyunFormAllDatapoint(uint8_t *buffer, uint16_t len, bool dpForm);
 int intoyunTransmitData(const uint8_t *buffer, uint16_t len);
 int intoyunSendSingleDatapoint(const uint16_t dpID);
 int IOT_DataPoint_SendAll(bool dpForm);

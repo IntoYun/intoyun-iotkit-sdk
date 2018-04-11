@@ -39,7 +39,7 @@ int dpIntCO2;                                     // 二氧化碳浓度
 int dpEnumBirds;                                  // 鸟类危害程度
 bool dpBoolSprinkler_switch;                      // 洒水器开关
 
-void eventProcess(iotx_system_event_t event, iotx_system_events_param_t param, uint8_t *data, uint32_t len)
+void eventProcess(int event, int param, uint8_t *data, uint32_t len)
 {
     if(event == event_cloud_comm) {
         switch(param){

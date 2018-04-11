@@ -66,12 +66,12 @@ typedef enum {
     ep_cloud_comm_ota                  = 2, //接收到云端OTA升级事件
 } iotx_system_events_param_t;
 
-typedef void (*event_handler_t)(iotx_system_event_t event, iotx_system_events_param_t param, uint8_t *data, uint32_t len);
+typedef void (*event_handler_t)(int event, int param, uint8_t *data, uint32_t len);
 
 iotx_device_info_pt iotx_device_info_get(void);
 
-int IOT_SYSTEM_DeviceInit(void);
-int IOT_SYSTEM_SetDeviceInfo(char *deviceId, char *deviceSecret, char *productID, char *productSecret, char *hardwareVersion, char *softwareVersion);
+void IOT_SYSTEM_DeviceInit(void);
+void IOT_SYSTEM_SetDeviceInfo(char *deviceId, char *deviceSecret, char *productID, char *productSecret, char *hardwareVersion, char *softwareVersion);
 void IOT_SYSTEM_Init(void);
 void IOT_SYSTEM_Loop(void);
 void IOT_SYSTEM_SetEventCallback(event_handler_t handler);

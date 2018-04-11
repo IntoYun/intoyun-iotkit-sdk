@@ -32,21 +32,20 @@ iotx_device_info_pt iotx_device_info_get(void)
     return &iotx_device_info;
 }
 
-int IOT_SYSTEM_DeviceInit(void)
+void IOT_SYSTEM_DeviceInit(void)
 {
     if (iotx_devinfo_inited) {
         //log_debug("devinfo already created, return!");
-        return 0;
+        return;
     }
 
     memset(&iotx_device_info, 0x0, sizeof(iotx_device_info_t));
     iotx_devinfo_inited = 1;
 
     log_info("device_info created successfully!");
-    return SUCCESS_RETURN;
 }
 
-int IOT_SYSTEM_SetDeviceInfo(char *deviceId, char *deviceSecret, char *productID, char *productSecret, char *hardwareVersion, char *softwareVersion)
+void IOT_SYSTEM_SetDeviceInfo(char *deviceId, char *deviceSecret, char *productID, char *productSecret, char *hardwareVersion, char *softwareVersion)
 {
     iotx_device_info_pt pdev_info = iotx_device_info_get();
     iotx_conn_info_pt pconn_info = iotx_conn_info_get();
@@ -63,7 +62,6 @@ int IOT_SYSTEM_SetDeviceInfo(char *deviceId, char *deviceSecret, char *productID
     strncpy(pconn_info->password, pdev_info->device_secret, DEVICE_SECRET_LEN);
 
     log_debug("device_info set successfully!");
-    return SUCCESS_RETURN;
 }
 
 void IOT_SYSTEM_Init(void)

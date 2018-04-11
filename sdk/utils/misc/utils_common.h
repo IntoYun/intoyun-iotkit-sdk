@@ -23,7 +23,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-
 int StringToHex(char *psrc, uint16_t srclen, uint8_t *pdest, uint16_t destlen, bool reverse);
 int HexToString(uint8_t *psrc, uint16_t srclen, char *pdest, uint16_t destlen, bool reverse);
 int Uint16ToHex(uint8_t *pdest, uint16_t destlen, uint16_t val);

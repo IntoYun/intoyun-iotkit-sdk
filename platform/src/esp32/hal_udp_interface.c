@@ -83,7 +83,7 @@ void *HAL_UDP_create(char *host, unsigned short port)
     }
     freeaddrinfo(addrInfoList);
 
-    return (uintptr_t)rc;
+    return (void *)rc;
 }
 
 void HAL_UDP_close(void *p_socket)

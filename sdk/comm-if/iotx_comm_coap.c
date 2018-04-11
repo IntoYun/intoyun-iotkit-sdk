@@ -17,6 +17,8 @@
  */
 
 #include "iotx_coap_api.h"
+#include "iotx_guider_api.h"
+#include "iotx_crypto_api.h"
 
 static int iotx_comm_connect(void)
 {

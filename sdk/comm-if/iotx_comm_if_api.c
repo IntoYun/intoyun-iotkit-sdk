@@ -101,7 +101,7 @@ iotx_conn_info_pt iotx_conn_info_get(void)
 }
 
 /* get state of network */
-static iotx_conn_state_t iotx_get_network_state(void)
+static iotx_network_state_t iotx_get_network_state(void)
 {
     iotx_conn_info_pt pconn_info = iotx_conn_info_get();
     iotx_network_state_t state;
@@ -316,7 +316,7 @@ int IOT_Comm_SendActionReply(uint8_t fileType, iotx_ota_reply_t reply, uint8_t p
         return -1;
     }
 
-    int rst = iotx_comm_send(IOTX_CONN_SEND_ACTION_REPLY, temp, templen);
+    int rst = iotx_comm_send(IOTX_CONN_SEND_ACTION_REPLY, (uint8_t *)temp, templen);
     if(rst < 0) {
         iotx_set_conn_state(IOTX_CONN_STATE_DISCONNECTED);
     }

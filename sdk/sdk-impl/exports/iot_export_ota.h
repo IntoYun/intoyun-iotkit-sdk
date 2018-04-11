@@ -30,7 +30,7 @@ typedef struct
     void *(*init)(uint8_t type, const char *url, const char *md5, uint32_t size);
     int (*deInit)(void *handle);
     int (*setProgressCallback)(void *handle, THandlerFunction_Progress fn);
-    int (*update)(void *handle);
+    bool (*update)(void *handle);
     int (*reportProgress)(void *handle, iotx_ota_reply_t reply, uint8_t progress);
     int (*getLastError)(void *handle);
 } iot_ota_if_t;

@@ -19,6 +19,8 @@
 
 #include "iot_import_mqtt.h"
 #include "iotx_mqtt_client.h"
+#include "iotx_guider_api.h"
+#include "iotx_crypto_api.h"
 
 #define MQTT_MSGLEN              (1024)
 
@@ -52,16 +54,16 @@ static void cloud_data_receive_callback(void *pcontext, void *pclient, iotx_mqtt
 
     log_debug("cloud_data_receive_callback");
 #if CONFIG_CLOUD_DATAPOINT_ENABLED == 1
-    intoyunParseReceiveDatapoints(ptopic_info->payload, ptopic_info->payload_len);
+    intoyunParseReceiveDatapoints((uint8_t *)ptopic_info->payload, ptopic_info->payload_len);
 #endif
-    IOT_SYSTEM_NotifyEvent(event_cloud_comm, ep_cloud_comm_data, ptopic_info->payload, ptopic_info->payload_len);
+    IOT_SYSTEM_NotifyEvent(event_cloud_comm, ep_cloud_comm_data, (uint8_t *)ptopic_info->payload, ptopic_info->payload_len);
 }
 
 static void cloud_action_callback(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
 {
     log_debug("cloud_action_callback");
     iotx_mqtt_topic_info_pt ptopic_info = (iotx_mqtt_topic_info_pt) msg->msg;
-    IOT_SYSTEM_NotifyEvent(event_cloud_comm, ep_cloud_comm_ota, ptopic_info->payload, ptopic_info->payload_len);
+    IOT_SYSTEM_NotifyEvent(event_cloud_comm, ep_cloud_comm_ota, (uint8_t *)ptopic_info->payload, ptopic_info->payload_len);
 }
 
 static int iotx_mqtt_pre_auth_process(void)
@@ -88,7 +90,7 @@ static int iotx_mqtt_up_process(char *topic, iotx_mqtt_topic_info_pt topic_msg)
         return -1;
     }
 
-    out_buf_len = iotx_comm_payload_encrypt(out_buf, out_buf_len, topic_msg->payload, topic_msg->payload_len);
+    out_buf_len = iotx_comm_payload_encrypt(out_buf, out_buf_len, (uint8_t *)topic_msg->payload, topic_msg->payload_len);
     if (out_buf_len <= 0) {
         log_err("payload encrypt error!");
         ret = -1;
@@ -119,7 +121,7 @@ static int iotx_mqtt_down_process(iotx_mqtt_topic_info_pt topic_msg)
         return -1;
     }
 
-    out_buf_len = iotx_comm_payload_decrypt(out_buf, out_buf_len, topic_msg->payload, topic_msg->payload_len);
+    out_buf_len = iotx_comm_payload_decrypt(out_buf, out_buf_len, (uint8_t *)topic_msg->payload, topic_msg->payload_len);
     if (out_buf_len <= 0) {
         log_err("payload encrypt error!");
         ret = -1;
@@ -279,7 +281,7 @@ static int iotx_comm_disconnect(void)
         msg_writebuf = pclient->buf_send;
         msg_readbuf = pclient->buf_read;
 
-        IOT_MQTT_Destroy(&pclient);
+        IOT_MQTT_Destroy((void **)&pclient);
 
         if (NULL != msg_writebuf) {
             HAL_Free(msg_writebuf);

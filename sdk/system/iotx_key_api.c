@@ -16,8 +16,8 @@
  *
  */
 
-
 #include "iotx_key_api.h"
+#include "iot_import.h"
 
 static iotx_key_param_t keyParams = {0,20,600,1000,1,0,false,0,0};
 static uint8_t keyNumRecord = 0;  //记录按下了的按键编号

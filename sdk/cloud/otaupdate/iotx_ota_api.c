@@ -187,7 +187,7 @@ bool IOT_OTA_Update(void *handle)
 
         otalib_MD5Update(h_ota->md5, buf, ret);
 
-        h_ota->cb(h_ota, buf, ret, h_ota->size_fetched, h_ota->size_file);
+        h_ota->cb(h_ota, (uint8_t *)buf, ret, h_ota->size_fetched, h_ota->size_file);
         if (h_ota->size_fetched >= h_ota->size_file) {
             char md5_str[33];
             otalib_MD5Finalize(h_ota->md5, md5_str);

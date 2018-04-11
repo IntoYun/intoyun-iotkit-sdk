@@ -63,6 +63,8 @@ extern const iot_system_if_t System;
 extern const iot_timers_if_t Timer;
 extern const iot_keys_if_t Key;
 
+uint32_t millis(void);
+void delay(uint32_t ms);
 uint32_t timerGetId(void);
 bool timerIsEnd(uint32_t timerID, uint32_t time);
 

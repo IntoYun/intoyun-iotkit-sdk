@@ -20,10 +20,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <limits.h>
-#include "utils_cmac.h"
-#include "lite-log.h"
-#include "sdk_config.h"
-#include "utils_epoch_time.h"
+#include "iot_import_utils.h"
 #include "iotx_guider_api.h"
 #include "iotx_system_api.h"
 #include "iotx_comm_if_api.h"
@@ -151,7 +148,7 @@ int iotx_guider_authenticate(void)
     }
 
     StringToHex(pdev_info->device_secret, 32, device_secret_hex, 16, false);
-    _calc_cmac(pconn_info->random_str, strlen(pconn_info->random_str), device_secret_hex, cMac_hex);
+    _calc_cmac((uint8_t *)pconn_info->random_str, strlen(pconn_info->random_str), device_secret_hex, cMac_hex);
     HexToString(cMac_hex, 16, cMac_string, 33, false);
     strcat(pconn_info->password, cMac_string);
 

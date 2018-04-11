@@ -26,6 +26,8 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include "threads_platform.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 #include "hal_import.h"
 

@@ -17,6 +17,7 @@
  */
 
 #include "iotx_timer_api.h"
+#include "iot_import.h"
 
 static iotx_timer_t *timerListHead = NULL;
 static bool timerListInitFlag = false;

@@ -20,6 +20,10 @@
 #include "lite-log.h"
 #include "iotx_log_api.h"
 
+
+void LITE_dump_malloc_free_stats(int level);
+
+
 void IOT_OpenLog(const char *ident)
 {
     const char *mod = ident;
