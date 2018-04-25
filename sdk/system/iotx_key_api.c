@@ -16,8 +16,10 @@
  *
  */
 
-#include "iotx_key_api.h"
 #include "iot_import.h"
+#include "iotx_key_api.h"
+
+#if CONFIG_SYSTEM_KEY_ENABLE == 1
 
 static iotx_key_param_t keyParams = {0,20,600,1000,1,0,false,0,0};
 static uint8_t keyNumRecord = 0;  //记录按下了的按键编号
@@ -27,7 +29,7 @@ static bool keyListInitFlag = false;
 static void KeyListInit(void)
 {
     keyListHead = (iotx_key_t*)malloc(sizeof(iotx_key_t));
-    if(keyListHead == NULL){
+    if(keyListHead == NULL) {
         return;
     }
     keyListHead->next = NULL;
@@ -38,10 +40,8 @@ static bool KeyExists( iotx_key_t *obj )
 {
     iotx_key_t* cur = keyListHead->next;
 
-    while( cur != NULL )
-    {
-        if( cur->keyNum == obj->keyNum )
-        {
+    while( cur != NULL ) {
+        if(cur->keyNum == obj->keyNum) {
             return true;
         }
         cur = cur->next;
@@ -55,16 +55,15 @@ static void KeyListInsert(iotx_key_t *obj)
     iotx_key_t *head = keyListHead;
     iotx_key_t *cur = keyListHead->next;
 
-    if( ( obj == NULL ) || ( KeyExists( obj ) == true ) ){
-        //log_v("key is exists\r\n");
+    if(( obj == NULL ) || ( KeyExists( obj ) == true )){
         return;
     }
 
     if(cur == NULL) {
         head->next = obj;
         obj->next = NULL;
-    }else{
-        while((cur->next != NULL)){
+    } else {
+        while((cur->next != NULL)) {
             cur = cur->next;
         }
         cur->next = obj;
@@ -75,9 +74,8 @@ static void KeyListInsert(iotx_key_t *obj)
 static bool KeyListQueryDoubleClickCb(uint8_t num)
 {
     iotx_key_t *cur = keyListHead->next;
-    while(cur != NULL){
-        if( cur->keyNum == num)
-        {
+    while(cur != NULL) {
+        if( cur->keyNum == num) {
             if(cur->cbKeyDoubleClickFunc != NULL) {
                 return true;
             }
@@ -91,27 +89,26 @@ static bool KeyListQueryDoubleClickCb(uint8_t num)
 static void KeyListRegisterCbFunc(uint8_t cbType, uint8_t num, cbPressFunc cbFunc, cbClickFunc clickFunc)
 {
     iotx_key_t *cur = keyListHead->next;
-    while(cur != NULL){
-        if( cur->keyNum == num)
-        {
+    while(cur != NULL) {
+        if( cur->keyNum == num) {
             switch(cbType){
-            case KEY_CLICK_CB:
-                cur->cbKeyClickFunc = clickFunc;
-                return;
-            case KEY_DOUBLE_CLICK_CB:
-                cur->cbKeyDoubleClickFunc = clickFunc;
-                return;
-            case KEY_PRESS_SATRT_CB:
-                cur->cbKeyPressStartFunc = cbFunc;
-                return;
-            case KEY_PRESS_STOP_CB:
-                cur->cbKeyPressStopFunc = cbFunc;
-                return;
-            case KEY_PRESS_DURING_CB:
-                cur->cbKeyPressDuringFunc = cbFunc;
-                return;
-            default:
-                return;
+                case KEY_CLICK_CB:
+                    cur->cbKeyClickFunc = clickFunc;
+                    return;
+                case KEY_DOUBLE_CLICK_CB:
+                    cur->cbKeyDoubleClickFunc = clickFunc;
+                    return;
+                case KEY_PRESS_SATRT_CB:
+                    cur->cbKeyPressStartFunc = cbFunc;
+                    return;
+                case KEY_PRESS_STOP_CB:
+                    cur->cbKeyPressStopFunc = cbFunc;
+                    return;
+                case KEY_PRESS_DURING_CB:
+                    cur->cbKeyPressDuringFunc = cbFunc;
+                    return;
+                default:
+                    return;
             }
         }
         cur = cur->next;
@@ -122,36 +119,35 @@ static void KeyListRegisterCbFunc(uint8_t cbType, uint8_t num, cbPressFunc cbFun
 static void KeyListExeCbFunc(uint8_t cbType, uint8_t num, uint32_t ms)
 {
     iotx_key_t *cur = keyListHead->next;
-    while(cur != NULL){
-        if( cur->keyNum == num)
-        {
+    while(cur != NULL) {
+        if( cur->keyNum == num) {
             switch(cbType){
-            case KEY_CLICK_CB:
-                if(cur->cbKeyClickFunc != NULL) {
-                    cur->cbKeyClickFunc();
-                }
-                break;
-            case KEY_DOUBLE_CLICK_CB:
-                if(cur->cbKeyDoubleClickFunc != NULL) {
-                    cur->cbKeyDoubleClickFunc();
-                }
-            case KEY_PRESS_SATRT_CB:
-                if(cur->cbKeyPressStartFunc != NULL) {
-                    cur->cbKeyPressStartFunc(ms);
-                }
-                break;
-            case KEY_PRESS_STOP_CB:
-                if(cur->cbKeyPressStopFunc != NULL) {
-                    cur->cbKeyPressStopFunc(ms);
-                }
-                break;
-            case KEY_PRESS_DURING_CB:
-                if(cur->cbKeyPressDuringFunc != NULL) {
-                    cur->cbKeyPressDuringFunc(ms);
-                }
-                break;
-            default:
-                break;
+                case KEY_CLICK_CB:
+                    if(cur->cbKeyClickFunc != NULL) {
+                        cur->cbKeyClickFunc();
+                    }
+                    break;
+                case KEY_DOUBLE_CLICK_CB:
+                    if(cur->cbKeyDoubleClickFunc != NULL) {
+                        cur->cbKeyDoubleClickFunc();
+                    }
+                case KEY_PRESS_SATRT_CB:
+                    if(cur->cbKeyPressStartFunc != NULL) {
+                        cur->cbKeyPressStartFunc(ms);
+                    }
+                    break;
+                case KEY_PRESS_STOP_CB:
+                    if(cur->cbKeyPressStopFunc != NULL) {
+                        cur->cbKeyPressStopFunc(ms);
+                    }
+                    break;
+                case KEY_PRESS_DURING_CB:
+                    if(cur->cbKeyPressDuringFunc != NULL) {
+                        cur->cbKeyPressDuringFunc(ms);
+                    }
+                    break;
+                default:
+                    break;
             }
         }
         cur = cur->next;
@@ -162,8 +158,8 @@ static void KeyListExeCbFunc(uint8_t cbType, uint8_t num, uint32_t ms)
 static int KeyListGetValue(void)
 {
     iotx_key_t *cur = keyListHead->next;
-    while(cur != NULL){
-        if(cur->cbKeyGetValueFunc() == keyParams._buttonPressed){
+    while(cur != NULL) {
+        if(cur->cbKeyGetValueFunc() == keyParams._buttonPressed) {
             keyNumRecord = cur->keyNum; //记录哪个按键按下了
             return keyParams._buttonPressed;
         }
@@ -176,9 +172,8 @@ void IOT_KEY_Init(void)
 {
     iotx_key_t* cur = keyListHead->next;
 
-    while( cur != NULL )
-    {
-        if(cur->cbKeyInitFunc != NULL){
+    while( cur != NULL ) {
+        if(cur->cbKeyInitFunc != NULL) {
             cur->cbKeyInitFunc();
         }
         cur = cur->next;
@@ -204,14 +199,13 @@ void IOT_KEY_SetParams(bool invert, uint32_t debounceTime, uint32_t clickTime, u
 
 void IOT_KEY_Register(uint8_t num, cbInitFunc initFunc, cbGetValueFunc getValFunc)
 {
-    if(!keyListInitFlag){
+    if(!keyListInitFlag) {
         keyListInitFlag = true;
         KeyListInit();
     }
 
     iotx_key_t *p = (iotx_key_t*)malloc(sizeof(iotx_key_t));
-    if(p == NULL){
-        //log_v("error malloc\r\n");
+    if(p == NULL) {
         return;
     }
     p->keyNum= num;
@@ -224,7 +218,6 @@ void IOT_KEY_Register(uint8_t num, cbInitFunc initFunc, cbGetValueFunc getValFun
     p->cbKeyPressDuringFunc = NULL;
     p->next = NULL;
 
-    //log_v("keyNum=%d\r\n",p->keyNum);
     KeyListInsert(p);
 }
 
@@ -315,4 +308,6 @@ void IOT_KEY_Loop(void)
         }
     }
 }
+
+#endif
 

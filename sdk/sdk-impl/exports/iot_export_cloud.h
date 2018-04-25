@@ -23,6 +23,7 @@
 extern "C" {
 #endif
 
+#include "sdk_config.h"
 #include "iotx_datapoint_api.h"
 
 typedef struct
@@ -30,10 +31,9 @@ typedef struct
     int (*connect)(void);
     bool (*connected)(void);
     int (*disconnect)(void);
-
     //发送自定义数据
     int (*sendCustomData)(const uint8_t *buffer, uint16_t length);
-
+#if CONFIG_CLOUD_DATAPOINT_ENABLED == 1
     //数据点格式编程API接口
     //定义数据点
     void (*defineDatapointBool)(const uint16_t dpID, dp_permission_t permission, const bool value);
@@ -63,6 +63,7 @@ typedef struct
     int (*sendDatapointString)(const uint16_t dpID, const char *value);
     int (*sendDatapointBinary)(const uint16_t dpID, const uint8_t *value, uint16_t len);
     int (*sendDatapointAll)(void);
+#endif
 } iot_cloud_if_t;
 
 extern const iot_cloud_if_t Cloud;

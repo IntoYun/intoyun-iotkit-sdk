@@ -35,9 +35,14 @@ typedef struct
     //应用操作接口
     void (*setDeviceInfo)(char *productID, char *productSecret, char *hardwareVersion, char *softwareVersion, char *deviceId, char *deviceSecret);
     void (*setEventCallback)(event_handler_t handler);
+#if CONFIG_CLOUD_DATAPOINT_ENABLED == 1
     void (*setDatapointControl)(dp_transmit_mode_t mode, uint32_t lapse);
+#endif
 } iot_system_if_t;
 
+extern const iot_system_if_t System;
+
+#if CONFIG_SYSTEM_TIMER_ENABLE == 1
 typedef struct {
     void (*timerRegister)(uint8_t num, uint32_t period, bool oneShot, cbTimerFunc cbFunc);
     void (*changePeriod)(uint8_t num, uint32_t period);
@@ -47,6 +52,10 @@ typedef struct {
     void (*loop)(void);
 } iot_timers_if_t;
 
+extern const iot_timers_if_t Timer;
+#endif
+
+#if CONFIG_SYSTEM_KEY_ENABLE == 1
 typedef struct {
     void (*init)(void);
     void (*setParams)(bool invert, uint32_t debounceTime, uint32_t clickTime, uint32_t pressTime);
@@ -59,9 +68,8 @@ typedef struct {
     void (*loop)(void);
 } iot_keys_if_t;
 
-extern const iot_system_if_t System;
-extern const iot_timers_if_t Timer;
 extern const iot_keys_if_t Key;
+#endif
 
 uint32_t millis(void);
 void delay(uint32_t ms);

@@ -164,6 +164,7 @@ const iot_log_if_t Log =
     IOT_DumpMemoryStats,
 };
 
+#if CONFIG_SYSTEM_KEY_ENABLE == 1
 const iot_keys_if_t Key =
 {
     IOT_KEY_Init,
@@ -176,7 +177,9 @@ const iot_keys_if_t Key =
     IOT_KEY_PressDuringCb,
     IOT_KEY_Loop,
 };
+#endif
 
+#if CONFIG_SYSTEM_TIMER_ENABLE == 1
 const iot_timers_if_t Timer =
 {
     IOT_TIMER_Register,
@@ -186,4 +189,5 @@ const iot_timers_if_t Timer =
     IOT_TIMER_Reset,
     IOT_TIMER_Loop,
 };
+#endif
 

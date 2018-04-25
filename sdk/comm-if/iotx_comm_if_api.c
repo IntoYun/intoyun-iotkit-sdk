@@ -159,11 +159,11 @@ static void iotx_set_conn_state(iotx_conn_state_t newState)
             case IOTX_CONN_STATE_INITIALIZED:    /* initializing state */
             case IOTX_CONN_STATE_DISCONNECTED:   /* disconnected state */
                 if(pconn_info->conn_state == IOTX_CONN_STATE_CONNECTED) {
-                    IOT_SYSTEM_NotifyEvent(event_network_status, ep_cloud_status_disconnected, NULL, 0);
+                    IOT_SYSTEM_NotifyEvent(event_cloud_status, ep_cloud_status_disconnected, NULL, 0);
                 }
                 break;
             case IOTX_CONN_STATE_CONNECTED:      /* connected state */
-                IOT_SYSTEM_NotifyEvent(event_network_status, ep_cloud_status_connected, NULL, 0);
+                IOT_SYSTEM_NotifyEvent(event_cloud_status, ep_cloud_status_connected, NULL, 0);
                 break;
             default:
                 break;
@@ -376,10 +376,12 @@ int IOT_Comm_Yield(void)
 
     iotx_comm_yield();
 
+#if CONFIG_CLOUD_DATAPOINT_ENABLED == 1
     if(IOT_Comm_IsConnected()) {
         IOT_DataPoint_SendDatapointAutomatic();
         return 0;
     }
+#endif
 
     iotx_conn_state_t connState = iotx_get_conn_state();
     do {

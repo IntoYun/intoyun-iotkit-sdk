@@ -19,6 +19,10 @@
 #ifndef __IOTX_KEY_API_H__
 #define __IOTX_KEY_API_H__
 
+#include "sdk_config.h"
+
+#if CONFIG_SYSTEM_KEY_ENABLE == 1
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -83,5 +87,6 @@ void IOT_KEY_Loop(void);
 }
 #endif
 
+#endif
 #endif
 

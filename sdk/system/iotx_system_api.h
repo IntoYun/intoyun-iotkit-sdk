@@ -45,13 +45,15 @@ typedef struct {
 
 typedef enum {
     event_network_status = 1,
-    event_cloud_comm     = 2,
+    event_cloud_status   = 2,
+    event_cloud_comm     = 3,
 } iotx_system_event_t;
 
 typedef enum {
     //network status
     ep_network_status_disconnected     = 1, //已断开路由器
     ep_network_status_connected        = 2, //已连接路由器
+    //Cloud connection status
     ep_cloud_status_disconnected       = 3, //已断开连服务器
     ep_cloud_status_connected          = 4, //已连服务器
 
