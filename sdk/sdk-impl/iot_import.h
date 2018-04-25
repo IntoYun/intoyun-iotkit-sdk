@@ -19,12 +19,13 @@
 #ifndef __IOT_IMPORT_H__
 #define __IOT_IMPORT_H__
 
-#if defined(__cplusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <inttypes.h>
@@ -37,7 +38,7 @@ extern "C" {
 #define IOT_TRUE    (1)     /* indicate boolean value true */
 #define IOT_FALSE   (0)     /* indicate boolean value false */
 
-#if defined(__cplusplus)
+#ifdef __cplusplus
 }
 #endif
 

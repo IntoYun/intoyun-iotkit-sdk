@@ -1,3 +1,6 @@
+#ifndef __SDK_CONFIG_H__
+#define __SDK_CONFIG_H__
+
 /*
  * sdk 配置文件
  */
@@ -24,4 +27,4 @@
 #define CONFIG_TIMER_ENABLE                1   //是否定时器接口功能
 #define CONFIG_LOG_ENABLE                  1   //是否使能日志功能
 
-
+#endif

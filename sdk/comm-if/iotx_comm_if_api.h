@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef __IOTX_COMM_API_H__
-#define __IOTX_COMM_API_H__
+#ifndef __IOTX_COMM_IF_API_H__
+#define __IOTX_COMM_IF_API_H__
 
 #include "utils_timer.h"
 

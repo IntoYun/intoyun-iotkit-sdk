@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef __IOTX_DEVICE_API_H__
-#define __IOTX_DEVICE_API_H__
+#ifndef __IOTX_SYSTEM_API_H__
+#define __IOTX_SYSTEM_API_H__
 
 #ifdef __cplusplus
 extern "C"
@@ -34,9 +34,6 @@ extern "C"
 #define HARDWARE_VERSION_LEN              (32)
 #define SOFTWARE_VERSION_LEN              (32)
 
-#define PRODUCT_KEY_LEN                   (20)
-#define DEVICE_NAME_LEN                   (32)
-
 typedef struct {
     char device_id[DEVICE_ID_LEN + 1];
     char device_secret[DEVICE_SECRET_LEN + 1];
@@ -44,9 +41,6 @@ typedef struct {
     char product_secret[PRODUCT_SECRET_LEN + 1];
     char hardware_version[HARDWARE_VERSION_LEN + 1];
     char software_version[SOFTWARE_VERSION_LEN + 1];
-
-    char product_key[PRODUCT_KEY_LEN + 1];
-    char device_name[DEVICE_NAME_LEN + 1];
 } iotx_device_info_t, *iotx_device_info_pt;
 
 typedef enum {
@@ -81,5 +75,5 @@ void IOT_SYSTEM_NotifyEvent(iotx_system_event_t event, iotx_system_events_param_
 }
 #endif
 
-#endif  /* #ifndef _IOTX_DEVICE_H_ */
+#endif  /* #ifndef __IOTX_SYSTEM_API_H__ */
 
