@@ -759,10 +759,8 @@ void intoyunParseReceiveDatapoints(const uint8_t *payload, uint32_t len)
     bool dpReset = false;
     bool dpGetAllDatapoint = false;
     if (RESULT_DATAPOINT_NEW == IOT_DataPoint_ReadBool(DPID_DEFAULT_BOOL_RESET, &dpReset)) {
-        log_info("1111");
         HAL_SystemReboot();
     } else if (RESULT_DATAPOINT_NEW == IOT_DataPoint_ReadBool(DPID_DEFAULT_BOOL_GETALLDATAPOINT, &dpGetAllDatapoint)) {
-        log_info("2222");
         IOT_DataPoint_SendAll(true);
     }
 }

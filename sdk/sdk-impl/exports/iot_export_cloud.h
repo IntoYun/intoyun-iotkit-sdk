@@ -32,7 +32,7 @@ typedef struct
     int (*disconnect)(void);
 
     //发送自定义数据
-    int (*sendCloudData)(const uint8_t *buffer, uint16_t length);
+    int (*sendCustomData)(const uint8_t *buffer, uint16_t length);
 
     //数据点格式编程API接口
     //定义数据点
