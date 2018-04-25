@@ -92,7 +92,7 @@ const iot_cloud_if_t Cloud =
     IOT_Comm_Connect,
     IOT_Comm_IsConnected,
     IOT_Comm_Disconnect,
-    intoyunTransmitData,
+    IOT_Comm_SendData,
 #if CONFIG_CLOUD_DATAPOINT_ENABLED == 1
     IOT_DataPoint_DefineBool,
     IOT_DataPoint_DefineNumber,
@@ -120,7 +120,7 @@ const iot_cloud_if_t Cloud =
     IOT_DataPoint_SendEnum,
     IOT_DataPoint_SendString,
     IOT_DataPoint_SendBinary,
-    intoyunSendAllDatapointManual,
+    IOT_DataPoint_SendAllDatapointManual,
 #endif
 };
 

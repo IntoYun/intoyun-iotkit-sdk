@@ -19,6 +19,8 @@
 #ifndef __IOTX_DATAPOINT_API_H__
 #define __IOTX_DATAPOINT_API_H__
 
+#include "sdk_config.h"
+
 #if CONFIG_CLOUD_DATAPOINT_ENABLED == 1
 
 #ifdef __cplusplus
@@ -122,12 +124,10 @@ int IOT_DataPoint_SendEnum(const uint16_t dpID, int value);
 int IOT_DataPoint_SendString(const uint16_t dpID, const char *value);
 int IOT_DataPoint_SendBinary(const uint16_t dpID, const uint8_t *value, uint16_t len);
 
-void intoyunParseReceiveDatapoints(const uint8_t *payload, uint32_t len);
-int intoyunTransmitData(const uint8_t *buffer, uint16_t len);
-int intoyunSendSingleDatapoint(const uint16_t dpID);
+void IOT_DataPoint_ParseReceiveDatapoints(const uint8_t *payload, uint32_t len);
 int IOT_DataPoint_SendAll(bool dpForm);
-int intoyunSendAllDatapointManual(void);
-int intoyunSendDatapointAutomatic(void);
+int IOT_DataPoint_SendAllDatapointManual(void);
+int IOT_DataPoint_SendDatapointAutomatic(void);
 
 #ifdef __cplusplus
 }

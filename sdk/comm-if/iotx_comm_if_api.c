@@ -226,9 +226,11 @@ int IOT_Comm_Init(void)
 
     iotx_conn_info.lock_generic = HAL_MutexCreate();
 
+#if CONFIG_CLOUD_DATAPOINT_ENABLED == 1
     // 添加默认数据点
     IOT_DataPoint_DefineBool(DPID_DEFAULT_BOOL_RESET, DP_PERMISSION_UP_DOWN, false);               //reboot
     IOT_DataPoint_DefineBool(DPID_DEFAULT_BOOL_GETALLDATAPOINT, DP_PERMISSION_UP_DOWN, false);     //get all datapoint
+#endif
 
     iotx_conninfo_inited = 1;
     log_info("conn_info created successfully!");
@@ -375,7 +377,7 @@ int IOT_Comm_Yield(void)
     iotx_comm_yield();
 
     if(IOT_Comm_IsConnected()) {
-        intoyunSendDatapointAutomatic();
+        IOT_DataPoint_SendDatapointAutomatic();
         return 0;
     }
 
