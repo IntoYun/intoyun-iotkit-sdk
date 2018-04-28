@@ -5,6 +5,9 @@
  * sdk 配置文件
  */
 
+#define SDK_VERSION                        "1.2.0"
+
+
 #define CONFIG_CLOUD_CHANNEL               1   //选择云端通讯通道  1: MQTT  2: COAP
 #define CONFIG_CLOUD_DATAPOINT_ENABLED     0   //是否使能数据点通讯接口
 
