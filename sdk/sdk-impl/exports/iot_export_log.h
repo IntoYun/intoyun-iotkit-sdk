@@ -27,10 +27,8 @@ extern "C" {
 
 typedef struct
 {
-    void (*openLog)(const char *ident);
-    void (*closeLog)(void);
-    void (*setLogLevel)(IOT_LogLevel level);
-    void (*dumpMemoryStats)(IOT_LogLevel level);
+    void (*setLogLevel)(const char* tag, molmc_log_level_t level);
+    vprintf_like_t (*setLogVprintf)(vprintf_like_t func);
 } iot_log_if_t;
 
 extern const iot_log_if_t Log;

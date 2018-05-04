@@ -156,7 +156,7 @@ int iotx_comm_payload_decrypt(uint8_t *dest, uint16_t destlen, uint8_t *src, uin
         memcpy(dest, ptr, destlen);
 #endif
     } else {
-        log_debug("decrypt error!");
+        MOLMC_LOGD("crypto", "decrypt error!");
         destlen = 0;
     }
     return destlen;

@@ -18,7 +18,7 @@
 
 #include "iot_import.h"
 #include "sdk_config.h"
-#include "lite-log.h"
+#include "iotx_log_api.h"
 #include "lite-utils.h"
 #include "utils_timer.h"
 #include "utils_cJSON.h"
@@ -44,10 +44,10 @@ static int iotx_get_device_info(char *buf, uint16_t buflen)
     cJSON_AddItemToObject(root, "online", cJSON_CreateBool(true));
     json_out = cJSON_Print(root);
     json_len = strlen(json_out);
-    log_debug("info = %s", json_out);
+    MOLMC_LOGD("comm-if", "info = %s", json_out);
 
     if(json_len >= buflen) {
-        log_err("memory len to short");
+        MOLMC_LOGE("comm-if", "memory len to short");
         return -1;
     }
     memset(buf, 0, buflen);
@@ -78,15 +78,15 @@ static int iotx_get_action_reply(char *buf, uint16_t buflen, uint8_t fileType, i
             HAL_Snprintf(temp, sizeof(temp), "{\"type\":\"%d\",\"status\":\"14\"}", fileType);
             break;
         default:
-            log_err("reply type error");
+            MOLMC_LOGE("comm-if", "reply type error");
             return -1;
             break;
     }
-    log_debug("reply = %s", temp);
+    MOLMC_LOGD("comm-if", "reply = %s", temp);
 
     uint16_t templen = strlen(temp);
     if(templen >= buflen) {
-        log_err("memory len to short");
+        MOLMC_LOGE("comm-if", "memory len to short");
         return -1;
     }
     memset(buf, 0, buflen);
@@ -200,7 +200,7 @@ void IOT_Network_SetState(iotx_network_state_t state)
 int IOT_Comm_Init(void)
 {
     if (iotx_conninfo_inited) {
-        //log_debug("conninfo already created, return!");
+        //MOLMC_LOGD("comm-if", "conninfo already created, return!");
         return 0;
     }
 
@@ -233,7 +233,7 @@ int IOT_Comm_Init(void)
 #endif
 
     iotx_conninfo_inited = 1;
-    log_info("conn_info created successfully!");
+    MOLMC_LOGI("comm_if", "conn_info created successfully!");
     return 0;
 }
 
@@ -284,7 +284,7 @@ int IOT_Comm_Disconnect(void)
 
 int IOT_Comm_SendData(const uint8_t *data, uint16_t datalen)
 {
-    log_debug("IOT_Comm_SendData");
+    MOLMC_LOGD("comm-if", "IOT_Comm_SendData");
     if(!IOT_Network_IsConnected()) {
         return -1;
     }
@@ -304,7 +304,7 @@ int IOT_Comm_SendActionReply(uint8_t fileType, iotx_ota_reply_t reply, uint8_t p
 {
     char temp[128] = {0};
 
-    log_debug("IOT_Comm_SendActionReply");
+    MOLMC_LOGD("comm-if", "IOT_Comm_SendActionReply");
     if(!IOT_Network_IsConnected()) {
         return -1;
     }
@@ -338,7 +338,7 @@ static int iotx_conn_handle_reconnect(void)
         return FAIL_RETURN;
     }
 
-    log_info("start reconnect");
+    MOLMC_LOGI("comm-if", "start reconnect");
 
     rc = iotx_comm_connect();
     if (SUCCESS_RETURN == rc) {
@@ -361,7 +361,7 @@ static int iotx_conn_handle_reconnect(void)
     }
     utils_time_countdown_ms(&(pconn_info->reconnect_param.reconnect_next_time), interval_ms);
 
-    log_err("reconnect failed rc = %d", rc);
+    MOLMC_LOGE("comm-if", "reconnect failed rc = %d", rc);
     return rc;
 }
 
@@ -389,9 +389,9 @@ int IOT_Comm_Yield(void)
         if (IOTX_CONN_STATE_DISCONNECTED_RECONNECTING == connState) {
             rc = iotx_conn_handle_reconnect();
             if (SUCCESS_RETURN != rc) {
-                //log_debug("reconnect network fail, rc = %d", rc);
+                //MOLMC_LOGD("comm-if", "reconnect network fail, rc = %d", rc);
             } else {
-                log_info("cloud is reconnected!");
+                MOLMC_LOGI("comm-if", "network is reconnected!");
                 //iotx_mc_reconnect_callback();
                 pconn_info->reconnect_param.reconnect_time_interval_ms = IOTX_MC_RECONNECT_INTERVAL_MIN_MS;
             }
@@ -401,7 +401,7 @@ int IOT_Comm_Yield(void)
 
         /* If network suddenly interrupted, stop pinging packet, try to reconnect network immediately */
         if (IOTX_CONN_STATE_DISCONNECTED == connState) {
-            log_err("cloud is disconnected!");
+            MOLMC_LOGE("comm-if", "network is disconnected!");
             //iotx_mc_disconnect_callback(pClient);
 
             pconn_info->reconnect_param.reconnect_time_interval_ms = IOTX_CONN_RECONNECT_INTERVAL_MIN_MS;

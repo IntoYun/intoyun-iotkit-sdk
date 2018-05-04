@@ -16,7 +16,6 @@
  *
  */
 
-
 #ifndef _IOTX_COMMON_SHA1_H_
 #define _IOTX_COMMON_SHA1_H_
 

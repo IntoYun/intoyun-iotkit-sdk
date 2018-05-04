@@ -16,8 +16,6 @@
  *
  */
 
-
-
 #ifndef _IOTX_COMMON_HMAC_H_
 #define _IOTX_COMMON_HMAC_H_
 

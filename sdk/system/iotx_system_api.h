@@ -24,8 +24,8 @@ extern "C"
 {
 #endif
 
-#include "iot_import.h"
-#include "iot_import_errno.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 #define DEVICE_ID_LEN                     (32)
 #define DEVICE_SECRET_LEN                 (32)

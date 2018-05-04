@@ -17,8 +17,6 @@
  */
 
 #include "iot_import.h"
-#include "lite-log.h"
-#include "lite-utils_internal.h"
 #include "utils_list.h"
 
 /*
@@ -27,7 +25,7 @@
 list_t *list_new(void)
 {
     list_t *self;
-    self = LITE_malloc(sizeof(list_t));
+    self = HAL_Malloc(sizeof(list_t));
     if (!self) {
         return NULL;
     }
@@ -53,11 +51,11 @@ void list_destroy(list_t *self)
         if (self->free) {
             self->free(curr->val);
         }
-        LITE_free(curr);
+        HAL_Free(curr);
         curr = next;
     }
 
-    LITE_free(self);
+    HAL_Free(self);
 }
 
 /*
@@ -227,7 +225,7 @@ void list_remove(list_t *self, list_node_t *node)
         self->free(node->val);
     }
 
-    LITE_free(node);
+    HAL_Free(node);
     --self->len;
 }
 
@@ -248,7 +246,7 @@ list_iterator_t *list_iterator_new(list_t *list, list_direction_t direction)
 list_iterator_t *list_iterator_new_from_node(list_node_t *node, list_direction_t direction)
 {
     list_iterator_t *self;
-    self = LITE_malloc(sizeof(list_iterator_t));
+    self = HAL_Malloc(sizeof(list_iterator_t));
     if (!self) {
         return NULL;
     }
@@ -275,7 +273,7 @@ list_node_t *list_iterator_next(list_iterator_t *self)
  */
 void list_iterator_destroy(list_iterator_t *self)
 {
-    LITE_free(self);
+    HAL_Free(self);
     self = NULL;
 }
 
@@ -285,7 +283,7 @@ void list_iterator_destroy(list_iterator_t *self)
 list_node_t *list_node_new(void *val)
 {
     list_node_t *self;
-    self = LITE_malloc(sizeof(list_node_t));
+    self = HAL_Malloc(sizeof(list_node_t));
     if (!self) {
         return NULL;
     }

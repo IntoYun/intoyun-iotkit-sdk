@@ -158,10 +158,8 @@ const iot_ota_if_t OTAUpdate =
 
 const iot_log_if_t Log =
 {
-    IOT_OpenLog,
-    IOT_CloseLog,
-    IOT_SetLogLevel,
-    IOT_DumpMemoryStats,
+    molmc_log_level_set,
+    molmc_log_set_vprintf
 };
 
 #if CONFIG_SYSTEM_KEY_ENABLE == 1

@@ -17,12 +17,11 @@
  */
 
 
-
-
 #ifndef _IOTX_COMMON_TIMER_H_
 #define _IOTX_COMMON_TIMER_H_
 
-#include "iot_import.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 typedef struct {
     uint32_t time;
@@ -44,3 +43,4 @@ void utils_time_countdown_ms(iotx_time_t *timer, uint32_t millisecond);
 uint32_t utils_time_get_ms(void);
 
 #endif /* _IOTX_COMMON_TIMER_H_ */
+

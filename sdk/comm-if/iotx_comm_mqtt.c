@@ -41,7 +41,7 @@ static int gen_mqt_topic(char *buf, uint16_t buf_len, const char *name)
     LITE_ASSERT(ret < buf_len);
 
     if (ret < 0) {
-        log_err("HAL_Snprintf failed");
+        MOLMC_LOGE("comm-if", "HAL_Snprintf failed");
         return -1;
     }
 
@@ -52,7 +52,7 @@ static void cloud_data_receive_callback(void *pcontext, void *pclient, iotx_mqtt
 {
     iotx_mqtt_topic_info_pt ptopic_info = (iotx_mqtt_topic_info_pt) msg->msg;
 
-    log_debug("cloud_data_receive_callback");
+    MOLMC_LOGD("comm-if", "cloud_data_receive_callback");
 #if CONFIG_CLOUD_DATAPOINT_ENABLED == 1
     IOT_DataPoint_ParseReceiveDatapoints((uint8_t *)ptopic_info->payload, ptopic_info->payload_len);
 #endif
@@ -61,7 +61,7 @@ static void cloud_data_receive_callback(void *pcontext, void *pclient, iotx_mqtt
 
 static void cloud_action_callback(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
 {
-    log_debug("cloud_action_callback");
+    MOLMC_LOGD("comm-if", "cloud_action_callback");
     iotx_mqtt_topic_info_pt ptopic_info = (iotx_mqtt_topic_info_pt) msg->msg;
     IOT_SYSTEM_NotifyEvent(event_cloud_comm, ep_cloud_comm_ota, (uint8_t *)ptopic_info->payload, ptopic_info->payload_len);
 }
@@ -82,17 +82,17 @@ static int iotx_mqtt_up_process(char *topic, iotx_mqtt_topic_info_pt topic_msg)
     uint8_t *out_buf = NULL;
     uint16_t out_buf_len = topic_msg->payload_len + 6;
 
-    log_debug("iotx_mqtt_up_process\r\n");
+    MOLMC_LOGD("comm-if", "iotx_mqtt_up_process\r\n");
 
     out_buf = (uint8_t *)HAL_Malloc(out_buf_len);
     if(NULL == out_buf) {
-        log_err("malloc failed!");
+        MOLMC_LOGE("comm-if", "malloc failed!");
         return -1;
     }
 
     out_buf_len = iotx_comm_payload_encrypt(out_buf, out_buf_len, (uint8_t *)topic_msg->payload, topic_msg->payload_len);
     if (out_buf_len <= 0) {
-        log_err("payload encrypt error!");
+        MOLMC_LOGE("comm-if", "payload encrypt error!");
         ret = -1;
         goto exit;
     }
@@ -100,6 +100,8 @@ static int iotx_mqtt_up_process(char *topic, iotx_mqtt_topic_info_pt topic_msg)
     memset((void *)topic_msg->payload, 0, topic_msg->payload_len);
     memcpy((void *)topic_msg->payload, out_buf, out_buf_len);
     topic_msg->payload_len = out_buf_len;
+
+    //MOLMC_LOG_BUFFER_HEX("comm-if", topic_msg->payload, topic_msg->payload_len);
 
     ret = 0;
 exit:
@@ -113,17 +115,17 @@ static int iotx_mqtt_down_process(iotx_mqtt_topic_info_pt topic_msg)
     uint8_t *out_buf = NULL;
     uint16_t out_buf_len = topic_msg->payload_len;
 
-    log_debug("iotx_mqtt_down_process\r\n");
+    MOLMC_LOGD("comm-if", "iotx_mqtt_down_process\r\n");
 
     out_buf = (uint8_t *)HAL_Malloc(out_buf_len);
     if(NULL == out_buf) {
-        log_err("malloc failed!");
+        MOLMC_LOGE("comm-if", "malloc failed!");
         return -1;
     }
 
     out_buf_len = iotx_comm_payload_decrypt(out_buf, out_buf_len, (uint8_t *)topic_msg->payload, topic_msg->payload_len);
     if (out_buf_len <= 0) {
-        log_err("payload encrypt error!");
+        MOLMC_LOGE("comm-if", "payload encrypt error!");
         ret = -1;
         goto exit;
     }
@@ -131,6 +133,8 @@ static int iotx_mqtt_down_process(iotx_mqtt_topic_info_pt topic_msg)
     memset((void *)topic_msg->payload, 0, topic_msg->payload_len);
     memcpy((void *)topic_msg->payload, out_buf, out_buf_len);
     topic_msg->payload_len = out_buf_len;
+
+    //MOLMC_LOG_BUFFER_HEX("comm-if", topic_msg->payload, topic_msg->payload_len);
 
     ret = 0;
 exit:
@@ -140,7 +144,7 @@ exit:
 
 static int iotx_comm_connect(void)
 {
-    log_info("iotx_comm_connect");
+    MOLMC_LOGI("comm-if", "iotx_comm_connect");
 
     int rc = 0;
     char *msg_writebuf = NULL, *msg_readbuf = NULL;
@@ -153,12 +157,12 @@ static int iotx_comm_connect(void)
     iotx_comm_disconnect();
 
     if (NULL == (msg_writebuf = (char *)HAL_Malloc(MQTT_MSGLEN))) {
-        log_info("not enough memory");
+        MOLMC_LOGI("comm-if", "not enough memory");
         goto do_exit;
     }
 
     if (NULL == (msg_readbuf = (char *)HAL_Malloc(MQTT_MSGLEN))) {
-        log_info("not enough memory");
+        MOLMC_LOGI("comm-if", "not enough memory");
         goto do_exit;
     }
 
@@ -190,42 +194,42 @@ static int iotx_comm_connect(void)
     /* Construct a MQTT client with specify parameter */
     pclient = IOT_MQTT_Construct(&mqtt_params);
     if (NULL == pclient) {
-        log_info("MQTT construct failed");
+        MOLMC_LOGI("comm-if", "MQTT construct failed");
         goto do_exit;
     }
 
     //订阅数据点接收
     if (gen_mqt_topic(pconn_info->topic_name_tx, TOPIC_NAME_LEN, SUB_TX_TOPIC) < 0) {
-        log_err("generate topic name of info failed");
+        MOLMC_LOGE("comm-if", "generate topic name of info failed");
         goto do_exit;
     }
 
     rc = IOT_MQTT_Subscribe(pclient, pconn_info->topic_name_tx, IOTX_MQTT_QOS0, cloud_data_receive_callback, NULL);
     if (rc < 0) {
-        log_info("IOT_MQTT_Subscribe() failed, rc = %d", rc);
+        MOLMC_LOGI("comm-if", "IOT_MQTT_Subscribe() failed, rc = %d", rc);
         goto do_exit;
     }
 
     //订阅命令控制
     if (gen_mqt_topic(pconn_info->topic_name_action, TOPIC_NAME_LEN, SUB_ACTION_TOPIC) < 0) {
-        log_err("generate topic name of info failed");
+        MOLMC_LOGE("comm-if", "generate topic name of info failed");
         goto do_exit;
     }
 
     rc = IOT_MQTT_Subscribe(pclient, pconn_info->topic_name_action, IOTX_MQTT_QOS0, cloud_action_callback, NULL);
     if (rc < 0) {
-        log_info("IOT_MQTT_Subscribe() failed, rc = %d", rc);
+        MOLMC_LOGI("comm-if", "IOT_MQTT_Subscribe() failed, rc = %d", rc);
         goto do_exit;
     }
 
     //发送info
     if (iotx_get_device_info(msg_buf, sizeof(msg_buf)) < 0) {
-        log_err("generate info failed");
+        MOLMC_LOGE("comm-if", "generate info failed");
         goto do_exit;
     }
 
     if (gen_mqt_topic(topic_name, TOPIC_NAME_LEN, PUB_INFO_TOPIC) < 0) {
-        log_err("generate topic name of info failed");
+        MOLMC_LOGE("comm-if", "generate topic name of info failed");
         goto do_exit;
     }
 
@@ -238,7 +242,7 @@ static int iotx_comm_connect(void)
 
     rc = IOT_MQTT_Publish(pclient, topic_name, &topic_msg) < 0 ? -1 : 0;
     if (rc < 0) {
-        log_info("publish info failed, rc = %d", rc);
+        MOLMC_LOGI("comm-if", "publish info failed, rc = %d", rc);
         goto do_exit;
     }
 
@@ -300,7 +304,7 @@ static int iotx_comm_send(iotx_conn_send_t sendType, const uint8_t *data, uint16
 
     void *pclient = iotx_conn_info_get()->pclient;
     if(NULL == pclient) {
-        log_err("not connect");
+        MOLMC_LOGE("comm-if", "not connect");
         return -1;
     }
 
@@ -311,14 +315,14 @@ static int iotx_comm_send(iotx_conn_send_t sendType, const uint8_t *data, uint16
     }
 
     if (gen_mqt_topic(topic_name, TOPIC_NAME_LEN, topic_tail) < 0) {
-        log_err("generate topic name of info failed");
+        MOLMC_LOGE("comm-if", "generate topic name of info failed");
         return -1;
     }
 
     uint16_t payloadlen = datalen + 6; //预留填充 package(2个字节) + mic(4个字节)
     uint8_t *payload = (uint8_t *)HAL_Malloc(payloadlen);
     if(NULL == payload) {
-        log_err("mem malloc failed");
+        MOLMC_LOGE("comm-if", "mem malloc failed");
         return -1;
     }
     memset(payload, 0, payloadlen);

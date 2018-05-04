@@ -16,12 +16,10 @@
  *
  */
 
-
 #include <string.h>
 #include <stddef.h>
 #include "iot_import.h"
 #include "sdk_config.h"
-#include "lite-log.h"
 #include "utils_httpc.h"
 
 #define HTTPCLIENT_MIN(x,y) (((x)<(y))?(x):(y))
@@ -76,7 +74,7 @@ static void httpclient_base64enc(char *out, const char *in)
 int httpclient_conn(httpclient_t *client)
 {
     if (0 != client->net.connect(&client->net)) {
-        log_err("establish connection failed");
+        MOLMC_LOGE("httpc", "establish connection failed");
         return ERROR_HTTP_CONN;
     }
 
@@ -95,13 +93,13 @@ int httpclient_parse_url(const char *url, char *scheme, uint32_t max_scheme_len,
     char *fragment_ptr;
 
     if (host_ptr == NULL) {
-        log_err("Could not find host");
+        MOLMC_LOGE("httpc", "Could not find host");
         return ERROR_HTTP_PARSE; /* URL is invalid */
     }
 
     if (max_scheme_len < host_ptr - scheme_ptr + 1) {
         /* including NULL-terminating char */
-        log_err("Scheme str is too small (%u >= %u)", max_scheme_len, (uint32_t)(host_ptr - scheme_ptr + 1));
+        MOLMC_LOGE("httpc", "Scheme str is too small (%u >= %u)", max_scheme_len, (uint32_t)(host_ptr - scheme_ptr + 1));
         return ERROR_HTTP_PARSE;
     }
     memcpy(scheme, scheme_ptr, host_ptr - scheme_ptr);
@@ -113,7 +111,7 @@ int httpclient_parse_url(const char *url, char *scheme, uint32_t max_scheme_len,
 
     path_ptr = strchr(host_ptr, '/');
     if (NULL == path_ptr) {
-        log_err("invalid path");
+        MOLMC_LOGE("httpc", "invalid path");
         return -1;
     }
 
@@ -123,7 +121,7 @@ int httpclient_parse_url(const char *url, char *scheme, uint32_t max_scheme_len,
 
     if (maxhost_len < host_len + 1) {
         /* including NULL-terminating char */
-        log_err("Host str is too long (host_len(%d) >= max_len(%d))", host_len + 1, maxhost_len);
+        MOLMC_LOGE("httpc", "Host str is too long (host_len(%d) >= max_len(%d))", host_len + 1, maxhost_len);
         return ERROR_HTTP_PARSE;
     }
     memcpy(host, host_ptr, host_len);
@@ -138,7 +136,7 @@ int httpclient_parse_url(const char *url, char *scheme, uint32_t max_scheme_len,
 
     if (max_path_len < path_len + 1) {
         /* including NULL-terminating char */
-        log_err("Path str is too small (%d >= %d)", max_path_len, path_len + 1);
+        MOLMC_LOGE("httpc", "Path str is too small (%d >= %d)", max_path_len, path_len + 1);
         return ERROR_HTTP_PARSE;
     }
     memcpy(path, path_ptr, path_len);
@@ -154,7 +152,7 @@ int httpclient_parse_host(const char *url, char *host, uint32_t maxhost_len)
     char *path_ptr;
 
     if (host_ptr == NULL) {
-        log_err("Could not find host");
+        MOLMC_LOGE("httpc", "Could not find host");
         return ERROR_HTTP_PARSE; /* URL is invalid */
     }
     host_ptr += 3;
@@ -166,7 +164,7 @@ int httpclient_parse_host(const char *url, char *host, uint32_t maxhost_len)
 
     if (maxhost_len < host_len + 1) {
         /* including NULL-terminating char */
-        log_err("Host str is too small (%d >= %d)", maxhost_len, host_len + 1);
+        MOLMC_LOGE("httpc", "Host str is too small (%d >= %d)", maxhost_len, host_len + 1);
         return ERROR_HTTP_PARSE;
     }
     memcpy(host, host_ptr, host_len);
@@ -237,11 +235,11 @@ int httpclient_send_auth(httpclient_t *client, char *send_buf, int *send_idx)
 
     httpclient_get_info(client, send_buf, send_idx, "Authorization: Basic ", 0);
     HAL_Snprintf(base64buff, sizeof(base64buff), "%s:%s", client->auth_user, client->auth_password);
-    log_debug("bAuth: %s", base64buff) ;
+    MOLMC_LOGD("httpc", "bAuth: %s", base64buff) ;
     httpclient_base64enc(b_auth, base64buff);
     b_auth[strlen(b_auth) + 1] = '\0';
     b_auth[strlen(b_auth)] = '\n';
-    log_debug("b_auth:%s", b_auth) ;
+    MOLMC_LOGD("httpc", "b_auth:%s", b_auth) ;
     httpclient_get_info(client, send_buf, send_idx, b_auth, 0);
     return SUCCESS_RETURN;
 }
@@ -264,7 +262,7 @@ int httpclient_send_header(httpclient_t *client, const char *url, int method, ht
     /* int res = httpclient_parse_url(url, scheme, sizeof(scheme), host, sizeof(host), &(client->remote_port), path, sizeof(path)); */
     int res = httpclient_parse_url(url, scheme, sizeof(scheme), host, sizeof(host), &port, path, sizeof(path));
     if (res != SUCCESS_RETURN) {
-        log_err("httpclient_parse_url returned %d", res);
+        MOLMC_LOGE("httpc", "httpclient_parse_url returned %d", res);
         return res;
     }
 
@@ -284,7 +282,7 @@ int httpclient_send_header(httpclient_t *client, const char *url, int method, ht
     HAL_Snprintf(buf, sizeof(buf), "%s %s HTTP/1.1\r\nHost: %s\r\n", meth, path, host); /* Write request */
     ret = httpclient_get_info(client, send_buf, &len, buf, strlen(buf));
     if (ret) {
-        log_err("Could not write request");
+        MOLMC_LOGE("httpc", "Could not write request");
         return ERROR_HTTP_CONN;
     }
 
@@ -311,17 +309,17 @@ int httpclient_send_header(httpclient_t *client, const char *url, int method, ht
     /* Close headers */
     httpclient_get_info(client, send_buf, &len, "\r\n", 0);
 
-    log_multi_line(LOG_DEBUG_LEVEL, "REQUEST", "%s", send_buf, ">");
+    //log_multi_line(LOG_DEBUG_LEVEL, "REQUEST", "%s", send_buf, ">");
 
     /* ret = httpclient_tcp_send_all(client->net.handle, send_buf, len); */
     ret = client->net.write(&client->net, send_buf, len, 5000);
     if (ret > 0) {
-        log_debug("Written %d bytes", ret);
+        MOLMC_LOGD("httpc", "Written %d bytes", ret);
     } else if (ret == 0) {
-        log_err("ret == 0,Connection was closed by server");
+        MOLMC_LOGE("httpc", "ret == 0,Connection was closed by server");
         return ERROR_HTTP_CLOSED; /* Connection was closed by server */
     } else {
-        log_err("Connection error (send returned %d)", ret);
+        MOLMC_LOGE("httpc", "Connection error (send returned %d)", ret);
         return ERROR_HTTP_CONN;
     }
 
@@ -333,17 +331,17 @@ int httpclient_send_userdata(httpclient_t *client, httpclient_data_t *client_dat
     int ret = 0;
 
     if (client_data->post_buf && client_data->post_buf_len) {
-        log_debug("client_data->post_buf: %s", client_data->post_buf);
+        MOLMC_LOGD("httpc", "client_data->post_buf: %s", client_data->post_buf);
         {
             /* ret = httpclient_tcp_send_all(client->handle, (char *)client_data->post_buf, client_data->post_buf_len); */
             ret = client->net.write(&client->net, (char *)client_data->post_buf, client_data->post_buf_len, 5000);
             if (ret > 0) {
-                log_debug("Written %d bytes", ret);
+                MOLMC_LOGD("httpc", "Written %d bytes", ret);
             } else if (ret == 0) {
-                log_err("ret == 0,Connection was closed by server");
+                MOLMC_LOGE("httpc", "ret == 0,Connection was closed by server");
                 return ERROR_HTTP_CLOSED; /* Connection was closed by server */
             } else {
-                log_err("Connection error (send returned %d)", ret);
+                MOLMC_LOGE("httpc", "Connection error (send returned %d)", ret);
                 return ERROR_HTTP_CONN;
             }
         }
@@ -364,7 +362,7 @@ int httpclient_recv(httpclient_t *client, char *buf, int min_len, int max_len, i
     *p_read_len = 0;
 
     ret = client->net.read(&client->net, buf, max_len, iotx_time_left(&timer));
-    /* log_debug("Recv: | %s", buf); */
+    /* MOLMC_LOGD("httpc", "Recv: | %s", buf); */
 
     if (ret > 0) {
         *p_read_len = ret;
@@ -372,13 +370,13 @@ int httpclient_recv(httpclient_t *client, char *buf, int min_len, int max_len, i
         /* timeout */
         return FAIL_RETURN;
     } else if (-1 == ret) {
-        log_info("Connection closed.");
+        MOLMC_LOGI("httpc", "Connection closed.");
         return ERROR_HTTP_CONN;
     } else {
-        log_err("Connection error (recv returned %d)", ret);
+        MOLMC_LOGE("httpc", "Connection error (recv returned %d)", ret);
         return ERROR_HTTP_CONN;
     }
-    log_info("%u bytes has been read", *p_read_len);
+    MOLMC_LOGI("httpc", "%u bytes has been read", *p_read_len);
     return 0;
 
     /*    while (readLen <= min_len) { */
@@ -397,15 +395,15 @@ int httpclient_recv(httpclient_t *client, char *buf, int min_len, int max_len, i
     /*            //timeout */
     /*            break; */
     /*        } else if (-1 == ret) { */
-    /*            log_info("Connection closed. %u bytes be read", readLen); */
+    /*            MOLMC_LOGI("httpc", "Connection closed. %u bytes be read", readLen); */
     /*            break; */
     /*        } else { */
-    /*            log_err("Connection error (recv returned %d)", ret); */
+    /*            MOLMC_LOGE("httpc", "Connection error (recv returned %d)", ret); */
     /*            return ERROR_HTTP_CONN; */
     /*        } */
     /*    } */
     /* */
-    /*    log_info("%u bytes be read", readLen); */
+    /*    MOLMC_LOGI("httpc", "%u bytes be read", readLen); */
     /*    *p_read_len = readLen; */
     /*    return 0; */
 }
@@ -422,7 +420,7 @@ int httpclient_retrieve_content(httpclient_t *client, char *data, int len,
     utils_time_countdown_ms(&timer, timeout_ms);
 
     /* Receive data */
-    log_debug("Current data: %s", data);
+    MOLMC_LOGD("httpc", "Current data: %s", data);
 
     client_data->is_more = IOT_TRUE;
 
@@ -443,16 +441,16 @@ int httpclient_retrieve_content(httpclient_t *client, char *data, int len,
             ret = httpclient_recv(client, data, 1, max_len, &len, iotx_time_left(&timer));
 
             /* Receive data */
-            log_debug("data len: %d %d", len, count);
+            MOLMC_LOGD("httpc", "data len: %d %d", len, count);
 
             if (ret == ERROR_HTTP_CONN) {
-                log_debug("ret == ERROR_HTTP_CONN");
+                MOLMC_LOGD("httpc", "ret == ERROR_HTTP_CONN");
                 return ret;
             }
 
             if (len == 0) {
                 /* read no more data */
-                log_debug("no more len == 0");
+                MOLMC_LOGD("httpc", "no more len == 0");
                 client_data->is_more = IOT_FALSE;
                 return SUCCESS_RETURN;
             }
@@ -511,11 +509,11 @@ int httpclient_retrieve_content(httpclient_t *client, char *data, int len,
             if (readLen == 0) {
                 /* Last chunk */
                 client_data->is_more = IOT_FALSE;
-                log_debug("no more (last chunk)");
+                MOLMC_LOGD("httpc", "no more (last chunk)");
             }
 
             if (n != 1) {
-                log_err("Could not read chunk length");
+                MOLMC_LOGE("httpc", "Could not read chunk length");
                 return ERROR_HTTP_UNRESOLVED_DNS;
             }
 
@@ -525,7 +523,7 @@ int httpclient_retrieve_content(httpclient_t *client, char *data, int len,
             readLen = client_data->retrieve_len;
         }
 
-        log_debug("Total-Payload: %d Bytes; Read: %d Bytes", readLen, len);
+        MOLMC_LOGD("httpc", "Total-Payload: %d Bytes; Read: %d Bytes", readLen, len);
 
         do {
             templen = HTTPCLIENT_MIN(len, readLen);
@@ -542,7 +540,7 @@ int httpclient_retrieve_content(httpclient_t *client, char *data, int len,
             }
 
             if (len > readLen) {
-                log_debug("memmove %d %d %d\n", readLen, len, client_data->retrieve_len);
+                MOLMC_LOGD("httpc", "memmove %d %d %d\n", readLen, len, client_data->retrieve_len);
                 memmove(data, &data[readLen], len - readLen); /* chunk case, read between two chunks */
                 len -= readLen;
                 readLen = 0;
@@ -574,13 +572,13 @@ int httpclient_retrieve_content(httpclient_t *client, char *data, int len,
                 len += new_trf_len;
             }
             if ((data[0] != '\r') || (data[1] != '\n')) {
-                log_err("Format error, %s", data); /* after memmove, the beginning of next chunk */
+                MOLMC_LOGE("httpc", "Format error, %s", data); /* after memmove, the beginning of next chunk */
                 return ERROR_HTTP_UNRESOLVED_DNS;
             }
             memmove(data, &data[2], len - 2); /* remove the \r\n */
             len -= 2;
         } else {
-            log_debug("no more (content-length)");
+            MOLMC_LOGD("httpc", "no more (content-length)");
             client_data->is_more = IOT_FALSE;
             break;
         }
@@ -604,7 +602,7 @@ int httpclient_response_parse(httpclient_t *client, char *data, int len, uint32_
 
     char *crlf_ptr = strstr(data, "\r\n");
     if (crlf_ptr == NULL) {
-        log_err("\r\n not found");
+        MOLMC_LOGE("httpc", "\r\n not found");
         return ERROR_HTTP_UNRESOLVED_DNS;
     }
 
@@ -615,7 +613,7 @@ int httpclient_response_parse(httpclient_t *client, char *data, int len, uint32_
 #if 0
     if (sscanf(data, "HTTP/%*d.%*d %d %*[^\r\n]", &(client->response_code)) != 1) {
         /* Cannot match string, error */
-        log_err("Not a correct HTTP answer : %s\n", data);
+        MOLMC_LOGE("httpc", "Not a correct HTTP answer : %s\n", data);
         return ERROR_HTTP_UNRESOLVED_DNS;
     }
 #endif
@@ -624,10 +622,10 @@ int httpclient_response_parse(httpclient_t *client, char *data, int len, uint32_
 
     if ((client->response_code < 200) || (client->response_code >= 400)) {
         /* Did not return a 2xx code; TODO fetch headers/(&data?) anyway and implement a mean of writing/reading headers */
-        log_warning("Response code %d", client->response_code);
+        MOLMC_LOGW("httpc", "Response code %d", client->response_code);
     }
 
-    log_debug("Reading headers: %s", data);
+    MOLMC_LOGD("httpc", "Reading headers: %s", data);
 
     memmove(data, &data[crlf_pos + 2], len - (crlf_pos + 2) + 1); /* Be sure to move NULL-terminating char as well */
     len -= (crlf_pos + 2);
@@ -644,7 +642,7 @@ int httpclient_response_parse(httpclient_t *client, char *data, int len, uint32_
         len += new_trf_len;
         data[len] = '\0';
         if (NULL == (ptr_body_end = strstr(data, "\r\n\r\n"))) {
-            log_err("parse error: no end of the request body");
+            MOLMC_LOGE("httpc", "parse error: no end of the request body");
             return -1;
         }
     }
@@ -663,7 +661,7 @@ int httpclient_response_parse(httpclient_t *client, char *data, int len, uint32_
             client_data->retrieve_len = 0;
         }
     } else {
-        log_err("Could not parse header");
+        MOLMC_LOGE("httpc", "Could not parse header");
         return ERROR_HTTP;
     }
 
@@ -693,13 +691,13 @@ int httpclient_send_request(httpclient_t *client, const char *url, HTTPCLIENT_RE
     int ret = ERROR_HTTP_CONN;
 
     if (0 == client->net.handle) {
-        log_debug("not connection have been established");
+        MOLMC_LOGD("httpc", "not connection have been established");
         return ret;
     }
 
     ret = httpclient_send_header(client, url, method, client_data);
     if (ret != 0) {
-        log_err("httpclient_send_header is error,ret = %d", ret);
+        MOLMC_LOGE("httpc", "httpclient_send_header is error,ret = %d", ret);
         return ret;
     }
 
@@ -720,7 +718,7 @@ int httpclient_recv_response(httpclient_t *client, uint32_t timeout_ms, httpclie
     utils_time_countdown_ms(&timer, timeout_ms);
 
     if (0 == client->net.handle) {
-        log_debug("not connection have been established");
+        MOLMC_LOGD("httpc", "not connection have been established");
         return ret;
     }
 
@@ -737,7 +735,7 @@ int httpclient_recv_response(httpclient_t *client, uint32_t timeout_ms, httpclie
         buf[reclen] = '\0';
 
         if (reclen) {
-            log_multi_line(LOG_DEBUG_LEVEL, "RESPONSE", "%s", buf, "<");
+            //log_multi_line(LOG_DEBUG_LEVEL, "RESPONSE", "%s", buf, "<");
             ret = httpclient_response_parse(client, buf, reclen, iotx_time_left(&timer), client_data);
         }
     }
@@ -751,7 +749,7 @@ void httpclient_close(httpclient_t *client)
         client->net.disconnect(&client->net);
     }
     client->net.handle = 0;
-    log_debug("client disconnected");
+    MOLMC_LOGD("httpc", "client disconnected");
 }
 
 int httpclient_common(httpclient_t *client, const char *url, int port, const char *ca_crt,
@@ -762,7 +760,7 @@ int httpclient_common(httpclient_t *client, const char *url, int port, const cha
     char host[HTTPCLIENT_MAX_HOST_LEN] = { 0 };
 
     httpclient_parse_host(url, host, sizeof(host));
-    log_debug("host: '%s', port: %d", host, port);
+    MOLMC_LOGD("httpc", "host: '%s', port: %d", host, port);
 
     if (0 == client->net.handle) {
         /* Establish connection if no. */
@@ -773,7 +771,7 @@ int httpclient_common(httpclient_t *client, const char *url, int port, const cha
 
         ret = httpclient_connect(client);
         if (0 != ret) {
-            log_err("httpclient_connect is error, ret = %d", ret);
+            MOLMC_LOGE("httpc", "httpclient_connect is error, ret = %d", ret);
             httpclient_close(client);
             return ret;
         }
@@ -781,7 +779,7 @@ int httpclient_common(httpclient_t *client, const char *url, int port, const cha
 
     ret = httpclient_send_request(client, url, method, client_data);
     if (0 != ret) {
-        log_err("httpclient_send_request is error, ret = %d", ret);
+        MOLMC_LOGE("httpc", "httpclient_send_request is error, ret = %d", ret);
         httpclient_close(client);
         return ret;
     }
@@ -793,7 +791,7 @@ int httpclient_common(httpclient_t *client, const char *url, int port, const cha
         && (0 != client_data->response_buf_len)) {
         ret = httpclient_recv_response(client, iotx_time_left(&timer), client_data);
         if (ret < 0) {
-            log_err("httpclient_recv_response is error,ret = %d", ret);
+            MOLMC_LOGE("httpc", "httpclient_recv_response is error,ret = %d", ret);
             httpclient_close(client);
             return ret;
         }
@@ -818,7 +816,7 @@ int iotx_post(httpclient_t *client,
     char host[HTTPCLIENT_MAX_HOST_LEN] = { 0 };
 
     httpclient_parse_host(url, host, sizeof(host));
-    log_debug("host: '%s', port: %d", host, port);
+    MOLMC_LOGD("httpc", "host: '%s', port: %d", host, port);
 
     if (0 == client->net.handle) {
         /* Establish connection if no. */
@@ -829,7 +827,7 @@ int iotx_post(httpclient_t *client,
 
         ret = httpclient_connect(client);
         if (0 != ret) {
-            log_err("httpclient_connect is error, ret = %d", ret);
+            MOLMC_LOGE("httpc", "httpclient_connect is error, ret = %d", ret);
             httpclient_close(client);
             return ret;
         }
@@ -837,7 +835,7 @@ int iotx_post(httpclient_t *client,
 
     ret = httpclient_send_request(client, url, HTTPCLIENT_POST, client_data);
     if (0 != ret) {
-        log_err("httpclient_send_request is error, ret = %d", ret);
+        MOLMC_LOGE("httpc", "httpclient_send_request is error, ret = %d", ret);
         httpclient_close(client);
         return ret;
     }

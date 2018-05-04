@@ -22,7 +22,6 @@
 #include "iot_import.h"
 #include "iot_export.h"
 
-#include "lite-log.h"
 #include "utils_base64.h"
 
 static int8_t g_encodingTable[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
@@ -62,14 +61,14 @@ iotx_err_t utils_base64encode(const uint8_t *data, uint32_t inputLength, uint32_
     uint32_t j = 0;
 
     if (NULL == encodedData) {
-        log_err("pointer of encodedData is NULL!");
+        MOLMC_LOGE("base64", "pointer of encodedData is NULL!");
         return FAIL_RETURN;
     }
 
     *outputLength = 4 * ((inputLength + 2) / 3);
 
     if (outputLenMax < *outputLength) {
-        log_err("the length of output memory is not enough!");
+        MOLMC_LOGE("base64", "the length of output memory is not enough!");
         return FAIL_RETURN;
     }
 
@@ -102,7 +101,7 @@ iotx_err_t utils_base64decode(const uint8_t *data, uint32_t inputLength, uint32_
     build_decoding_table();
 
     if (inputLength % 4 != 0) {
-        log_err("the input length is error!");
+        MOLMC_LOGE("base64", "the input length is error!");
         return FAIL_RETURN;
     }
 
@@ -118,7 +117,7 @@ iotx_err_t utils_base64decode(const uint8_t *data, uint32_t inputLength, uint32_
     }
 
     if (outputLenMax < *outputLength) {
-        log_err("the length of output memory is not enough!");
+        MOLMC_LOGE("base64", "the length of output memory is not enough!");
         return FAIL_RETURN;
     }
 

@@ -20,7 +20,7 @@
 #include "utils_cJSON.h"
 #include "utils_httpc.h"
 #include "utils_epoch_time.h"
-#include "lite-log.h"
+#include "iotx_log_api.h"
 #include "iotx_comm_if_api.h"
 
 
@@ -49,7 +49,7 @@ uint64_t utils_get_epoch_time(char copy[], int len)
 
     ret = httpclient_common(&httpclient, url, 80, NULL, HTTPCLIENT_GET, 1000, &httpclient_data);
     if (0 != ret) {
-        log_err("request epoch time from remote server failed.");
+        MOLMC_LOGE("epoch", "request epoch time from remote server failed.");
         goto do_exit;
     } else {
         tsJson = cJSON_Parse(http_content);

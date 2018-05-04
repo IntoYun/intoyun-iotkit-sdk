@@ -19,7 +19,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "iot_import.h"
-#include "lite-log.h"
 #include "utils_sha1.h"
 
 /* Implementation that should never be optimized out by the compiler */

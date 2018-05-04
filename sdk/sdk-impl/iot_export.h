@@ -25,8 +25,7 @@ extern "C" {
 
 #include "iot_import.h"
 
-#include "utils_cJSON.h"
-#include "sdk-impl_internal.h"
+#include "sdk_impl_internal.h"
 
 #include "exports/iot_export_network.h"
 #include "exports/iot_export_cloud.h"

@@ -18,7 +18,7 @@
 
 #include <string.h>
 
-#include "lite-log.h"
+#include "iotx_log_api.h"
 #include "iotx_system_api.h"
 #include "iotx_comm_if_api.h"
 
@@ -35,14 +35,14 @@ iotx_device_info_pt iotx_device_info_get(void)
 void IOT_SYSTEM_DeviceInit(void)
 {
     if (iotx_devinfo_inited) {
-        //log_debug("devinfo already created, return!");
+        MOLMC_LOGD("system", "device_info already created, return!");
         return;
     }
 
     memset(&iotx_device_info, 0x0, sizeof(iotx_device_info_t));
     iotx_devinfo_inited = 1;
 
-    log_info("device_info created successfully!");
+    MOLMC_LOGI("system", "device_info created successfully!");
 }
 
 void IOT_SYSTEM_SetDeviceInfo(char *deviceId, char *deviceSecret, char *productID, char *productSecret, char *hardwareVersion, char *softwareVersion)
@@ -50,7 +50,7 @@ void IOT_SYSTEM_SetDeviceInfo(char *deviceId, char *deviceSecret, char *productI
     iotx_device_info_pt pdev_info = iotx_device_info_get();
     iotx_conn_info_pt pconn_info = iotx_conn_info_get();
 
-    log_debug("set device info!");
+    MOLMC_LOGD("system", "start to set device info!");
 
     strncpy(pdev_info->device_id, deviceId, DEVICE_ID_LEN);
     strncpy(pdev_info->device_secret, deviceSecret, DEVICE_SECRET_LEN);
@@ -61,7 +61,7 @@ void IOT_SYSTEM_SetDeviceInfo(char *deviceId, char *deviceSecret, char *productI
 
     strncpy(pconn_info->password, pdev_info->device_secret, DEVICE_SECRET_LEN);
 
-    log_debug("device_info set successfully!");
+    MOLMC_LOGD("system", "device_info set successfully!");
 }
 
 void IOT_SYSTEM_Init(void)
