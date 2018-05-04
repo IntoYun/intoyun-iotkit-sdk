@@ -200,12 +200,10 @@ void IOT_Network_SetState(iotx_network_state_t state)
 int IOT_Comm_Init(void)
 {
     if (iotx_conninfo_inited) {
-        //MOLMC_LOGD("comm-if", "conninfo already created, return!");
         return 0;
     }
 
     iotx_device_info_pt pdev_info = iotx_device_info_get();
-
     memset(&iotx_conn_info, 0x0, sizeof(iotx_conn_info_t));
 
 #if CONFIG_CLOUD_CHANNEL == 1     //MQTT
@@ -221,9 +219,7 @@ int IOT_Comm_Init(void)
     iotx_conn_info.username = pdev_info->device_id;
     iotx_conn_info.conn_state = IOTX_CONN_STATE_INVALID;
     iotx_conn_info.network_state = IOTX_NETWORK_STATE_DISCONNECTED;
-
     iotx_time_init(&iotx_conn_info.reconnect_param.reconnect_next_time);
-
     iotx_conn_info.lock_generic = HAL_MutexCreate();
 
 #if CONFIG_CLOUD_DATAPOINT_ENABLED == 1
@@ -233,7 +229,6 @@ int IOT_Comm_Init(void)
 #endif
 
     iotx_conninfo_inited = 1;
-    MOLMC_LOGI("comm_if", "conn_info created successfully!");
     return 0;
 }
 
@@ -247,6 +242,7 @@ int IOT_Comm_Connect(void)
         return 0;
     }
 
+    MOLMC_LOGI("comm-if", "iotx_comm_connect");
     int rst = iotx_comm_connect();
     if(rst < 0) {
         iotx_set_conn_state(IOTX_CONN_STATE_DISCONNECTED);

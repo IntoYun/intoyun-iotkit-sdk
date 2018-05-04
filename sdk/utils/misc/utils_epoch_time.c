@@ -39,7 +39,7 @@ uint64_t utils_get_epoch_time(char copy[], int len)
     memset(http_content, 0, sizeof(HTTP_RESP_CONTENT_LEN));
 
     httpclient.header = "Accept: text/xml,text/html\r\n";
-    httpclient.header = "Connection: close\r\n";
+    //httpclient.header = "Connection: close\r\n";
 
     httpclient_data.response_buf = http_content;
     httpclient_data.response_buf_len = HTTP_RESP_CONTENT_LEN;

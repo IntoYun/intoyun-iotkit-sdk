@@ -18,17 +18,13 @@
 
 #include "iot_import.h"
 #include "iotx_log_api.h"
-#include "lite-list.h"
+#include "utils_queue.h"
 
 //print number of bytes per line for molmc_log_buffer_char and molmc_log_buffer_hex
 #define BYTES_PER_LINE 16
 
 // Number of tags to be cached. Must be 2**n - 1, n >= 2.
 #define TAG_CACHE_SIZE 31
-
-// Maximum time to wait for the mutex in a logging statement.
-#define MAX_MUTEX_WAIT_MS 10
-#define MAX_MUTEX_WAIT_TICKS ((MAX_MUTEX_WAIT_MS + portTICK_PERIOD_MS - 1) / portTICK_PERIOD_MS)
 
 // Uncomment this to enable consistency checks and cache statistics in this file.
 // #define LOG_BUILTIN_CHECKS
@@ -40,19 +36,17 @@ typedef struct {
 } cached_tag_entry_t;
 
 typedef struct uncached_tag_entry_{
-    list_head_t entries;
-    //SLIST_ENTRY(uncached_tag_entry_) entries;
+    SLIST_ENTRY(uncached_tag_entry_) entries;
     uint8_t level;  // molmc_log_level_t as uint8_t
     char tag[0];    // beginning of a zero-terminated string
 } uncached_tag_entry_t;
 
 static molmc_log_level_t s_log_default_level = MOLMC_LOG_VERBOSE;
-static LIST_HEAD(s_log_tags);
-//static SLIST_HEAD(log_tags_head , uncached_tag_entry_) s_log_tags = SLIST_HEAD_INITIALIZER(s_log_tags);
+static SLIST_HEAD(log_tags_head , uncached_tag_entry_) s_log_tags = SLIST_HEAD_INITIALIZER(s_log_tags);
 static cached_tag_entry_t s_log_cache[TAG_CACHE_SIZE];
 static uint32_t s_log_cache_max_generation = 0;
 static uint32_t s_log_cache_entry_count = 0;
-static vprintf_like_t s_log_print_func = &vprintf;
+static vprintf_like_t s_log_print_func = &HAL_Vprintf;
 static void *s_log_mutex = NULL;
 
 #ifdef LOG_BUILTIN_CHECKS
@@ -83,7 +77,6 @@ vprintf_like_t molmc_log_set_vprintf(vprintf_like_t func)
 
 void molmc_log_level_set(const char* tag, molmc_log_level_t level)
 {
-#if 0
     if (!s_log_mutex) {
         s_log_mutex = HAL_MutexCreate();
     }
@@ -132,12 +125,10 @@ void molmc_log_level_set(const char* tag, molmc_log_level_t level)
         }
     }
     HAL_MutexUnlock(s_log_mutex);
-#endif
 }
 
 void clear_log_level_list()
 {
-/*
     while( !SLIST_EMPTY(&s_log_tags)) {
         SLIST_REMOVE_HEAD(&s_log_tags, entries );
     }
@@ -146,19 +137,14 @@ void clear_log_level_list()
 #ifdef LOG_BUILTIN_CHECKS
     s_log_cache_misses = 0;
 #endif
-*/
 }
 
 void molmc_log_write(molmc_log_level_t level, const char* tag, const char* format, ...)
 {
-#if 0
     if (!s_log_mutex) {
         s_log_mutex = HAL_MutexCreate();
     }
     HAL_MutexLock(s_log_mutex);
-    //if (xSemaphoreTake(s_log_mutex, MAX_MUTEX_WAIT_TICKS) == pdFALSE) {
-    //    return;
-    //}
     molmc_log_level_t level_for_tag;
     // Look for the tag in cache first, then in the linked list of all tags
     if (!get_cached_log_level(tag, &level_for_tag)) {
@@ -174,17 +160,14 @@ void molmc_log_write(molmc_log_level_t level, const char* tag, const char* forma
     if (!should_output(level, level_for_tag)) {
         return;
     }
-
     va_list list;
     va_start(list, format);
     (*s_log_print_func)(format, list);
     va_end(list);
-#endif
 }
 
 static inline bool get_cached_log_level(const char* tag, molmc_log_level_t* level)
 {
-#if 0
     // Look for `tag` in cache
     int i;
     for (i = 0; i < s_log_cache_entry_count; ++i) {
@@ -211,7 +194,6 @@ static inline bool get_cached_log_level(const char* tag, molmc_log_level_t* leve
         // Restore heap ordering
         heap_bubble_down(i);
     }
-#endif
     return true;
 }
 
@@ -244,7 +226,6 @@ static inline void add_to_cache(const char* tag, molmc_log_level_t level)
 
 static inline bool get_uncached_log_level(const char* tag, molmc_log_level_t* level)
 {
-/*
     // Walk the linked list of all tags and see if given tag is present in the list.
     // This is slow because tags are compared as strings.
     uncached_tag_entry_t *it;
@@ -255,8 +236,6 @@ static inline bool get_uncached_log_level(const char* tag, molmc_log_level_t* le
         }
     }
     return false;
-*/
-    return true;
 }
 
 static inline bool should_output(molmc_log_level_t level_for_message, molmc_log_level_t level_for_tag)

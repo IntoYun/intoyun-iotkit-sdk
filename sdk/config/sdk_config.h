@@ -15,7 +15,7 @@
  * limitations under the License.
  *
  */
- 
+
 #ifndef __SDK_CONFIG_H__
 #define __SDK_CONFIG_H__
 
@@ -46,7 +46,8 @@
 #define CONFIG_SYSTEM_TIMER_ENABLE         0   //是否定时器接口功能
 #define CONFIG_LOG_ENABLE                  1   //是否使能日志功能
 
-#define CONFIG_LOG_DEFAULT_LEVEL           1
 #define CONFIG_LOG_DEFAULT_LEVEL_ERROR     1
+#define CONFIG_LOG_DEFAULT_LEVEL           MOLMC_LOG_VERBOSE
 
 #endif
+

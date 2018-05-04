@@ -199,7 +199,6 @@ void molmc_log_write(molmc_log_level_t level, const char* tag, const char* forma
         }\
     } while(0)
 
-
 #if CONFIG_LOG_COLORS
 #define LOG_COLOR_BLACK   "30"
 #define LOG_COLOR_RED     "31"
@@ -225,17 +224,17 @@ void molmc_log_write(molmc_log_level_t level, const char* tag, const char* forma
 #define LOG_RESET_COLOR
 #endif //CONFIG_LOG_COLORS
 
-#define LOG_FORMAT(letter, format)  LOG_COLOR_ ## letter #letter " (%d) %s: " format LOG_RESET_COLOR "\n"
+#define LOG_FORMAT(letter, format)  LOG_COLOR_ ## letter #letter " [%010u]:[%s]:[%s],[%s](%d):" format LOG_RESET_COLOR "\n"
 
-#define MOLMC_LOGE( tag, format, ... )  if (LOG_LOCAL_LEVEL >= MOLMC_LOG_ERROR)   { molmc_log_write(MOLMC_LOG_ERROR,   tag, LOG_FORMAT(E, format), molmc_log_timestamp(), tag, ##__VA_ARGS__); }
-#define MOLMC_LOGW( tag, format, ... )  if (LOG_LOCAL_LEVEL >= MOLMC_LOG_WARN)    { molmc_log_write(MOLMC_LOG_WARN,    tag, LOG_FORMAT(W, format), molmc_log_timestamp(), tag, ##__VA_ARGS__); }
-#define MOLMC_LOGI( tag, format, ... )  if (LOG_LOCAL_LEVEL >= MOLMC_LOG_INFO)    { molmc_log_write(MOLMC_LOG_INFO,    tag, LOG_FORMAT(I, format), molmc_log_timestamp(), tag, ##__VA_ARGS__); }
-#define MOLMC_LOGD( tag, format, ... )  if (LOG_LOCAL_LEVEL >= MOLMC_LOG_DEBUG)   { molmc_log_write(MOLMC_LOG_DEBUG,   tag, LOG_FORMAT(D, format), molmc_log_timestamp(), tag, ##__VA_ARGS__); }
-#define MOLMC_LOGV( tag, format, ... )  if (LOG_LOCAL_LEVEL >= MOLMC_LOG_VERBOSE) { molmc_log_write(MOLMC_LOG_VERBOSE, tag, LOG_FORMAT(V, format), molmc_log_timestamp(), tag, ##__VA_ARGS__); }
+#define MOLMC_LOGE( tag, format, ... ) MOLMC_LOG_LEVEL_LOCAL(MOLMC_LOG_ERROR,   tag, format, ##__VA_ARGS__)
+#define MOLMC_LOGW( tag, format, ... ) MOLMC_LOG_LEVEL_LOCAL(MOLMC_LOG_WARN,    tag, format, ##__VA_ARGS__)
+#define MOLMC_LOGI( tag, format, ... ) MOLMC_LOG_LEVEL_LOCAL(MOLMC_LOG_INFO,    tag, format, ##__VA_ARGS__)
+#define MOLMC_LOGD( tag, format, ... ) MOLMC_LOG_LEVEL_LOCAL(MOLMC_LOG_DEBUG,   tag, format, ##__VA_ARGS__)
+#define MOLMC_LOGV( tag, format, ... ) MOLMC_LOG_LEVEL_LOCAL(MOLMC_LOG_VERBOSE, tag, format, ##__VA_ARGS__)
 
 /** runtime macro to output logs at a specified level.
  *
- * @param tag tag of the log, which can be used to change the log level by ``molmc_log_level_set`` at runtime.
+ * @param tag tag of the log, which can be used to change the log level by ``esp_log_level_set`` at runtime.
  *
  * @param level level of the output log.
  *
@@ -245,19 +244,21 @@ void molmc_log_write(molmc_log_level_t level, const char* tag, const char* forma
  *
  * @see ``printf``
  */
-#define MOLMC_LOG_LEVEL(level, tag, format, ...) do {\
-                if (level==MOLMC_LOG_ERROR )          { molmc_log_write(MOLMC_LOG_ERROR,      tag, LOG_FORMAT(E, format), molmc_log_timestamp(), tag, ##__VA_ARGS__); }\
-                else if (level==MOLMC_LOG_WARN )      { molmc_log_write(MOLMC_LOG_WARN,       tag, LOG_FORMAT(W, format), molmc_log_timestamp(), tag, ##__VA_ARGS__); }\
-                else if (level==MOLMC_LOG_DEBUG )     { molmc_log_write(MOLMC_LOG_DEBUG,      tag, LOG_FORMAT(D, format), molmc_log_timestamp(), tag, ##__VA_ARGS__); }\
-                else if (level==MOLMC_LOG_VERBOSE )   { molmc_log_write(MOLMC_LOG_VERBOSE,    tag, LOG_FORMAT(V, format), molmc_log_timestamp(), tag, ##__VA_ARGS__); }\
-                else                                { molmc_log_write(MOLMC_LOG_INFO,       tag, LOG_FORMAT(I, format), molmc_log_timestamp(), tag, ##__VA_ARGS__); }}while(0)
+#define MOLMC_LOG_LEVEL(level, tag, format, ...) do {                     \
+        if (level==MOLMC_LOG_ERROR )          { molmc_log_write(MOLMC_LOG_ERROR,      tag, LOG_FORMAT(E, format), molmc_log_timestamp(), tag, __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__); } \
+        else if (level==MOLMC_LOG_WARN )      { molmc_log_write(MOLMC_LOG_WARN,       tag, LOG_FORMAT(W, format), molmc_log_timestamp(), tag, __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__); } \
+        else if (level==MOLMC_LOG_DEBUG )     { molmc_log_write(MOLMC_LOG_DEBUG,      tag, LOG_FORMAT(D, format), molmc_log_timestamp(), tag, __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__); } \
+        else if (level==MOLMC_LOG_VERBOSE )   { molmc_log_write(MOLMC_LOG_VERBOSE,    tag, LOG_FORMAT(V, format), molmc_log_timestamp(), tag, __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__); } \
+        else                                  { molmc_log_write(MOLMC_LOG_INFO,       tag, LOG_FORMAT(I, format), molmc_log_timestamp(), tag, __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__); } \
+    } while(0)
 
 /** runtime macro to output logs at a specified level. Also check the level with ``LOG_LOCAL_LEVEL``.
  *
- * @see ``printf``, ``MOLMC_LOG_LEVEL``
+ * @see ``printf``, ``ESP_LOG_LEVEL``
  */
-#define MOLMC_LOG_LEVEL_LOCAL(level, tag, format, ...) do {\
-                if ( LOG_LOCAL_LEVEL >= level ) MOLMC_LOG_LEVEL(level, tag, format, ##__VA_ARGS__); } while(0);
+#define MOLMC_LOG_LEVEL_LOCAL(level, tag, format, ...) do {               \
+        if ( LOG_LOCAL_LEVEL >= level ) MOLMC_LOG_LEVEL(level, tag, format, ##__VA_ARGS__); \
+    } while(0)
 
 #ifdef __cplusplus
 }

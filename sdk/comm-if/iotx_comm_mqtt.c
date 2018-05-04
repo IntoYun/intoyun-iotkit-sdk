@@ -144,8 +144,6 @@ exit:
 
 static int iotx_comm_connect(void)
 {
-    MOLMC_LOGI("comm-if", "iotx_comm_connect");
-
     int rc = 0;
     char *msg_writebuf = NULL, *msg_readbuf = NULL;
     void *pclient = NULL;

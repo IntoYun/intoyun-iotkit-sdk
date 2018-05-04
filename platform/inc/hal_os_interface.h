@@ -164,6 +164,17 @@ uint32_t HAL_Random(uint32_t region);
 /**
  * @brief Writes formatted data to stream.
  *
+ * @param [in] fmt: @n Format that contains the text to be written.
+ * @param [in] ap:  @n the variable argument list.
+ * @return bytes of character successfully format into stream.
+ * @see None.
+ * @note None.
+ */
+void HAL_Vprintf(const char *format, va_list ap);
+
+/**
+ * @brief Writes formatted data to stream.
+ *
  * @param [in] fmt: @n String that contains the text to be written, it can optionally contain embedded format specifiers
      that specifies how subsequent arguments are converted for output.
  * @param [in] ...: @n the variable argument list, for formatted and inserted in the resulting string replacing their respective specifiers.
@@ -172,6 +183,19 @@ uint32_t HAL_Random(uint32_t region);
  * @note None.
  */
 void HAL_Printf(const char *fmt, ...);
+
+/**
+ * @brief Writes formatted data to string.
+ *
+ * @param [out] str: @n String that holds written text.
+ * @param [in] len: @n Maximum length of character will be written.
+ * @param [in] fmt: @n Format that contains the text to be written.
+ * @param [in] ap:  @n the variable argument list.
+ * @return bytes of character successfully format into string.
+ * @see None.
+ * @note None.
+ */
+int HAL_Vsnprintf(char *str, const int len, const char *fmt, va_list ap);
 
 /**
  * @brief Writes formatted data to string.
@@ -186,19 +210,6 @@ void HAL_Printf(const char *fmt, ...);
  * @note None.
  */
 int HAL_Snprintf(char *str, const int len, const char *fmt, ...);
-
-/**
- * @brief Writes formatted data to string.
- *
- * @param [out] str: @n String that holds written text.
- * @param [in] len: @n Maximum length of character will be written.
- * @param [in] fmt: @n Format that contains the text to be written.
- * @param [in] ap:  @n the variable argument list.
- * @return bytes of character successfully format into string.
- * @see None.
- * @note None.
- */
-int HAL_Vsnprintf(char *str, const int len, const char *fmt, va_list ap);
 
 #ifdef __cplusplus
 }
