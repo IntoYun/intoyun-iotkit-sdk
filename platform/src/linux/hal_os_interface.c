@@ -26,6 +26,9 @@
 #include <sys/time.h>
 
 #include "hal_import.h"
+#include "iot_import.h"
+
+const static char *TAG = "hal:os";
 
 void *HAL_MutexCreate(void)
 {
@@ -36,7 +39,7 @@ void *HAL_MutexCreate(void)
     }
 
     if (0 != (err_num = pthread_mutex_init(mutex, NULL))) {
-        perror("create mutex failed");
+        MOLMC_LOGE(TAG, "create mutex failed");
         HAL_Free(mutex);
         return NULL;
     }
@@ -48,7 +51,7 @@ void HAL_MutexDestroy(void *mutex)
 {
     int err_num;
     if (0 != (err_num = pthread_mutex_destroy((pthread_mutex_t *)mutex))) {
-        perror("destroy mutex failed");
+        MOLMC_LOGE(TAG, "destroy mutex failed");
     }
 
     HAL_Free(mutex);
@@ -58,7 +61,7 @@ void HAL_MutexLock(void *mutex)
 {
     int err_num;
     if (0 != (err_num = pthread_mutex_lock((pthread_mutex_t *)mutex))) {
-        perror("lock mutex failed");
+        MOLMC_LOGE(TAG, "lock mutex failed");
     }
 }
 
@@ -66,7 +69,7 @@ void HAL_MutexUnlock(void *mutex)
 {
     int err_num;
     if (0 != (err_num = pthread_mutex_unlock((pthread_mutex_t *)mutex))) {
-        perror("unlock mutex failed");
+        MOLMC_LOGE(TAG, "unlock mutex failed");
     }
 }
 
@@ -108,31 +111,8 @@ uint32_t HAL_Random(uint32_t region)
     return (region > 0) ? (random() % region) : 0;
 }
 
-void HAL_Printf(const char *fmt, ...)
+void HAL_Print(const char * output)
 {
-    va_list args;
-
-    va_start(args, fmt);
-    vprintf(fmt, args);
-    va_end(args);
-
-    fflush(stdout);
-}
-
-int HAL_Snprintf(char *str, const int len, const char *fmt, ...)
-{
-    va_list args;
-    int     rc;
-
-    va_start(args, fmt);
-    rc = vsnprintf(str, len, fmt, args);
-    va_end(args);
-
-    return rc;
-}
-
-int HAL_Vsnprintf(char *str, const int len, const char *format, va_list ap)
-{
-    return vsnprintf(str, len, format, ap);
+    printf("%s", output);
 }
 

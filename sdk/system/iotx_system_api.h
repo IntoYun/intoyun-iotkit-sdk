@@ -16,16 +16,16 @@
  *
  */
 
-#ifndef __IOTX_DEVICE_API_H__
-#define __IOTX_DEVICE_API_H__
+#ifndef __IOTX_SYSTEM_API_H__
+#define __IOTX_SYSTEM_API_H__
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#include "iot_import.h"
-#include "iot_import_errno.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 #define DEVICE_ID_LEN                     (32)
 #define DEVICE_SECRET_LEN                 (32)
@@ -34,9 +34,6 @@ extern "C"
 #define HARDWARE_VERSION_LEN              (32)
 #define SOFTWARE_VERSION_LEN              (32)
 
-#define PRODUCT_KEY_LEN                   (20)
-#define DEVICE_NAME_LEN                   (32)
-
 typedef struct {
     char device_id[DEVICE_ID_LEN + 1];
     char device_secret[DEVICE_SECRET_LEN + 1];
@@ -44,20 +41,19 @@ typedef struct {
     char product_secret[PRODUCT_SECRET_LEN + 1];
     char hardware_version[HARDWARE_VERSION_LEN + 1];
     char software_version[SOFTWARE_VERSION_LEN + 1];
-
-    char product_key[PRODUCT_KEY_LEN + 1];
-    char device_name[DEVICE_NAME_LEN + 1];
 } iotx_device_info_t, *iotx_device_info_pt;
 
 typedef enum {
     event_network_status = 1,
-    event_cloud_comm     = 2,
+    event_cloud_status   = 2,
+    event_cloud_comm     = 3,
 } iotx_system_event_t;
 
 typedef enum {
     //network status
     ep_network_status_disconnected     = 1, //已断开路由器
     ep_network_status_connected        = 2, //已连接路由器
+    //Cloud connection status
     ep_cloud_status_disconnected       = 3, //已断开连服务器
     ep_cloud_status_connected          = 4, //已连服务器
 
@@ -81,5 +77,5 @@ void IOT_SYSTEM_NotifyEvent(iotx_system_event_t event, iotx_system_events_param_
 }
 #endif
 
-#endif  /* #ifndef _IOTX_DEVICE_H_ */
+#endif  /* #ifndef __IOTX_SYSTEM_API_H__ */
 

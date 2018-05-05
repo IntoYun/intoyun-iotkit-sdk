@@ -16,67 +16,18 @@
  *
  */
 
-#include "hal_import.h"
+#include "iot_export.h"
 
-void *HAL_MutexCreate(void)
-{
-    return NULL;
-}
+extern int userMain(void);
 
-void HAL_MutexDestroy(void *mutex)
+int main(void)
 {
-}
+    //Log.setLogLevel("*", MOLMC_LOG_VERBOSE);
+    Log.setLogLevel("user:project", MOLMC_LOG_VERBOSE);
+    Log.setLogLevel("user:ota", MOLMC_LOG_VERBOSE);
 
-void HAL_MutexLock(void *mutex)
-{
-}
-
-void HAL_MutexUnlock(void *mutex)
-{
-}
-
-void *HAL_Malloc(uint32_t size)
-{
-    return NULL;
-}
-
-void HAL_Free(void *ptr)
-{
-}
-
-void HAL_SystemReboot(void)
-{
-}
-
-uint32_t HAL_UptimeMs(void)
-{
-    return 0;
-}
-
-void HAL_SleepMs(uint32_t ms)
-{
-}
-
-void HAL_Srandom(uint32_t seed)
-{
-}
-
-uint32_t HAL_Random(uint32_t region)
-{
-    return 0;
-}
-
-void HAL_Printf(const char *fmt, ...)
-{
-}
-
-int HAL_Snprintf(char *str, const int len, const char *fmt, ...)
-{
-    return 0;
-}
-
-int HAL_Vsnprintf(char *str, const int len, const char *format, va_list ap)
-{
+    Network.setState(IOTX_NETWORK_STATE_CONNECTED);
+    userMain();
     return 0;
 }
 

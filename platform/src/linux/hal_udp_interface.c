@@ -29,6 +29,9 @@
 #include <pthread.h>
 
 #include "hal_import.h"
+#include "iot_import.h"
+
+const static char *TAG = "hal:udp";
 
 void *HAL_UDP_create(char *host, unsigned short port)
 {
@@ -52,7 +55,7 @@ void *HAL_UDP_create(char *host, unsigned short port)
 
     rc = getaddrinfo(host, port_ptr, &hints, &res);
     if (0 != rc) {
-        perror("getaddrinfo error");
+        MOLMC_LOGE(TAG, "getaddrinfo error");
         return (void *)(-1);
     }
 
@@ -64,7 +67,7 @@ void *HAL_UDP_create(char *host, unsigned short port)
 
             socket_id = socket(ainfo->ai_family, ainfo->ai_socktype, ainfo->ai_protocol);
             if (socket_id < 0) {
-                perror("create socket error");
+                MOLMC_LOGE(TAG, "create socket error");
                 continue;
             }
             if (0 == connect(socket_id, ainfo->ai_addr, ainfo->ai_addrlen)) {
@@ -87,9 +90,7 @@ void HAL_UDP_close(void *p_socket)
     close(socket_id);
 }
 
-int HAL_UDP_write(void *p_socket,
-                  const unsigned char *p_data,
-                  unsigned int datalen)
+int HAL_UDP_write(void *p_socket, const unsigned char *p_data, unsigned int datalen)
 {
     int             rc = -1;
     long            socket_id = -1;
@@ -103,9 +104,7 @@ int HAL_UDP_write(void *p_socket,
     return rc;
 }
 
-int HAL_UDP_read(void *p_socket,
-                 unsigned char *p_data,
-                 unsigned int datalen)
+int HAL_UDP_read(void *p_socket, unsigned char *p_data, unsigned int datalen)
 {
     long            socket_id = -1;
     int             count = -1;
@@ -120,10 +119,7 @@ int HAL_UDP_read(void *p_socket,
     return count;
 }
 
-int HAL_UDP_readTimeout(void *p_socket,
-                        unsigned char *p_data,
-                        unsigned int datalen,
-                        unsigned int timeout)
+int HAL_UDP_readTimeout(void *p_socket, unsigned char *p_data, unsigned int datalen, unsigned int timeout)
 {
     int                 ret;
     struct timeval      tv;

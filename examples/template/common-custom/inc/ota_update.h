@@ -16,12 +16,10 @@
  *
  */
 
+#ifndef OTA_UPDATE_H_
+#define OTA_UPDATE_H_
 
-#ifndef __COMMON_UTILS_H__
-#define __COMMON_UTILS_H__
+bool otaUpdate(uint8_t *data, uint32_t len);
 
-#include "lite-utils_internal.h"
-
-
-#endif  /* __COMMON_UTILS_H__ */
+#endif
 

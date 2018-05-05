@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef _UTILS_EPOCH_TIME_H_
-#define _UTILS_EPOCH_TIME_H_
+#ifndef __UTILS_EPOCH_TIME_H__
+#define __UTILS_EPOCH_TIME_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,5 +37,5 @@ uint64_t utils_get_epoch_time(char copy[], int len);
 extern "C" {
 #endif
 
-#endif /* _ALIOT_EPOCH_TIME_H_ */
+#endif /* __UTILS_EPOCH_TIME_H__ */
 

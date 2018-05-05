@@ -16,7 +16,6 @@
  *
  */
 
-
 #include <stdio.h>
 #include <string.h>
 #include <windows.h>
@@ -24,10 +23,9 @@
 #pragma comment (lib, "ws2_32.lib") //加载 ws2_32.dll
 
 #include "hal_import.h"
+#include "iot_import.h"
 
-#define PLATFORM_WINSOCK_LOG    printf
-#define PLATFORM_WINSOCK_PERROR printf
-
+const static char *TAG = "hal:tcp";
 
 static uint64_t time_left(uint64_t t_end, uint64_t t_now)
 {
@@ -42,7 +40,6 @@ static uint64_t time_left(uint64_t t_end, uint64_t t_now)
     return t_left;
 }
 
-
 uintptr_t HAL_TCP_Establish(const char *host, uint16_t port)
 {
     uintptr_t sockfd;
@@ -52,7 +49,7 @@ uintptr_t HAL_TCP_Establish(const char *host, uint16_t port)
 
     WSAStartup(0x202, &wsaData);
 
-    PLATFORM_WINSOCK_LOG("host : %s, port : %u\n", host, port);
+    MOLMC_LOGI(TAG, "host : %s, port : %u\n", host, port);
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);   /* socket */
     hp = gethostbyname(host);
@@ -61,7 +58,7 @@ uintptr_t HAL_TCP_Establish(const char *host, uint16_t port)
     memset(&addrServer, 0, sizeof(addrServer));
     memcpy(&(addrServer.sin_addr), hp->h_addr, hp->h_length);
 
-    PLATFORM_WINSOCK_LOG("ip = %u.%u.%u.%u",
+    MOLMC_LOGI(TAG, "ip = %u.%u.%u.%u",
                          addrServer.sin_addr.S_un.S_un_b.s_b1,
                          addrServer.sin_addr.S_un.S_un_b.s_b2,
                          addrServer.sin_addr.S_un.S_un_b.s_b3,
@@ -70,13 +67,13 @@ uintptr_t HAL_TCP_Establish(const char *host, uint16_t port)
     addrServer.sin_family = AF_INET;
     addrServer.sin_port = htons((unsigned short)1883);
 
-    PLATFORM_WINSOCK_LOG("connecting to %s", host);
+    MOLMC_LOGI(TAG, "connecting to %s", host);
     if (connect(sockfd, (struct sockaddr *)&addrServer, sizeof(struct sockaddr))) {
-        PLATFORM_WINSOCK_LOG("connect failed!\n");
+        MOLMC_LOGI(TAG, "connect failed!\n");
         return -1;
     }
 
-    PLATFORM_WINSOCK_LOG("connect successfully!\n");
+    MOLMC_LOGI(TAG, "connect successfully!\n");
 
     return sockfd;
 }
@@ -89,19 +86,19 @@ int32_t HAL_TCP_Destroy(uintptr_t fd)
     /* Shutdown both send and receive operations. */
     rc = shutdown((int) fd, 2);
     if (0 != rc) {
-        PLATFORM_WINSOCK_PERROR("shutdown error");
+        MOLMC_LOGE(TAG, "shutdown error");
         return -1;
     }
 
     rc = closesocket((int) fd);
     if (0 != rc) {
-        PLATFORM_WINSOCK_PERROR("closesocket error");
+        MOLMC_LOGE(TAG, "closesocket error");
         return -1;
     }
 
     rc = WSACleanup();
     if (0 != rc) {
-        PLATFORM_WINSOCK_PERROR("WSACleanup error");
+        MOLMC_LOGE(TAG, "WSACleanup error");
         return -1;
     }
 
@@ -143,13 +140,13 @@ int32_t HAL_TCP_Write(uintptr_t fd, const char *buf, uint32_t len, uint32_t time
                     continue;
                 }
             } else if (0 == ret) {
-                PLATFORM_WINSOCK_LOG("select-write timeout");
+                MOLMC_LOGI(TAG, "select-write timeout");
                 break;
             } else {
                 if (WSAEINTR == WSAGetLastError()) {
                     continue;
                 }
-                PLATFORM_WINSOCK_PERROR("select-write fail");
+                MOLMC_LOGE(TAG, "select-write fail");
                 err_code = -1;
                 break;
             }
@@ -160,10 +157,10 @@ int32_t HAL_TCP_Write(uintptr_t fd, const char *buf, uint32_t len, uint32_t time
             if (ret > 0) {
                 len_sent += ret;
             } else if (0 == ret) {
-                PLATFORM_WINSOCK_LOG("No any data be sent");
+                MOLMC_LOGI(TAG, "No any data be sent");
             } else {
                 /* socket error occur */
-                PLATFORM_WINSOCK_PERROR("send fail");
+                MOLMC_LOGE(TAG, "send fail");
                 err_code = -1;
                 break;
             }
@@ -203,14 +200,14 @@ int32_t HAL_TCP_Read(uintptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms)
             if (ret > 0) {
                 len_recv += ret;
             } else if (0 == ret) {
-                PLATFORM_WINSOCK_LOG("connection is closed");
+                MOLMC_LOGI(TAG, "connection is closed");
                 err_code = -1;
                 break;
             } else {
                 if (WSAEINTR == WSAGetLastError()) {
                     continue;
                 }
-                PLATFORM_WINSOCK_PERROR("recv fail");
+                MOLMC_LOGE(TAG, "recv fail");
                 err_code = -2;
                 break;
             }
@@ -220,7 +217,7 @@ int32_t HAL_TCP_Read(uintptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms)
             if (WSAEINTR == WSAGetLastError()) {
                 continue;
             }
-            PLATFORM_WINSOCK_PERROR("select-read fail");
+            MOLMC_LOGE(TAG, "select-read fail");
             err_code = -2;
             break;
         }

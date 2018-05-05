@@ -85,8 +85,9 @@ void app_main(void)
     }
     ESP_ERROR_CHECK( err );
 
-    //IOT_OpenLog("example");
-    //IOT_SetLogLevel(IOT_LOG_DEBUG);
+    //Log.setLogLevel("*", MOLMC_LOG_VERBOSE);
+    Log.setLogLevel("user:project", MOLMC_LOG_VERBOSE);
+    Log.setLogLevel("user:ota", MOLMC_LOG_VERBOSE);
 
     initialise_wifi();
     xTaskCreate(&userMain, "user_main_task", 4096 * 2, NULL, 2, NULL);

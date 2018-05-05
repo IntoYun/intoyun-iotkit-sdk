@@ -17,8 +17,6 @@
  */
 
 #include "iot_import.h"
-#include "lite-log.h"
-#include "lite-utils_internal.h"
 #include "utils_list.h"
 
 /*
@@ -27,8 +25,7 @@
 list_t *list_new(void)
 {
     list_t *self;
-    self = LITE_malloc(sizeof(list_t));
-    if (!self) {
+    if ((self = HAL_Malloc(sizeof(list_t)))==0) {
         return NULL;
     }
     self->head = NULL;
@@ -53,11 +50,11 @@ void list_destroy(list_t *self)
         if (self->free) {
             self->free(curr->val);
         }
-        LITE_free(curr);
+        HAL_Free(curr);
         curr = next;
     }
 
-    LITE_free(self);
+    HAL_Free(self);
 }
 
 /*
@@ -163,8 +160,8 @@ list_node_t *list_find(list_t *self, void *val)
     if (NULL == (it = list_iterator_new(self, LIST_HEAD))) {
         return NULL;
     }
-    node = list_iterator_next(it);
-    while (node) {
+
+    while ((node = list_iterator_next(it))!=0) {
         if (self->match) {
             if (self->match(val, node->val)) {
                 list_iterator_destroy(it);
@@ -176,7 +173,6 @@ list_node_t *list_find(list_t *self, void *val)
                 return node;
             }
         }
-        node = list_iterator_next(it);
     }
 
     list_iterator_destroy(it);
@@ -227,7 +223,7 @@ void list_remove(list_t *self, list_node_t *node)
         self->free(node->val);
     }
 
-    LITE_free(node);
+    HAL_Free(node);
     --self->len;
 }
 
@@ -248,8 +244,7 @@ list_iterator_t *list_iterator_new(list_t *list, list_direction_t direction)
 list_iterator_t *list_iterator_new_from_node(list_node_t *node, list_direction_t direction)
 {
     list_iterator_t *self;
-    self = LITE_malloc(sizeof(list_iterator_t));
-    if (!self) {
+    if (0==(self = HAL_Malloc(sizeof(list_iterator_t)))) {
         return NULL;
     }
     self->next = node;
@@ -275,7 +270,7 @@ list_node_t *list_iterator_next(list_iterator_t *self)
  */
 void list_iterator_destroy(list_iterator_t *self)
 {
-    LITE_free(self);
+    HAL_Free(self);
     self = NULL;
 }
 
@@ -285,8 +280,7 @@ void list_iterator_destroy(list_iterator_t *self)
 list_node_t *list_node_new(void *val)
 {
     list_node_t *self;
-    self = LITE_malloc(sizeof(list_node_t));
-    if (!self) {
+    if (0==(self = HAL_Malloc(sizeof(list_node_t)))) {
         return NULL;
     }
 

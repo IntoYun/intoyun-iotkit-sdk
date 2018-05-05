@@ -19,7 +19,6 @@
 #include <string.h>
 #include "iot_import.h"
 #include "utils_net.h"
-#include "lite-log.h"
 
 /*** TCP connection ***/
 int read_tcp(utils_network_pt pNetwork, char *buffer, uint32_t len, uint32_t timeout_ms)
@@ -46,7 +45,7 @@ static int disconnect_tcp(utils_network_pt pNetwork)
 static int connect_tcp(utils_network_pt pNetwork)
 {
     if (NULL == pNetwork) {
-        log_err("network is null");
+        MOLMC_LOGE("net", "network is null");
         return 1;
     }
 
@@ -63,7 +62,7 @@ static int connect_tcp(utils_network_pt pNetwork)
 static int read_ssl(utils_network_pt pNetwork, char *buffer, uint32_t len, uint32_t timeout_ms)
 {
     if (NULL == pNetwork) {
-        log_err("network is null");
+        MOLMC_LOGE("net", "network is null");
         return -1;
     }
 
@@ -73,7 +72,7 @@ static int read_ssl(utils_network_pt pNetwork, char *buffer, uint32_t len, uint3
 static int write_ssl(utils_network_pt pNetwork, const char *buffer, uint32_t len, uint32_t timeout_ms)
 {
     if (NULL == pNetwork) {
-        log_err("network is null");
+        MOLMC_LOGE("net", "network is null");
         return -1;
     }
 
@@ -83,7 +82,7 @@ static int write_ssl(utils_network_pt pNetwork, const char *buffer, uint32_t len
 static int disconnect_ssl(utils_network_pt pNetwork)
 {
     if (NULL == pNetwork) {
-        log_err("network is null");
+        MOLMC_LOGE("net", "network is null");
         return -1;
     }
 
@@ -96,7 +95,7 @@ static int disconnect_ssl(utils_network_pt pNetwork)
 static int connect_ssl(utils_network_pt pNetwork)
 {
     if (NULL == pNetwork) {
-        log_err("network is null");
+        MOLMC_LOGE("net", "network is null");
         return 1;
     }
 
@@ -179,7 +178,7 @@ int iotx_net_connect(utils_network_pt pNetwork)
 int iotx_net_init(utils_network_pt pNetwork, const char *host, uint16_t port, const char *ca_crt)
 {
     if (!pNetwork || !host) {
-        log_err("parameter error! pNetwork=%p, host = %p", pNetwork, host);
+        MOLMC_LOGE("net", "parameter error! pNetwork=%p, host = %p", pNetwork, host);
         return -1;
     }
     pNetwork->pHostAddress = host;

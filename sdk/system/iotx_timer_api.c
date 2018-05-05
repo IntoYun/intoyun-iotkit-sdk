@@ -16,8 +16,10 @@
  *
  */
 
-#include "iotx_timer_api.h"
 #include "iot_import.h"
+#include "iotx_timer_api.h"
+
+#if CONFIG_SYSTEM_TIMER_ENABLE == 1
 
 static iotx_timer_t *timerListHead = NULL;
 static bool timerListInitFlag = false;
@@ -187,4 +189,6 @@ void IOT_TIMER_Loop(void)
 {
     TimerListLoop();
 }
+
+#endif
 

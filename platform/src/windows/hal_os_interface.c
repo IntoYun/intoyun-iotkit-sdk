@@ -20,9 +20,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <memory.h>
-
-#include "hal_import.h"
-
 #include <process.h>
 #include <windows.h>
 #include <stdio.h>
@@ -30,16 +27,17 @@
 #include <stdarg.h>
 #include <memory.h>
 
+#include "hal_import.h"
+#include "iot_import.h"
 
-#define PLATFORM_WINOS_PERROR printf
-
+const static char *TAG = "hal:os";
 
 void *HAL_MutexCreate(void)
 {
     HANDLE mutex;
 
     if (NULL == (mutex = CreateMutex(NULL, FALSE, NULL))) {
-        PLATFORM_WINOS_PERROR("create mutex error");
+        MOLMC_LOGE(TAG, "create mutex error");
     }
 
     return mutex;
@@ -48,21 +46,21 @@ void *HAL_MutexCreate(void)
 void HAL_MutexDestroy(void *mutex)
 {
     if (0 == CloseHandle(mutex)) {
-        PLATFORM_WINOS_PERROR("destroy mutex error");
+        MOLMC_LOGE(TAG, "destroy mutex error");
     }
 }
 
 void HAL_MutexLock(void *mutex)
 {
     if (WAIT_FAILED == WaitForSingleObject(mutex, INFINITE)) {
-        PLATFORM_WINOS_PERROR("lock mutex error");
+        MOLMC_LOGE(TAG, "lock mutex error");
     }
 }
 
 void HAL_MutexUnlock(void *mutex)
 {
     if (WAIT_FAILED == WaitForSingleObject(mutex, INFINITE)) {
-        PLATFORM_WINOS_PERROR("lock mutex error");
+        MOLMC_LOGE(TAG, "lock mutex error");
     }
 }
 
@@ -103,35 +101,8 @@ uint32_t HAL_Random(uint32_t region)
     return (region > 0) ? (orig_seed % region) : 0;
 }
 
-void HAL_Printf(const char *fmt, ...)
+void HAL_Print(const char * output)
 {
-    va_list args;
-
-    va_start(args, fmt);
-    vprintf(fmt, args);
-    va_end(args);
-
-    fflush(stdout);
-}
-
-int HAL_Snprintf(char *str, const int len, const char *fmt, ...)
-{
-    int ret;
-    va_list args;
-
-    va_start(args, fmt);
-    ret = _vsnprintf(str, len-1, fmt, args);
-    va_end(args);
-
-    return ret;
-}
-
-int HAL_Vsnprintf(char *str, const int len, const char *fmt, va_list ap)
-{
-    int ret;
-
-    ret = _vsnprintf(str, len-1, fmt, ap);
-
-    return ret;
+    printf("%s", output);
 }
 

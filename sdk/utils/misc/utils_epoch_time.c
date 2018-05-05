@@ -20,9 +20,10 @@
 #include "utils_cJSON.h"
 #include "utils_httpc.h"
 #include "utils_epoch_time.h"
-#include "lite-log.h"
+#include "iotx_log_api.h"
 #include "iotx_comm_if_api.h"
 
+const static char *TAG = "sdk:epoch_time";
 
 uint64_t utils_get_epoch_time(char copy[], int len)
 {
@@ -45,11 +46,11 @@ uint64_t utils_get_epoch_time(char copy[], int len)
     httpclient_data.response_buf_len = HTTP_RESP_CONTENT_LEN;
 
     memset(url, 0, sizeof(url));
-    HAL_Snprintf(url, sizeof(url), "http://%s/v1/device?act=getts", INTOYUN_HTTP_SERVER_DOMAIN);
+    snprintf(url, sizeof(url), "http://%s/v1/device?act=getts", INTOYUN_HTTP_SERVER_DOMAIN);
 
     ret = httpclient_common(&httpclient, url, 80, NULL, HTTPCLIENT_GET, 1000, &httpclient_data);
     if (0 != ret) {
-        log_err("request epoch time from remote server failed.");
+        MOLMC_LOGE(TAG, "request epoch time from remote server failed.");
         goto do_exit;
     } else {
         tsJson = cJSON_Parse(http_content);
@@ -62,7 +63,7 @@ uint64_t utils_get_epoch_time(char copy[], int len)
         }
         uint64_t res = tsObject->valueint;
         cJSON_Delete(tsJson);
-        HAL_Snprintf(copy, len, "%lu", res);
+        snprintf(copy, len, "%lu", res);
         return res;
     }
 

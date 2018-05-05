@@ -99,31 +99,8 @@ uint32_t HAL_Random(uint32_t region)
     return (region > 0) ? (rand() % region) : 0;
 }
 
-void HAL_Printf(const char *fmt, ...)
+void HAL_Print(const char * output)
 {
-    va_list args;
-
-    va_start(args, fmt);
-    vprintf(fmt, args);
-    va_end(args);
-
-    fflush(stdout);
-}
-
-int HAL_Snprintf(char *str, const int len, const char *fmt, ...)
-{
-    va_list args;
-    int     rc;
-
-    va_start(args, fmt);
-    rc = vsnprintf(str, len, fmt, args);
-    va_end(args);
-
-    return rc;
-}
-
-int HAL_Vsnprintf(char *str, const int len, const char *format, va_list ap)
-{
-    return vsnprintf(str, len, format, ap);
+    printf("%s", output);
 }
 

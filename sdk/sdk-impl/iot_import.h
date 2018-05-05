@@ -19,25 +19,23 @@
 #ifndef __IOT_IMPORT_H__
 #define __IOT_IMPORT_H__
 
-#if defined(__cplusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <inttypes.h>
 
 #include "hal_import.h"
 #include "sdk_config.h"
-#include "iot_import_config.h"
 #include "iot_import_errno.h"
+#include "iot_import_utils.h"
 
-#define IOT_TRUE    (1)     /* indicate boolean value true */
-#define IOT_FALSE   (0)     /* indicate boolean value false */
-
-#if defined(__cplusplus)
+#ifdef __cplusplus
 }
 #endif
 

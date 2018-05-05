@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef _IOTX_COMMON_MD5_H_
-#define _IOTX_COMMON_MD5_H_
+#ifndef __UTILS_MD5_H__
+#define __UTILS_MD5_H__
 
 #include "iot_import.h"
 

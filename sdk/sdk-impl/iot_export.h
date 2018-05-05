@@ -19,14 +19,13 @@
 #ifndef __IOT_EXPORT_H__
 #define __IOT_EXPORT_H__
 
-#if defined(__cplusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "iot_import.h"
 
-#include "utils_cJSON.h"
-#include "sdk-impl_internal.h"
+#include "sdk_impl_internal.h"
 
 #include "exports/iot_export_network.h"
 #include "exports/iot_export_cloud.h"
@@ -36,7 +35,7 @@ extern "C" {
 #include "exports/iot_export_system.h"
 #include "exports/iot_export_log.h"
 
-#if defined(__cplusplus)
+#ifdef __cplusplus
 }
 #endif
 

@@ -16,27 +16,10 @@
  *
  */
 
-#ifndef __IOT_EXPORT_LOG_H__
-#define __IOT_EXPORT_LOG_H__
+#ifndef OTA_UPDATE_H_
+#define OTA_UPDATE_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "iotx_log_api.h"
-
-typedef struct
-{
-    void (*setLogLevel)(const char* tag, molmc_log_level_t level);
-    log_output_fn_t (*setLogOutput)(log_output_fn_t func);
-} iot_log_if_t;
-
-extern const iot_log_if_t Log;
-
-#ifdef __cplusplus
-}
-#endif
-
+bool otaUpdate(uint8_t *data, uint32_t len);
 
 #endif
 

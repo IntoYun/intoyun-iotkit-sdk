@@ -18,12 +18,14 @@
 
 #include "iot_export.h"
 
+const static char *TAG = "user:ota";
+
 static void otaProgressCallback(void *handle, uint8_t *data, size_t len, uint32_t currentSize, uint32_t totalSize)
 {
     static uint8_t last_percent = 0;
     uint8_t percent = 0;
 
-    log_info("otaProgressCallback len = %d, currentSize = %d, totalSize = %d\r\n", len, currentSize, totalSize);
+    MOLMC_LOGI(TAG, "otaProgressCallback len = %d, currentSize = %d, totalSize = %d", len, currentSize, totalSize);
     //烧写FLASH
 
     //上送OTA进度
@@ -39,7 +41,7 @@ bool otaUpdate(uint8_t *data, uint32_t len)
     void *h_ota = NULL;
     bool ret = false;
 
-    log_info("action data : %s\r\n", data);
+    MOLMC_LOGI(TAG, "action data : %s\r\n", data);
     cJSON *actionJson=cJSON_Parse((char *)data);
     if(NULL == actionJson) {
         goto do_exit;

@@ -24,8 +24,6 @@ extern "C"
 {
 #endif
 
-#define IOTX_PRODUCT_KEY_LEN     (20)   /* IoTx product key length  */
-#define IOTX_DEVICE_NAME_LEN     (32)   /* IoTx device name length */
 #define IOTX_DEVICE_ID_LEN       (64)   /* IoTx device ID length */
 #define IOTX_DEVICE_SECRET_LEN   (64)   /* IoTx device secret length */
 #define IOTX_URI_MAX_LEN         (135)  /* IoTx CoAP uri maximal length */
@@ -84,8 +82,6 @@ typedef void (*iotx_event_handle_t)(void *context, iotx_coap_event_t event, void
 /*IoTx device*/
 typedef struct
 {
-    char     product_key[IOTX_PRODUCT_KEY_LEN + 1];
-    char     device_name[IOTX_DEVICE_NAME_LEN + 1];
     char     device_id[IOTX_DEVICE_ID_LEN + 1];
     char     device_secret[IOTX_DEVICE_SECRET_LEN + 1];
 } iotx_deviceinfo_t;

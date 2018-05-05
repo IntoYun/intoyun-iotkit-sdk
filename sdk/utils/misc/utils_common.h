@@ -16,12 +16,12 @@
  *
  */
 
-
 #ifndef __UTILS_COMMON_H__
 #define __UTILS_COMMON_H__
 
 #include <stdbool.h>
 #include <stdint.h>
+
 
 int StringToHex(char *psrc, uint16_t srclen, uint8_t *pdest, uint16_t destlen, bool reverse);
 int HexToString(uint8_t *psrc, uint16_t srclen, char *pdest, uint16_t destlen, bool reverse);

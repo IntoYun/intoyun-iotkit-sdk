@@ -20,6 +20,10 @@
 #ifndef __IOTX_TIMER_API_H__
 #define __IOTX_TIMER_API_H__
 
+#include "sdk_config.h"
+
+#if CONFIG_SYSTEM_TIMER_ENABLE == 1
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -56,5 +60,6 @@ void IOT_TIMER_Loop(void);
 }
 #endif
 
-#endif /* INTOYUN_TIMER_H__ */
+#endif
+#endif
 

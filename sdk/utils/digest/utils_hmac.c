@@ -16,9 +16,7 @@
  *
  */
 
-
 #include <string.h>
-#include "lite-log.h"
 #include "utils_md5.h"
 #include "utils_sha1.h"
 #include "utils_hmac.h"
@@ -31,12 +29,12 @@
 void utils_hmac_md5(const char *msg, int msg_len, char *digest, const char *key, int key_len)
 {
     if((NULL == msg) || (NULL == digest) || (NULL == key)) {
-        log_err("parameter is Null,failed!");
+        MOLMC_LOGE("hmac", "parameter is Null,failed!");
         return;
     }
 
     if(key_len > KEY_IOPAD_SIZE) {
-        log_err("key_len > size(%d) of array",KEY_IOPAD_SIZE);
+        MOLMC_LOGE("hmac", "key_len > size(%d) of array",KEY_IOPAD_SIZE);
         return;
     }
 
@@ -81,12 +79,12 @@ void utils_hmac_md5(const char *msg, int msg_len, char *digest, const char *key,
 void utils_hmac_sha1(const char *msg, int msg_len, char *digest, const char *key, int key_len)
 {
     if((NULL == msg) || (NULL == digest) || (NULL == key)) {
-        log_err("parameter is Null,failed!");
+        MOLMC_LOGE("hmac", "parameter is Null,failed!");
         return;
     }
 
     if(key_len > KEY_IOPAD_SIZE) {
-        log_err("key_len > size(%d) of array",KEY_IOPAD_SIZE);
+        MOLMC_LOGE("hmac", "key_len > size(%d) of array",KEY_IOPAD_SIZE);
         return;
     }
 

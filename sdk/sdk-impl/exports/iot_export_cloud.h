@@ -23,6 +23,7 @@
 extern "C" {
 #endif
 
+#include "sdk_config.h"
 #include "iotx_datapoint_api.h"
 
 typedef struct
@@ -30,24 +31,23 @@ typedef struct
     int (*connect)(void);
     bool (*connected)(void);
     int (*disconnect)(void);
-
     //发送自定义数据
-    int (*sendCloudData)(const uint8_t *buffer, uint16_t length);
-
+    int (*sendCustomData)(const uint8_t *buffer, uint16_t length);
+#if CONFIG_CLOUD_DATAPOINT_ENABLED == 1
     //数据点格式编程API接口
     //定义数据点
     void (*defineDatapointBool)(const uint16_t dpID, dp_permission_t permission, const bool value);
     void (*defineDatapointNumber)(const uint16_t dpID, dp_permission_t permission, const double minValue, const double maxValue, const int resolution, const double value);
     void (*defineDatapointEnum)(const uint16_t dpID, dp_permission_t permission, const int value);
-    void (*defineDatapointString)(const uint16_t dpID, dp_permission_t permission, const char *value);
-    void (*defineDatapointBinary)(const uint16_t dpID, dp_permission_t permission, const uint8_t *value, const uint16_t len);
+    void (*defineDatapointString)(const uint16_t dpID, dp_permission_t permission, const uint16_t maxLen, const char *value);
+    void (*defineDatapointBinary)(const uint16_t dpID, dp_permission_t permission, const uint16_t maxLen, const uint8_t *value, const uint16_t len);
     //读取数据点
     read_datapoint_result_t (*readDatapointBool)(const uint16_t dpID, bool *value);
     read_datapoint_result_t (*readDatapointNumberInt32)(const uint16_t dpID, int32_t *value);
     read_datapoint_result_t (*readDatapointNumberDouble)(const uint16_t dpID, double *value);
     read_datapoint_result_t (*readDatapointEnum)(const uint16_t dpID, int *value);
-    read_datapoint_result_t (*readDatapointString)(const uint16_t dpID, char *value);
-    read_datapoint_result_t (*readDatapointBinary)(const uint16_t dpID, uint8_t *value, uint16_t len);
+    read_datapoint_result_t (*readDatapointString)(const uint16_t dpID, char **value);
+    read_datapoint_result_t (*readDatapointBinary)(const uint16_t dpID, uint8_t **value, uint16_t *len);
     //写数据点
     void (*writeDatapointBool)(const uint16_t dpID, bool value);
     void (*writeDatapointNumberInt32)(const uint16_t dpID, int32_t value);
@@ -63,6 +63,7 @@ typedef struct
     int (*sendDatapointString)(const uint16_t dpID, const char *value);
     int (*sendDatapointBinary)(const uint16_t dpID, const uint8_t *value, uint16_t len);
     int (*sendDatapointAll)(void);
+#endif
 } iot_cloud_if_t;
 
 extern const iot_cloud_if_t Cloud;

@@ -25,6 +25,8 @@
 #include "iotx_system_api.h"
 #include "iotx_comm_if_api.h"
 
+const static char *TAG = "sdk:guider";
+
 const char *secmode_str[] = {
     "TCP + Guider + FormCrypto",
     "TCP + Guider + FormPlain",
@@ -66,11 +68,11 @@ static void _guider_get_timestamp_str(char *buf, int len)
     } while (ret == 0 && ++retry < 10);
 
     if (retry > 1) {
-        log_err("utils_get_epoch_time_from_ntp() retry = %d.", retry);
+        MOLMC_LOGE(TAG, "utils_get_epoch_time_from_ntp() retry = %d.", retry);
     }
 
     if (ret == 0) {
-        log_err("utils_get_epoch_time_from_ntp() failed!");
+        MOLMC_LOGE(TAG, "utils_get_epoch_time_from_ntp() failed!");
     }
 
     return;
@@ -93,22 +95,22 @@ SECURE_MODE iotx_guider_get_secure_mode(void)
 
 void print_comm_info(iotx_device_info_pt pdev_info, iotx_conn_info_pt pconn_info, int secure_mode)
 {
-    log_debug("%s", "....................................................");
-    log_debug("%20s : %-s", "product_id", pdev_info->product_id);
-    log_debug("%20s : %-s", "product_secret", pdev_info->product_secret);
-    log_debug("%20s : %-s", "device_id", pdev_info->device_id);
-    log_debug("%20s : %-s", "device_secret", pdev_info->device_secret);
-    log_debug("%20s : %-s", "hardware_version", pdev_info->hardware_version);
-    log_debug("%20s : %-s", "software_version", pdev_info->software_version);
-    log_debug("%s", "....................................................");
-    log_debug("%20s : %d", "server_port", pconn_info->port);
-    log_debug("%20s : %-s", "server_host", pconn_info->host_name);
-    log_debug("%20s : %-s", "client_id", pconn_info->client_id);
-    log_debug("%20s : %-s", "username", pconn_info->username);
-    log_debug("%20s : %-s", "password", pconn_info->password);
-    log_debug("%20s : %-s", "random", pconn_info->random_str);
-    log_debug("%20s : %d (%s)", "SecMode", secure_mode, secmode_str[secure_mode]);
-    log_debug("%s", "....................................................");
+    MOLMC_LOGD(TAG, "%s", "....................................................");
+    MOLMC_LOGD(TAG, "%20s : %-s", "product_id", pdev_info->product_id);
+    MOLMC_LOGD(TAG, "%20s : %-s", "product_secret", pdev_info->product_secret);
+    MOLMC_LOGD(TAG, "%20s : %-s", "device_id", pdev_info->device_id);
+    MOLMC_LOGD(TAG, "%20s : %-s", "device_secret", pdev_info->device_secret);
+    MOLMC_LOGD(TAG, "%20s : %-s", "hardware_version", pdev_info->hardware_version);
+    MOLMC_LOGD(TAG, "%20s : %-s", "software_version", pdev_info->software_version);
+    MOLMC_LOGD(TAG, "%s", "....................................................");
+    MOLMC_LOGD(TAG, "%20s : %d", "server_port", pconn_info->port);
+    MOLMC_LOGD(TAG, "%20s : %-s", "server_host", pconn_info->host_name);
+    MOLMC_LOGD(TAG, "%20s : %-s", "client_id", pconn_info->client_id);
+    MOLMC_LOGD(TAG, "%20s : %-s", "username", pconn_info->username);
+    MOLMC_LOGD(TAG, "%20s : %-s", "password", pconn_info->password);
+    MOLMC_LOGD(TAG, "%20s : %-s", "random", pconn_info->random_str);
+    MOLMC_LOGD(TAG, "%20s : %d (%s)", "SecMode", secure_mode, secmode_str[secure_mode]);
+    MOLMC_LOGD(TAG, "%s", "....................................................");
     return;
 }
 
@@ -122,7 +124,7 @@ int iotx_guider_authenticate(void)
     iotx_conn_info_pt pconn_info = iotx_conn_info_get();
 
     _guider_get_timestamp_str(time_stamp_str, sizeof(time_stamp_str));
-    log_debug("timestamp = %s", time_stamp_str);
+    MOLMC_LOGD(TAG, "timestamp = %s", time_stamp_str);
     HAL_Srandom(atoi(time_stamp_str));
 
     pconn_info->up_packetid = 0;
@@ -165,8 +167,8 @@ int iotx_guider_auth_gen_keys(void)
     StringToHex(pdev_info->device_secret, 32, device_secret_hex, 16, false);
     _gen_session_keys(device_secret_hex, pconn_info->random_str, pconn_info->nwkskey, pconn_info->appskey);
 
-    HEXDUMP_DEBUG(pconn_info->appskey, 16);
-    HEXDUMP_DEBUG(pconn_info->nwkskey, 16);
+    MOLMC_LOG_BUFFER_HEX(TAG, pconn_info->appskey, 16);
+    MOLMC_LOG_BUFFER_HEX(TAG, pconn_info->nwkskey, 16);
     return 0;
 }
 

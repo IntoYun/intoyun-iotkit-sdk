@@ -16,27 +16,18 @@
  *
  */
 
+#include "iot_export.h"
 
-#ifndef __MEM_STATS_H__
-#define __MEM_STATS_H__
+extern int userMain(void);
 
-#include "lite-utils_internal.h"
+int main(void)
+{
+    //Log.setLogLevel("*", MOLMC_LOG_VERBOSE);
+    Log.setLogLevel("user:project", MOLMC_LOG_VERBOSE);
+    Log.setLogLevel("user:ota", MOLMC_LOG_VERBOSE);
 
-#if defined(_PLATFORM_IS_LINUX_)
-    #include <execinfo.h>
-#endif
-
-typedef struct {
-    void               *buf;
-    int                 buflen;
-    char               *func;
-    int                 line;
-#if defined(_PLATFORM_IS_LINUX_)
-    char              **bt_symbols;
-    int                 bt_level;
-#endif
-    list_head_t         list;
-} OS_malloc_record;
-
-#endif  /* __MEM_STATS_H__ */
+    Network.setState(IOTX_NETWORK_STATE_CONNECTED);
+    userMain();
+    return 0;
+}
 

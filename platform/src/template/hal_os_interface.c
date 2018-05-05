@@ -16,14 +16,57 @@
  *
  */
 
+#include "hal_import.h"
 
-#ifndef __LITE_UTILS_CONFIG_H__
-#define __LITE_UTILS_CONFIG_H__
+void *HAL_MutexCreate(void)
+{
+    return NULL;
+}
 
-#ifdef _PLATFORM_IS_LINUX_
-#define WITH_MEM_STATS  1
-#else
-#define WITH_MEM_STATS  0
-#endif
+void HAL_MutexDestroy(void *mutex)
+{
+}
 
-#endif  /* __LITE_UTILS_CONFIG_H__ */
+void HAL_MutexLock(void *mutex)
+{
+}
+
+void HAL_MutexUnlock(void *mutex)
+{
+}
+
+void *HAL_Malloc(uint32_t size)
+{
+    return NULL;
+}
+
+void HAL_Free(void *ptr)
+{
+}
+
+void HAL_SystemReboot(void)
+{
+}
+
+uint32_t HAL_UptimeMs(void)
+{
+    return 0;
+}
+
+void HAL_SleepMs(uint32_t ms)
+{
+}
+
+void HAL_Srandom(uint32_t seed)
+{
+}
+
+uint32_t HAL_Random(uint32_t region)
+{
+    return 0;
+}
+
+void HAL_Print(const char * output)
+{
+}
+

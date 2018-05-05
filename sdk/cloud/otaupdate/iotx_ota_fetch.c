@@ -35,7 +35,7 @@ void *ofc_Init(const char *url)
     otahttp_Struct_pt h_odc;
 
     if (NULL == (h_odc = HAL_Malloc(sizeof(otahttp_Struct_t)))) {
-        log_err("allocate for h_odc failed");
+        MOLMC_LOGE(TAG, "allocate for h_odc failed");
         return NULL;
     }
 
@@ -58,7 +58,7 @@ int32_t ofc_Fetch(void *handle, char *buf, uint32_t buf_len, uint32_t timeout_s)
 
     if (0 != httpclient_common(&h_odc->http, h_odc->url, 80, NULL, HTTPCLIENT_GET, timeout_s * 1000,
                                &h_odc->http_data)) {
-        log_err("fetch firmware failed");
+        MOLMC_LOGE(TAG, "fetch firmware failed");
         return -1;
     }
 
