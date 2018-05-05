@@ -26,6 +26,8 @@
 #include "iotx_system_api.h"
 #include "iotx_datapoint_api.h"
 
+const static char *TAG = "sdk:comm-if";
+
 static int iotx_conninfo_inited = 0;
 static iotx_conn_info_t iotx_conn_info;
 
@@ -44,10 +46,10 @@ static int iotx_get_device_info(char *buf, uint16_t buflen)
     cJSON_AddItemToObject(root, "online", cJSON_CreateBool(true));
     json_out = cJSON_Print(root);
     json_len = strlen(json_out);
-    MOLMC_LOGD("comm-if", "info = %s", json_out);
+    MOLMC_LOGD(TAG, "info = %s", json_out);
 
     if(json_len >= buflen) {
-        MOLMC_LOGE("comm-if", "memory len to short");
+        MOLMC_LOGE(TAG, "memory len to short");
         return -1;
     }
     memset(buf, 0, buflen);
@@ -63,30 +65,30 @@ static int iotx_get_action_reply(char *buf, uint16_t buflen, uint8_t fileType, i
 
     switch(reply) {
         case IOTX_OTA_REPLY_PROGRESS:           /* 下载中 */
-            HAL_Snprintf(temp, sizeof(temp), "{\"type\":\"%d\",\"status\":\"10\",\"progress\":\"%d\"}", fileType, progress);
+            snprintf(temp, sizeof(temp), "{\"type\":\"%d\",\"status\":\"10\",\"progress\":\"%d\"}", fileType, progress);
             break;
         case IOTX_OTA_REPLY_FETCH_FAILED:       /* 获取文件失败 */
-            HAL_Snprintf(temp, sizeof(temp), "{\"type\":\"%d\",\"status\":\"11\"}", fileType);
+            snprintf(temp, sizeof(temp), "{\"type\":\"%d\",\"status\":\"11\"}", fileType);
             break;
         case IOTX_OTA_REPLY_FETCH_SUCCESS:      /* 获取文件成功 */
-            HAL_Snprintf(temp, sizeof(temp), "{\"type\":\"%d\",\"status\":\"15\"}", fileType);
+            snprintf(temp, sizeof(temp), "{\"type\":\"%d\",\"status\":\"15\"}", fileType);
             break;
         case IOTX_OTA_REPLY_BURN_FAILED:        /* 烧录程序失败 */
-            HAL_Snprintf(temp, sizeof(temp), "{\"type\":\"%d\",\"status\":\"13\"}", fileType);
+            snprintf(temp, sizeof(temp), "{\"type\":\"%d\",\"status\":\"13\"}", fileType);
             break;
         case IOTX_OTA_REPLY_BURN_SUCCESS:       /* 烧录程序成功 */
-            HAL_Snprintf(temp, sizeof(temp), "{\"type\":\"%d\",\"status\":\"14\"}", fileType);
+            snprintf(temp, sizeof(temp), "{\"type\":\"%d\",\"status\":\"14\"}", fileType);
             break;
         default:
-            MOLMC_LOGE("comm-if", "reply type error");
+            MOLMC_LOGE(TAG, "reply type error");
             return -1;
             break;
     }
-    MOLMC_LOGD("comm-if", "reply = %s", temp);
+    MOLMC_LOGD(TAG, "reply = %s", temp);
 
     uint16_t templen = strlen(temp);
     if(templen >= buflen) {
-        MOLMC_LOGE("comm-if", "memory len to short");
+        MOLMC_LOGE(TAG, "memory len to short");
         return -1;
     }
     memset(buf, 0, buflen);
@@ -242,7 +244,7 @@ int IOT_Comm_Connect(void)
         return 0;
     }
 
-    MOLMC_LOGI("comm-if", "iotx_comm_connect");
+    MOLMC_LOGI(TAG, "iotx_comm_connect");
     int rst = iotx_comm_connect();
     if(rst < 0) {
         iotx_set_conn_state(IOTX_CONN_STATE_DISCONNECTED);
@@ -280,7 +282,7 @@ int IOT_Comm_Disconnect(void)
 
 int IOT_Comm_SendData(const uint8_t *data, uint16_t datalen)
 {
-    MOLMC_LOGD("comm-if", "IOT_Comm_SendData");
+    MOLMC_LOGD(TAG, "IOT_Comm_SendData");
     if(!IOT_Network_IsConnected()) {
         return -1;
     }
@@ -300,7 +302,7 @@ int IOT_Comm_SendActionReply(uint8_t fileType, iotx_ota_reply_t reply, uint8_t p
 {
     char temp[128] = {0};
 
-    MOLMC_LOGD("comm-if", "IOT_Comm_SendActionReply");
+    MOLMC_LOGD(TAG, "IOT_Comm_SendActionReply");
     if(!IOT_Network_IsConnected()) {
         return -1;
     }
@@ -334,7 +336,7 @@ static int iotx_conn_handle_reconnect(void)
         return FAIL_RETURN;
     }
 
-    MOLMC_LOGI("comm-if", "start reconnect");
+    MOLMC_LOGI(TAG, "start reconnect");
 
     rc = iotx_comm_connect();
     if (SUCCESS_RETURN == rc) {
@@ -357,7 +359,7 @@ static int iotx_conn_handle_reconnect(void)
     }
     utils_time_countdown_ms(&(pconn_info->reconnect_param.reconnect_next_time), interval_ms);
 
-    MOLMC_LOGE("comm-if", "reconnect failed rc = %d", rc);
+    MOLMC_LOGE(TAG, "reconnect failed rc = %d", rc);
     return rc;
 }
 
@@ -385,9 +387,9 @@ int IOT_Comm_Yield(void)
         if (IOTX_CONN_STATE_DISCONNECTED_RECONNECTING == connState) {
             rc = iotx_conn_handle_reconnect();
             if (SUCCESS_RETURN != rc) {
-                //MOLMC_LOGD("comm-if", "reconnect network fail, rc = %d", rc);
+                //MOLMC_LOGD(TAG, "reconnect network fail, rc = %d", rc);
             } else {
-                MOLMC_LOGI("comm-if", "network is reconnected!");
+                MOLMC_LOGI(TAG, "network is reconnected!");
                 //iotx_mc_reconnect_callback();
                 pconn_info->reconnect_param.reconnect_time_interval_ms = IOTX_MC_RECONNECT_INTERVAL_MIN_MS;
             }
@@ -397,7 +399,7 @@ int IOT_Comm_Yield(void)
 
         /* If network suddenly interrupted, stop pinging packet, try to reconnect network immediately */
         if (IOTX_CONN_STATE_DISCONNECTED == connState) {
-            MOLMC_LOGE("comm-if", "network is disconnected!");
+            MOLMC_LOGE(TAG, "network is disconnected!");
             //iotx_mc_disconnect_callback(pClient);
 
             pconn_info->reconnect_param.reconnect_time_interval_ms = IOTX_CONN_RECONNECT_INTERVAL_MIN_MS;

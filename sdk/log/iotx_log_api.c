@@ -21,10 +21,12 @@
 #include "utils_queue.h"
 
 //print number of bytes per line for molmc_log_buffer_char and molmc_log_buffer_hex
-#define BYTES_PER_LINE 16
+#define BYTES_PER_LINE                  16
 
 // Number of tags to be cached. Must be 2**n - 1, n >= 2.
-#define TAG_CACHE_SIZE 31
+#define TAG_CACHE_SIZE                  31
+
+#define MAX_DEBUG_MESSAGE_LENGTH        256
 
 // Uncomment this to enable consistency checks and cache statistics in this file.
 // #define LOG_BUILTIN_CHECKS
@@ -46,7 +48,7 @@ static SLIST_HEAD(log_tags_head , uncached_tag_entry_) s_log_tags = SLIST_HEAD_I
 static cached_tag_entry_t s_log_cache[TAG_CACHE_SIZE];
 static uint32_t s_log_cache_max_generation = 0;
 static uint32_t s_log_cache_entry_count = 0;
-static vprintf_like_t s_log_print_func = &HAL_Vprintf;
+static log_output_fn_t s_log_print_func = &HAL_Print;
 static void *s_log_mutex = NULL;
 
 #ifdef LOG_BUILTIN_CHECKS
@@ -61,14 +63,14 @@ static inline void heap_swap(int i, int j);
 static inline bool should_output(molmc_log_level_t level_for_message, molmc_log_level_t level_for_tag);
 static inline void clear_log_level_list();
 
-vprintf_like_t molmc_log_set_vprintf(vprintf_like_t func)
+log_output_fn_t molmc_log_set_output(log_output_fn_t func)
 {
     if (!s_log_mutex) {
         s_log_mutex = HAL_MutexCreate();
     }
     HAL_MutexLock(s_log_mutex);
 
-    vprintf_like_t orig_func = s_log_print_func;
+    log_output_fn_t orig_func = s_log_print_func;
     s_log_print_func = func;
 
     HAL_MutexUnlock(s_log_mutex);
@@ -141,6 +143,8 @@ void clear_log_level_list()
 
 void molmc_log_write(molmc_log_level_t level, const char* tag, const char* format, ...)
 {
+    char _buffer[MAX_DEBUG_MESSAGE_LENGTH];
+
     if (!s_log_mutex) {
         s_log_mutex = HAL_MutexCreate();
     }
@@ -160,9 +164,14 @@ void molmc_log_write(molmc_log_level_t level, const char* tag, const char* forma
     if (!should_output(level, level_for_tag)) {
         return;
     }
+
     va_list list;
     va_start(list, format);
-    (*s_log_print_func)(format, list);
+    int trunc = vsnprintf(_buffer, sizeof(_buffer), format, list);
+    s_log_print_func(_buffer);
+    if (trunc > (int)sizeof(_buffer)) {
+       s_log_print_func("...");
+    }
     va_end(list);
 }
 

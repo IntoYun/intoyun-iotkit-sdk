@@ -42,7 +42,7 @@
 #define LITE_ASSERT(expr) \
     do { \
         if (!(expr)) { \
-            HAL_Printf("### %s | %s(%d): ASSERT FAILED ###: %s is FALSE\r\n", \
+            MOLMC_LOGE("assert", "### %s | %s(%d): ASSERT FAILED ###: %s is FALSE\r\n", \
                         __FILE__, __func__, __LINE__, #expr); \
         } \
     } while(0)

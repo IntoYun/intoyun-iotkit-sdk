@@ -30,9 +30,7 @@
 #include <stdarg.h>
 #include <memory.h>
 
-
 #define PLATFORM_WINOS_PERROR printf
-
 
 void *HAL_MutexCreate(void)
 {
@@ -103,35 +101,8 @@ uint32_t HAL_Random(uint32_t region)
     return (region > 0) ? (orig_seed % region) : 0;
 }
 
-void HAL_Printf(const char *fmt, ...)
+void HAL_Print(const char * output)
 {
-    va_list args;
-
-    va_start(args, fmt);
-    vprintf(fmt, args);
-    va_end(args);
-
-    fflush(stdout);
-}
-
-int HAL_Snprintf(char *str, const int len, const char *fmt, ...)
-{
-    int ret;
-    va_list args;
-
-    va_start(args, fmt);
-    ret = _vsnprintf(str, len-1, fmt, args);
-    va_end(args);
-
-    return ret;
-}
-
-int HAL_Vsnprintf(char *str, const int len, const char *fmt, va_list ap)
-{
-    int ret;
-
-    ret = _vsnprintf(str, len-1, fmt, ap);
-
-    return ret;
+    printf("%s", output);
 }
 

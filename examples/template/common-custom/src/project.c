@@ -20,6 +20,8 @@
 #include "project_config.h"
 #include "ota_update.h"
 
+const static char *TAG = "user_main";
+
 #define DEVICE_ID_DEF                             "0dvo0bdoy00000000000068f"         //设备标识
 #define DEVICE_SECRET_DEF                         "c08e66a8b08fd8436dac0dce9cc3bca9" //设备密钥
 
@@ -39,10 +41,10 @@ void eventProcess(int event, int param, uint8_t *data, uint32_t len)
     } else if(event == event_network_status) {
         switch(param){
             case ep_network_status_disconnected:  //模组已断开路由器
-                MOLMC_LOGI("app", "event network disconnect router\r\n");
+                MOLMC_LOGI(TAG, "event network disconnect router");
                 break;
             case ep_network_status_connected:     //模组已连接路由器
-                MOLMC_LOGI("app", "event network connect router\r\n");
+                MOLMC_LOGI(TAG, "event network connect router");
                 break;
             default:
                 break;
@@ -50,10 +52,10 @@ void eventProcess(int event, int param, uint8_t *data, uint32_t len)
     } else if(event == event_cloud_status) {
         switch(param){
             case ep_cloud_status_disconnected:    //模组已断开平台
-                MOLMC_LOGI("app", "event cloud disconnect server\r\n");
+                MOLMC_LOGI(TAG, "event cloud disconnect server");
                 break;
             case ep_cloud_status_connected:       //模组已连接平台
-                MOLMC_LOGI("app", "event cloud connect server\r\n");
+                MOLMC_LOGI(TAG, "event cloud connect server");
                 break;
             default:
                 break;

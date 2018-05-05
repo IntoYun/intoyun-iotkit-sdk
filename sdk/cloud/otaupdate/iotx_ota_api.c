@@ -23,8 +23,11 @@
 #include "iotx_ota_api.h"
 #include "iotx_comm_if_api.h"
 
+const static char *TAG = "sdk:ota";
+
 #include "iotx_ota_lib.c"
 #include "iotx_ota_fetch.c"
+
 
 typedef struct  {
     IOT_OTA_State_t state;         /* OTA state */
@@ -47,29 +50,29 @@ void *IOT_OTA_Init(uint8_t fileType, const char *url, const char *md5, uint32_t 
     OTA_Struct_pt h_ota = NULL;
 
     if ((NULL == url) || (NULL == md5)) {
-        MOLMC_LOGE("ota", "one or more parameters is invalid");
+        MOLMC_LOGE(TAG, "one or more parameters is invalid");
         return NULL;
     }
 
-    MOLMC_LOGI("ota", "type : %d", fileType);
-    MOLMC_LOGI("ota", "url  : %s", url);
-    MOLMC_LOGI("ota", "md5  : %s", md5);
-    MOLMC_LOGI("ota", "size : %d", size);
+    MOLMC_LOGI(TAG, "type : %d", fileType);
+    MOLMC_LOGI(TAG, "url  : %s", url);
+    MOLMC_LOGI(TAG, "md5  : %s", md5);
+    MOLMC_LOGI(TAG, "size : %d", size);
 
     if (NULL == (h_ota = HAL_Malloc(sizeof(OTA_Struct_t)))) {
-        MOLMC_LOGE("ota", "allocate failed");
+        MOLMC_LOGE(TAG, "allocate failed");
         return NULL;
     }
     memset(h_ota, 0, sizeof(OTA_Struct_t));
     h_ota->state = IOT_OTAS_UNINITED;
 
     if (NULL == (h_ota->purl = HAL_Malloc(strlen(url) + 1))) {
-        MOLMC_LOGE("ota", "allocate url failed");
+        MOLMC_LOGE(TAG, "allocate url failed");
         goto do_exit;
     }
 
     if (NULL == (h_ota->pmd5 = HAL_Malloc(strlen(md5) + 1))) {
-        MOLMC_LOGE("ota", "allocate md5 failed");
+        MOLMC_LOGE(TAG, "allocate md5 failed");
         goto do_exit;
     }
     strcpy(h_ota->purl, url);
@@ -77,12 +80,12 @@ void *IOT_OTA_Init(uint8_t fileType, const char *url, const char *md5, uint32_t 
     h_ota->size_file = size;
     h_ota->md5 = otalib_MD5Init();
     if (NULL == h_ota->md5) {
-        MOLMC_LOGE("ota", "initialize md5 failed");
+        MOLMC_LOGE(TAG, "initialize md5 failed");
         goto do_exit;
     }
 
     if (NULL == (h_ota->ch_fetch = ofc_Init(h_ota->purl))) {
-        MOLMC_LOGE("ota", "Initialize fetch module failed");
+        MOLMC_LOGE(TAG, "Initialize fetch module failed");
         goto do_exit;
     }
 
@@ -120,12 +123,12 @@ int IOT_OTA_Deinit(void *handle)
     OTA_Struct_pt h_ota = (OTA_Struct_pt) handle;
 
     if (NULL == h_ota) {
-        MOLMC_LOGE("ota", "handle is NULL");
+        MOLMC_LOGE(TAG, "handle is NULL");
         return IOT_OTAE_INVALID_PARAM;
     }
 
     if (IOT_OTAS_UNINITED == h_ota->state) {
-        MOLMC_LOGE("ota", "handle is uninitialized");
+        MOLMC_LOGE(TAG, "handle is uninitialized");
         h_ota->err = IOT_OTAE_INVALID_STATE;
         return -1;
     }
@@ -143,12 +146,12 @@ int IOT_OTA_SetProgressCallback(void *handle, THandlerFunction_Progress fn)
     OTA_Struct_pt h_ota = (OTA_Struct_pt) handle;
 
     if (NULL == h_ota) {
-        MOLMC_LOGE("ota", "handle is NULL");
+        MOLMC_LOGE(TAG, "handle is NULL");
         return IOT_OTAE_INVALID_PARAM;
     }
 
     if (IOT_OTAS_UNINITED == h_ota->state) {
-        MOLMC_LOGE("ota", "handle is uninitialized");
+        MOLMC_LOGE(TAG, "handle is uninitialized");
         h_ota->err = IOT_OTAE_INVALID_STATE;
         return -1;
     }
@@ -166,14 +169,14 @@ bool IOT_OTA_Update(void *handle)
     OTA_Struct_pt h_ota = (OTA_Struct_pt) handle;
 
     if (NULL == handle) {
-        MOLMC_LOGE("ota", "invalid parameter");
+        MOLMC_LOGE(TAG, "invalid parameter");
         goto do_exit;
     }
 
     do {
         ret = ofc_Fetch(h_ota->ch_fetch, buf, OTA_BUF_LEN, 1);
         if (ret < 0) {
-            MOLMC_LOGE("ota", "Fetch firmware failed");
+            MOLMC_LOGE(TAG, "Fetch firmware failed");
             h_ota->state = IOT_OTAS_FETCHED;
             h_ota->err = IOT_OTAE_FETCH_FAILED;
             break;
@@ -191,7 +194,7 @@ bool IOT_OTA_Update(void *handle)
         if (h_ota->size_fetched >= h_ota->size_file) {
             char md5_str[33];
             otalib_MD5Finalize(h_ota->md5, md5_str);
-            MOLMC_LOGD("ota", "origin=%s, now=%s", h_ota->pmd5, md5_str);
+            MOLMC_LOGD(TAG, "origin=%s, now=%s", h_ota->pmd5, md5_str);
             if (0 == strcmp(h_ota->pmd5, md5_str)) {
                 ok = true;
                 h_ota->err = IOT_OTAE_NONE;
@@ -219,12 +222,12 @@ int IOT_OTA_ReportProgress(void *handle, iotx_ota_reply_t reply, uint8_t progres
     OTA_Struct_pt h_ota = (OTA_Struct_pt) handle;
 
     if (NULL == h_ota) {
-        MOLMC_LOGE("ota", "handle is NULL");
+        MOLMC_LOGE(TAG, "handle is NULL");
         return IOT_OTAE_INVALID_PARAM;
     }
 
     if (IOT_OTAS_UNINITED == h_ota->state) {
-        MOLMC_LOGE("ota", "handle is uninitialized");
+        MOLMC_LOGE(TAG, "handle is uninitialized");
         h_ota->err = IOT_OTAE_INVALID_STATE;
         return -1;
     }
@@ -238,7 +241,7 @@ int IOT_OTA_GetLastError(void *handle)
     OTA_Struct_pt h_ota = (OTA_Struct_pt) handle;
 
     if (NULL == handle) {
-        MOLMC_LOGE("ota", "handle is NULL");
+        MOLMC_LOGE(TAG, "handle is NULL");
         return  IOT_OTAE_INVALID_PARAM;
     }
 

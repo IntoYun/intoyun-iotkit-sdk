@@ -159,7 +159,7 @@ const iot_ota_if_t OTAUpdate =
 const iot_log_if_t Log =
 {
     molmc_log_level_set,
-    molmc_log_set_vprintf
+    molmc_log_set_output
 };
 
 #if CONFIG_SYSTEM_KEY_ENABLE == 1

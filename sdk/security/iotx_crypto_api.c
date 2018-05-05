@@ -25,6 +25,7 @@
 #include "iotx_system_api.h"
 #include "iotx_comm_if_api.h"
 
+const static char *TAG = "sdk:crypto";
 
 static void _cal_mic(const uint8_t *src, uint16_t srclen, const uint8_t *key, uint8_t *mic)
 {
@@ -156,7 +157,7 @@ int iotx_comm_payload_decrypt(uint8_t *dest, uint16_t destlen, uint8_t *src, uin
         memcpy(dest, ptr, destlen);
 #endif
     } else {
-        MOLMC_LOGD("crypto", "decrypt error!");
+        MOLMC_LOGD(TAG, "decrypt error!");
         destlen = 0;
     }
     return destlen;
