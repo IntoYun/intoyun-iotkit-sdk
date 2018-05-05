@@ -30,8 +30,8 @@
  * $FreeBSD$
  */
 
-#ifndef _UTILS_QUEUE_H_
-#define _UTILS_QUEUE_H_
+#ifndef __UTILS_QUEUE_H__
+#define __UTILS_QUEUE_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -640,5 +640,5 @@ struct {								\
 }
 #endif
 
-#endif /* !_UTILS_QUEUE_H_ */
+#endif /* !__UTILS_QUEUE_H__ */
 

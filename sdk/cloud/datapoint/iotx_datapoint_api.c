@@ -19,6 +19,8 @@
 #include "iot_import.h"
 #include "iotx_datapoint_api.h"
 
+const static char *TAG = "sdk:ota";
+
 #if CONFIG_CLOUD_DATAPOINT_ENABLED == 1
 
 property_conf *properties[CONFIG_PROPERTIES_MAX];
@@ -31,6 +33,7 @@ volatile datapoint_control_t g_datapoint_control = {DP_TRANSMIT_MODE_AUTOMATIC, 
 static uint16_t intoyunFormSingleDatapoint(int property_index, uint8_t *buffer, uint16_t len);
 static int intoyunTransmitData(const uint8_t *buffer, uint16_t len);
 static int intoyunSendSingleDatapoint(const uint16_t dpID);
+static int IOT_DataPoint_SendAll(void);
 
 static int getPropertyIndex(const uint16_t dpID)
 {
@@ -152,7 +155,7 @@ void IOT_DataPoint_DefineEnum(const uint16_t dpID, dp_permission_t permission, c
     }
 }
 
-void IOT_DataPoint_DefineString(const uint16_t dpID, dp_permission_t permission, const char *value)
+void IOT_DataPoint_DefineString(const uint16_t dpID, dp_permission_t permission, const uint16_t maxLen, const char *value)
 {
     if (-1 == getPropertyIndex(dpID)) {
         setDatapointValueInit(properties_count,dpID,DATA_TYPE_STRING,permission);
@@ -162,7 +165,7 @@ void IOT_DataPoint_DefineString(const uint16_t dpID, dp_permission_t permission,
     }
 }
 
-void IOT_DataPoint_DefineBinary(const uint16_t dpID, dp_permission_t permission, const uint8_t *value, const uint16_t len)
+void IOT_DataPoint_DefineBinary(const uint16_t dpID, dp_permission_t permission, const uint16_t maxLen, const uint8_t *value, const uint16_t len)
 {
     if (-1 == getPropertyIndex(dpID)) {
         setDatapointValueInit(properties_count,dpID,DATA_TYPE_BINARY,permission);
@@ -227,40 +230,36 @@ read_datapoint_result_t IOT_DataPoint_ReadEnum(const uint16_t dpID, int *value)
     return readResult;
 }
 
-read_datapoint_result_t IOT_DataPoint_ReadString(const uint16_t dpID, char *value)
+read_datapoint_result_t IOT_DataPoint_ReadString(const uint16_t dpID, char **value)
 {
     int index = getPropertyIndex(dpID);
     if (index == -1) {
         return RESULT_DATAPOINT_NONE;
     }
 
-    for(uint16_t i=0;i<strlen(properties[index]->stringValue);i++) {
-        value[i] = properties[index]->stringValue[i];
-    }
+    (*value) = properties[index]->stringValue;
     read_datapoint_result_t readResult = properties[index]->readFlag;
     properties[index]->readFlag = RESULT_DATAPOINT_OLD;
     return readResult;
 }
 
-read_datapoint_result_t IOT_DataPoint_ReadBinary(const uint16_t dpID, uint8_t *value, uint16_t len)
+read_datapoint_result_t IOT_DataPoint_ReadBinary(const uint16_t dpID, uint8_t **value, uint16_t *len)
 {
     int index = getPropertyIndex(dpID);
     if (index == -1) {
         return RESULT_DATAPOINT_NONE;
     }
 
-    for(uint16_t i=0;i<len;i++) {
-        value[i] = properties[index]->binaryValue.value[i];
-    }
-    len = properties[index]->binaryValue.len;
+    (*value) = properties[index]->binaryValue.value;
+    (*len) = properties[index]->binaryValue.len;
     read_datapoint_result_t readResult = properties[index]->readFlag;
     properties[index]->readFlag = RESULT_DATAPOINT_OLD;
 
     return readResult;
 }
 
-// dpCtrlType   0: 平台控制写数据   1：用户写数据
-static void writeDatapointBool(const uint16_t dpID, bool value, bool dpCtrlType)
+// type   0: 平台控制写数据   1：用户写数据
+static void writeDatapointBool(const uint16_t dpID, bool value, uint8_t type)
 {
     int index = getPropertyIndex(dpID);
     if(index == -1) {
@@ -272,24 +271,25 @@ static void writeDatapointBool(const uint16_t dpID, bool value, bool dpCtrlType)
     } else {
         if(properties[index]->boolValue != value) {
             properties[index]->change = true;
-            if(dpCtrlType) { //用户操作
+            if(type) { //用户操作
                 properties[index]->readFlag = RESULT_DATAPOINT_OLD;
             } else {
                 properties[index]->readFlag = RESULT_DATAPOINT_NEW;
             }
             properties[index]->boolValue = value;
         } else {
-            properties[index]->change = false;
-            if(dpCtrlType) { //用户操作
+            if(type) { //用户操作
+                properties[index]->change = false;
                 properties[index]->readFlag = RESULT_DATAPOINT_OLD;
             } else {
+                properties[index]->change = true;
                 properties[index]->readFlag = RESULT_DATAPOINT_NEW;
             }
         }
     }
 }
 
-static void writeDatapointNumberInt32(const uint16_t dpID, int32_t value, bool dpCtrlType)
+static void writeDatapointNumberInt32(const uint16_t dpID, int32_t value, uint8_t type)
 {
     int index = getPropertyIndex(dpID);
     if(index == -1) {
@@ -308,24 +308,25 @@ static void writeDatapointNumberInt32(const uint16_t dpID, int32_t value, bool d
 
         if(properties[index]->numberIntValue != value) {
             properties[index]->change = true;
-            if(dpCtrlType) { //用户操作
+            if(type) { //用户操作
                 properties[index]->readFlag = RESULT_DATAPOINT_OLD;
             } else {
                 properties[index]->readFlag = RESULT_DATAPOINT_NEW;
             }
             properties[index]->numberIntValue = tmp;
         } else {
-            properties[index]->change = false;
-            if(dpCtrlType) { //用户操作
+            if(type) { //用户操作
+                properties[index]->change = false;
                 properties[index]->readFlag = RESULT_DATAPOINT_OLD;
             } else {
+                properties[index]->change = true;
                 properties[index]->readFlag = RESULT_DATAPOINT_NEW;
             }
         }
     }
 }
 
-static void writeDatapointNumberDouble(const uint16_t dpID, double value, bool dpCtrlType)
+static void writeDatapointNumberDouble(const uint16_t dpID, double value, uint8_t type)
 {
     int index = getPropertyIndex(dpID);
     if(index == -1) {
@@ -348,7 +349,7 @@ static void writeDatapointNumberDouble(const uint16_t dpID, double value, bool d
 
         if(properties[index]->numberDoubleValue != d) {
             properties[index]->change = true;
-            if(dpCtrlType) { //用户操作
+            if(type) { //用户操作
                 properties[index]->readFlag = RESULT_DATAPOINT_OLD;
             } else {
                 properties[index]->readFlag = RESULT_DATAPOINT_NEW;
@@ -356,17 +357,18 @@ static void writeDatapointNumberDouble(const uint16_t dpID, double value, bool d
 
             properties[index]->numberDoubleValue = tmp/(double)_pow(10, properties[index]->numberProperty.resolution);
         } else {
-            properties[index]->change = false;
-            if(dpCtrlType) { //用户操作
+            if(type) { //用户操作
+                properties[index]->change = false;
                 properties[index]->readFlag = RESULT_DATAPOINT_OLD;
             } else {
+                properties[index]->change = true;
                 properties[index]->readFlag = RESULT_DATAPOINT_NEW;
             }
         }
     }
 }
 
-static void writeDatapointEnum(const uint16_t dpID, int value, bool dpCtrlType)
+static void writeDatapointEnum(const uint16_t dpID, int value, uint8_t type)
 {
     int index = getPropertyIndex(dpID);
     if(index == -1) {
@@ -378,24 +380,25 @@ static void writeDatapointEnum(const uint16_t dpID, int value, bool dpCtrlType)
     } else {
         if(properties[index]->enumValue != value) {
             properties[index]->change = true;
-            if(dpCtrlType) { //用户操作
+            if(type) { //用户操作
                 properties[index]->readFlag = RESULT_DATAPOINT_OLD;
             } else {
                 properties[index]->readFlag = RESULT_DATAPOINT_NEW;
             }
             properties[index]->enumValue = value;
         } else {
-            properties[index]->change = false;
-            if(dpCtrlType) { //用户操作
+            if(type) { //用户操作
+                properties[index]->change = false;
                 properties[index]->readFlag = RESULT_DATAPOINT_OLD;
             } else {
+                properties[index]->change = true;
                 properties[index]->readFlag = RESULT_DATAPOINT_NEW;
             }
         }
     }
 }
 
-static void writeDatapointString(const uint16_t dpID, const char *value, bool dpCtrlType)
+static void writeDatapointString(const uint16_t dpID, const char *value, uint8_t type)
 {
     int index = getPropertyIndex(dpID);
     if(index == -1) {
@@ -407,7 +410,7 @@ static void writeDatapointString(const uint16_t dpID, const char *value, bool dp
     } else {
         if(strcmp(properties[index]->stringValue,value) != 0) {
             properties[index]->change = true;
-            if(dpCtrlType) { //用户操作
+            if(type) { //用户操作
                 properties[index]->readFlag = RESULT_DATAPOINT_OLD;
             } else {
                 properties[index]->readFlag = RESULT_DATAPOINT_NEW;
@@ -415,17 +418,18 @@ static void writeDatapointString(const uint16_t dpID, const char *value, bool dp
             properties[index]->stringValue = (char *)HAL_Malloc(strlen(value)+1);
             strncpy(properties[index]->stringValue,value,strlen(value)+1);
         } else {
-            properties[index]->change = false;
-            if(dpCtrlType) { //用户操作
+            if(type) { //用户操作
+                properties[index]->change = false;
                 properties[index]->readFlag = RESULT_DATAPOINT_OLD;
             } else {
+                properties[index]->change = true;
                 properties[index]->readFlag = RESULT_DATAPOINT_NEW;
             }
         }
     }
 }
 
-static void writeDatapointBinary(const uint16_t dpID, const uint8_t *value, uint16_t len, bool dpCtrlType)
+static void writeDatapointBinary(const uint16_t dpID, const uint8_t *value, uint16_t len, uint8_t type)
 {
     int index = getPropertyIndex(dpID);
     if(index == -1) {
@@ -435,24 +439,24 @@ static void writeDatapointBinary(const uint16_t dpID, const uint8_t *value, uint
     if(properties[index]->dataType != DATA_TYPE_BINARY) {
         return;
     } else {
-        if(memcmp(properties[index]->binaryValue.value,value,len) != 0) {
+
+        if((properties[index]->binaryValue.len != len) || memcmp(properties[index]->binaryValue.value, value, len)) {
             properties[index]->change = true;
-            if(dpCtrlType) { //用户操作
+            if(type) { //用户操作
                 properties[index]->readFlag = RESULT_DATAPOINT_OLD;
             } else {
                 properties[index]->readFlag = RESULT_DATAPOINT_NEW;
             }
 
             properties[index]->binaryValue.value = (uint8_t *)HAL_Malloc(len);
-            for(uint16_t i=0;i<len;i++) {
-                properties[index]->binaryValue.value[i] = value[i];
-            }
+            memcpy(properties[index]->binaryValue.value, value, len);
             properties[index]->binaryValue.len = (uint16_t)len;
         } else {
-            properties[index]->change = false;
-            if(dpCtrlType) { //用户操作
+            if(type) { //用户操作
+                properties[index]->change = false;
                 properties[index]->readFlag = RESULT_DATAPOINT_OLD;
             } else {
+                properties[index]->change = true;
                 properties[index]->readFlag = RESULT_DATAPOINT_NEW;
             }
         }
@@ -461,32 +465,32 @@ static void writeDatapointBinary(const uint16_t dpID, const uint8_t *value, uint
 
 void IOT_DataPoint_WriteBool(const uint16_t dpID, bool value)
 {
-    writeDatapointBool(dpID,value,true);
+    writeDatapointBool(dpID, value, 1);
 }
 
 void IOT_DataPoint_WriteNumberInt32(const uint16_t dpID, int32_t value)
 {
-    writeDatapointNumberInt32(dpID,value,true);
+    writeDatapointNumberInt32(dpID, value, 1);
 }
 
 void IOT_DataPoint_WriteNumberDouble(const uint16_t dpID, double value)
 {
-    writeDatapointNumberDouble(dpID,value,true);
+    writeDatapointNumberDouble(dpID, value, 1);
 }
 
 void IOT_DataPoint_WriteEnum(const uint16_t dpID, int value)
 {
-    writeDatapointEnum(dpID,value,true);
+    writeDatapointEnum(dpID, value, 1);
 }
 
 void IOT_DataPoint_WriteString(const uint16_t dpID, const char *value)
 {
-    writeDatapointString(dpID,value,true);
+    writeDatapointString(dpID, value, 1);
 }
 
 void IOT_DataPoint_WriteBinary(const uint16_t dpID, const uint8_t *value, uint16_t len)
 {
-    writeDatapointBinary(dpID,value,len,true);
+    writeDatapointBinary(dpID, value, len, 1);
 }
 
 int IOT_DataPoint_SendBool(const uint16_t dpID, bool value)
@@ -497,7 +501,7 @@ int IOT_DataPoint_SendBool(const uint16_t dpID, bool value)
         return -1;
     }
 
-    writeDatapointBool(dpID, value, true);
+    writeDatapointBool(dpID, value, 1);
 
     if(DP_TRANSMIT_MODE_AUTOMATIC == getDatapointTransmitMode()) {
         return -1;
@@ -519,7 +523,7 @@ int IOT_DataPoint_SendNumberInt32(const uint16_t dpID, int32_t value)
         return -1;
     }
 
-    writeDatapointNumberInt32(dpID, value, true);
+    writeDatapointNumberInt32(dpID, value, 1);
 
     if(DP_TRANSMIT_MODE_AUTOMATIC == getDatapointTransmitMode()) {
         return -1;
@@ -542,7 +546,7 @@ int IOT_DataPoint_SendNumberDouble(const uint16_t dpID, double value)
         return -1;
     }
 
-    writeDatapointNumberDouble(dpID, value, true);
+    writeDatapointNumberDouble(dpID, value, 1);
 
     if(DP_TRANSMIT_MODE_AUTOMATIC == getDatapointTransmitMode()) {
         return -1;
@@ -565,7 +569,7 @@ int IOT_DataPoint_SendEnum(const uint16_t dpID, int value)
         return -1;
     }
 
-    writeDatapointEnum(dpID, value, true);
+    writeDatapointEnum(dpID, value, 1);
 
     if(DP_TRANSMIT_MODE_AUTOMATIC == getDatapointTransmitMode()) {
         return -1;
@@ -588,7 +592,7 @@ int IOT_DataPoint_SendString(const uint16_t dpID, const char *value)
         return -1;
     }
 
-    writeDatapointString(dpID, value, true);
+    writeDatapointString(dpID, value, 1);
 
     if(DP_TRANSMIT_MODE_AUTOMATIC == getDatapointTransmitMode()) {
         return -1;
@@ -611,7 +615,7 @@ int IOT_DataPoint_SendBinary(const uint16_t dpID, const uint8_t *value, uint16_t
         return -1;
     }
 
-    writeDatapointBinary(dpID, value, len, true);
+    writeDatapointBinary(dpID, value, len, 1);
 
     if(DP_TRANSMIT_MODE_AUTOMATIC == getDatapointTransmitMode()) {
         return -1;
@@ -627,15 +631,17 @@ int IOT_DataPoint_SendBinary(const uint16_t dpID, const uint8_t *value, uint16_t
 
 void IOT_DataPoint_ParseReceiveDatapoints(const uint8_t *payload, uint32_t len)
 {
-    //0x31 dpid(1-2 bytes)+data type(1 byte)+data len(1-2 bytes)+data(n bytes)
-    //大端表示，如果最高位是1，则表示两个字节，否则是一个字节
     int32_t index = 0;
     uint16_t dpID = 0;
     uint8_t dataType;
     uint16_t dataLength=0;
 
-    //log_v("payload:");
-    //log_v_dump(payload, len);
+    //0x31 dpid(1-2 bytes)+data type(1 byte)+data len(1-2 bytes)+data(n bytes)
+    //大端表示，如果最高位是1，则表示两个字节，否则是一个字节
+    if((payload[0] != 0x31 ) || (len == 0)) {
+        return;
+    }
+
     index++;
     while(index < len) {
         dpID = payload[index++] & 0xff;
@@ -653,7 +659,7 @@ void IOT_DataPoint_ParseReceiveDatapoints(const uint8_t *payload, uint32_t len)
                     bool value = payload[index++];
                     if(getPropertyIndex(dpID) != -1) {
                         //数据点存在
-                        writeDatapointBool(dpID, value, false);
+                        writeDatapointBool(dpID, value, 0);
                     }
                 }
                 break;
@@ -679,13 +685,13 @@ void IOT_DataPoint_ParseReceiveDatapoints(const uint8_t *payload, uint32_t len)
                         value = value + properties[id]->numberProperty.minValue;
                         if(getPropertyIndex(dpID) != -1) {
                             //数据点存在
-                            writeDatapointNumberInt32(dpID,value,false);
+                            writeDatapointNumberInt32(dpID, value, 0);
                         }
                     } else {
                         double dValue = (value/(double)_pow(10, properties[id]->numberProperty.resolution)) + properties[id]->numberProperty.minValue;
                         if(getPropertyIndex(dpID) != -1) {
                             //数据点存在
-                            writeDatapointNumberDouble(dpID,dValue,false);
+                            writeDatapointNumberDouble(dpID, dValue, 0);
                         }
                     }
                 }
@@ -708,7 +714,7 @@ void IOT_DataPoint_ParseReceiveDatapoints(const uint8_t *payload, uint32_t len)
 
                     if(getPropertyIndex(dpID) != -1) {
                         //数据点存在
-                        writeDatapointEnum(dpID,value,false);
+                        writeDatapointEnum(dpID, value, 0);
                     }
                 }
                 break;
@@ -729,7 +735,7 @@ void IOT_DataPoint_ParseReceiveDatapoints(const uint8_t *payload, uint32_t len)
                     index += dataLength;
                     if(getPropertyIndex(dpID) != -1) {
                         //数据点存在
-                        writeDatapointString(dpID,str,false);
+                        writeDatapointString(dpID, str, 0);
                     }
                     free(str);
                 }
@@ -746,7 +752,7 @@ void IOT_DataPoint_ParseReceiveDatapoints(const uint8_t *payload, uint32_t len)
 
                     if(getPropertyIndex(dpID) != -1) {
                         //数据点存在
-                        writeDatapointBinary(dpID, &payload[index], dataLength,false);
+                        writeDatapointBinary(dpID, &payload[index], dataLength, 0);
                     }
 
                     index += dataLength;
@@ -762,7 +768,7 @@ void IOT_DataPoint_ParseReceiveDatapoints(const uint8_t *payload, uint32_t len)
     if (RESULT_DATAPOINT_NEW == IOT_DataPoint_ReadBool(DPID_DEFAULT_BOOL_RESET, &dpReset)) {
         HAL_SystemReboot();
     } else if (RESULT_DATAPOINT_NEW == IOT_DataPoint_ReadBool(DPID_DEFAULT_BOOL_GETALLDATAPOINT, &dpGetAllDatapoint)) {
-        IOT_DataPoint_SendAll(true);
+        IOT_DataPoint_SendAll();
     }
 }
 
@@ -883,9 +889,9 @@ static int intoyunSendSingleDatapoint(const uint16_t dpID)
     return intoyunTransmitData(buffer,len);
 }
 
-// dpForm   false: 组织改变的数据点   true：组织全部的数据点
+// type   false: 组织改变的数据点   true：组织全部的数据点
 //组织所有数据点的数据
-static uint16_t intoyunFormAllDatapoint(uint8_t *buffer, uint16_t len, bool dpForm)
+static uint16_t intoyunFormAllDatapoint(uint8_t *buffer, uint16_t len, uint8_t type)
 {
     int32_t index = 0;
 
@@ -901,7 +907,7 @@ static uint16_t intoyunFormAllDatapoint(uint8_t *buffer, uint16_t len, bool dpFo
             continue;
         }
 
-        if( dpForm || ((!dpForm) && properties[i]->change) ) {
+        if( type || ((!type) && properties[i]->change) ) {
             index += intoyunFormDataPointBinary(i, (uint8_t *)buffer+index);
         }
     }
@@ -909,12 +915,17 @@ static uint16_t intoyunFormAllDatapoint(uint8_t *buffer, uint16_t len, bool dpFo
 }
 
 //发送所有数据点的数据
-int IOT_DataPoint_SendAll(bool dpForm)
+static int IOT_DataPoint_SendAll(void)
 {
     uint8_t buffer[512];
     uint16_t len;
 
-    len = intoyunFormAllDatapoint(buffer, sizeof(buffer), dpForm);
+    if(0 == getPropertyCount()) {
+        return -1;
+    }
+
+    len = intoyunFormAllDatapoint(buffer, sizeof(buffer), 1);
+    clearPropertyChangeFlag();
     return intoyunTransmitData(buffer,len);
 }
 
@@ -929,7 +940,7 @@ int IOT_DataPoint_SendAllDatapointManual(void)
     }
 
     clearPropertyChangeFlag();
-    return IOT_DataPoint_SendAll(true);
+    return IOT_DataPoint_SendAll();
 }
 
 int IOT_DataPoint_SendDatapointAutomatic(void)
@@ -962,9 +973,10 @@ int IOT_DataPoint_SendDatapointAutomatic(void)
     }
 
     if(sendFlag) {
+        MOLMC_LOGI(TAG, "send datapoint automatic!");
         g_datapoint_control.runtime = HAL_UptimeMs();
         clearPropertyChangeFlag();
-        return IOT_DataPoint_SendAll(true);
+        return IOT_DataPoint_SendAll();
     }
     return -1;
 }

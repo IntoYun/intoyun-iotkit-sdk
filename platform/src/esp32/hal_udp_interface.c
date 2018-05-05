@@ -26,8 +26,9 @@
 #include "lwip/netdb.h"
 
 #include "hal_import.h"
+#include "iot_import.h"
 
-#define TAG  "MQTT"
+const static char *TAG = "hal:tcp";
 
 void *HAL_UDP_create(char *host, unsigned short port)
 {
@@ -40,7 +41,7 @@ void *HAL_UDP_create(char *host, unsigned short port)
 
     memset(&hints, 0, sizeof(hints));
 
-    ESP_LOGI(TAG, "establish tcp connection with server(host=%s port=%u)", host, port);
+    MOLMC_LOGI(TAG, "establish tcp connection with server(host=%s port=%u)", host, port);
 
     hints.ai_family = AF_INET; //only IPv4
     hints.ai_socktype = SOCK_DGRAM;
@@ -48,20 +49,20 @@ void *HAL_UDP_create(char *host, unsigned short port)
     sprintf(service, "%u", port);
 
     if ((rc = getaddrinfo(host, service, &hints, &addrInfoList)) != 0) {
-        ESP_LOGE(TAG, "getaddrinfo error");
+        MOLMC_LOGE(TAG, "getaddrinfo error");
         return 0;
     }
 
     for (cur = addrInfoList; cur != NULL; cur = cur->ai_next) {
         if (cur->ai_family != AF_INET) {
-            ESP_LOGE(TAG, "socket type error");
+            MOLMC_LOGE(TAG, "socket type error");
             rc = 0;
             continue;
         }
 
         fd = socket(cur->ai_family, cur->ai_socktype, cur->ai_protocol);
         if (fd < 0) {
-            ESP_LOGE(TAG, "create socket error");
+            MOLMC_LOGE(TAG, "create socket error");
             rc = 0;
             continue;
         }
@@ -72,14 +73,14 @@ void *HAL_UDP_create(char *host, unsigned short port)
         }
 
         close(fd);
-        ESP_LOGE(TAG, "connect error");
+        MOLMC_LOGE(TAG, "connect error");
         rc = 0;
     }
 
     if (0 == rc) {
-        ESP_LOGI(TAG, "fail to establish tcp");
+        MOLMC_LOGI(TAG, "fail to establish tcp");
     } else {
-        ESP_LOGI(TAG, "success to establish tcp, fd=%d", rc);
+        MOLMC_LOGI(TAG, "success to establish tcp, fd=%d", rc);
     }
     freeaddrinfo(addrInfoList);
 

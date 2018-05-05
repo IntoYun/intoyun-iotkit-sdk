@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef _IOTX_COMMON_BASE64_H_
-#define _IOTX_COMMON_BASE64_H_
+#ifndef __UTILS_BASE64_H__
+#define __UTILS_BASE64_H__
 
 #include "iot_import.h"
 #include "iot_export.h"

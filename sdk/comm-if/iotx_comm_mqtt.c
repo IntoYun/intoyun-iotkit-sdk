@@ -102,7 +102,6 @@ static int iotx_mqtt_up_process(char *topic, iotx_mqtt_topic_info_pt topic_msg)
     topic_msg->payload_len = out_buf_len;
 
     //MOLMC_LOG_BUFFER_HEX(TAG, topic_msg->payload, topic_msg->payload_len);
-
     ret = 0;
 exit:
     HAL_Free(out_buf);
@@ -135,7 +134,6 @@ static int iotx_mqtt_down_process(iotx_mqtt_topic_info_pt topic_msg)
     topic_msg->payload_len = out_buf_len;
 
     //MOLMC_LOG_BUFFER_HEX(TAG, topic_msg->payload, topic_msg->payload_len);
-
     ret = 0;
 exit:
     HAL_Free(out_buf);

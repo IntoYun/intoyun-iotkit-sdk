@@ -66,17 +66,7 @@ uint32_t HAL_Random(uint32_t region)
     return 0;
 }
 
-void HAL_Printf(const char *fmt, ...)
+void HAL_Print(const char * output)
 {
-}
-
-int HAL_Snprintf(char *str, const int len, const char *fmt, ...)
-{
-    return 0;
-}
-
-int HAL_Vsnprintf(char *str, const int len, const char *format, va_list ap)
-{
-    return 0;
 }
 

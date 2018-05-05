@@ -19,15 +19,11 @@
 #ifndef __SDK_CONFIG_H__
 #define __SDK_CONFIG_H__
 
-/*
- * sdk 配置文件
- */
-
 #define SDK_VERSION                        "1.2.0"
 
 
 #define CONFIG_CLOUD_CHANNEL               1   //选择云端通讯通道  1: MQTT  2: COAP
-#define CONFIG_CLOUD_DATAPOINT_ENABLED     0   //是否使能数据点通讯接口
+#define CONFIG_CLOUD_DATAPOINT_ENABLED     1   //是否使能数据点通讯接口
 
 // 数据点相关配置
 #define CONFIG_PROPERTIES_MAX              50  //支持的数据点的最大个数
@@ -46,7 +42,12 @@
 #define CONFIG_SYSTEM_TIMER_ENABLE         0   //是否定时器接口功能
 #define CONFIG_LOG_ENABLE                  1   //是否使能日志功能
 
-#define CONFIG_LOG_DEFAULT_LEVEL_ERROR     1
+//MOLMC_LOG_NONE,       /*!< No log output */
+//MOLMC_LOG_ERROR,      /*!< Critical errors, software module can not recover on its own */
+//MOLMC_LOG_WARN,       /*!< Error conditions from which recovery measures have been taken */
+//MOLMC_LOG_INFO,       /*!< Information messages which describe normal flow of events */
+//MOLMC_LOG_DEBUG,      /*!< Extra information which is not necessary for normal use (values, pointers, sizes, etc). */
+//MOLMC_LOG_VERBOSE     /*!< Bigger chunks of debugging information, or frequent messages which can potentially flood the output. */
 #define CONFIG_LOG_DEFAULT_LEVEL           MOLMC_LOG_VERBOSE
 
 #endif

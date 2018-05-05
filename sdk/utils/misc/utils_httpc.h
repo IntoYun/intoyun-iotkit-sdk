@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef __UTILS_HTTPC_H_
-#define __UTILS_HTTPC_H_
+#ifndef __UTILS_HTTPC_H__
+#define __UTILS_HTTPC_H__
 
 #include "iot_import.h"
 #include "utils_net.h"
@@ -148,5 +148,5 @@ int httpclient_common(httpclient_t *client, const char *url, int port, const cha
 }
 #endif
 
-#endif /* __HTTPCLIENT_H__ */
+#endif /* __UTILS_HTTPC_H__ */
 

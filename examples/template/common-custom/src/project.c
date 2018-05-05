@@ -20,20 +20,24 @@
 #include "project_config.h"
 #include "ota_update.h"
 
-const static char *TAG = "user_main";
+const static char *TAG = "user:project";
 
-#define DEVICE_ID_DEF                             "0dvo0bdoy00000000000068f"         //设备标识
-#define DEVICE_SECRET_DEF                         "c08e66a8b08fd8436dac0dce9cc3bca9" //设备密钥
+#define DEVICE_ID_DEF                   "0dvo0bdoy00000000000068f"         //设备标识
+#define DEVICE_SECRET_DEF               "c08e66a8b08fd8436dac0dce9cc3bca9" //设备密钥
 
-void eventProcess(int event, int param, uint8_t *data, uint32_t len)
+uint32_t timerID;
+
+void eventProcess(int event, int param, uint8_t *data, uint32_t datalen)
 {
     if(event == event_cloud_comm) {
-        switch(param){
+        switch(param) {
             case ep_cloud_comm_data:
                 //处理用户控制数据
+                MOLMC_LOGD(TAG, "Recv the cloud data: ");
+                MOLMC_LOG_BUFFER_HEX(TAG, data, datalen);
                 break;
             case ep_cloud_comm_ota:
-                otaUpdate(data, len);
+                otaUpdate(data, datalen);
                 break;
             default:
                 break;
@@ -69,14 +73,23 @@ void userInit(void)
     System.init();
     System.setDeviceInfo(DEVICE_ID_DEF, DEVICE_SECRET_DEF, PRODUCT_ID_DEF, PRODUCT_SECRET_DEF, HARDWARE_VERSION_DEF, SOFTWARE_VERSION_DEF);
     System.setEventCallback(eventProcess);
+    /*************此处修改和添加用户初始化代码**************/
     Cloud.connect();
+
+    timerID = timerGetId();
+    /*******************************************************/
 }
 
 void userHandle(void)
 {
     if(Cloud.connected()) {
-        //处理需要上送到云平台的数据
-        Cloud.sendCustomData(NULL, 0);
+        if(timerIsEnd(timerID, 10000)) {
+            timerID = timerGetId();
+            char *upstring = "hello! molmc/intorobot/intoyun!!!";
+
+            //处理需要上送到云平台的数据
+            Cloud.sendCustomData(upstring, strlen(upstring));
+        }
     }
 }
 

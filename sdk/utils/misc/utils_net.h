@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef _IOTX_COMMON_NET_H_
-#define _IOTX_COMMON_NET_H_
+#ifndef __UTILS_NET_H__
+#define __UTILS_NET_H__
 
 #include "iot_import.h"
 
@@ -60,5 +60,5 @@ int iotx_net_disconnect(utils_network_pt pNetwork);
 int iotx_net_connect(utils_network_pt pNetwork);
 int iotx_net_init(utils_network_pt pNetwork, const char *host, uint16_t port, const char *ca_crt);
 
-#endif /* IOTX_COMMON_NET_H */
+#endif /* __UTILS_NET_H__ */
 

@@ -18,7 +18,6 @@
 
 #include <stdlib.h>
 #include <stddef.h>
-#include "iot_import_mqtt.h"
 #include "sdk_impl_internal.h"
 #include "iotx_mqtt_client.h"
 

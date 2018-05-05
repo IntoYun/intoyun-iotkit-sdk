@@ -32,12 +32,8 @@ extern "C" {
 
 #include "hal_import.h"
 #include "sdk_config.h"
-#include "iot_import_config.h"
 #include "iot_import_errno.h"
 #include "iot_import_utils.h"
-
-#define IOT_TRUE    (1)     /* indicate boolean value true */
-#define IOT_FALSE   (0)     /* indicate boolean value false */
 
 #ifdef __cplusplus
 }

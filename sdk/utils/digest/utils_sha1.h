@@ -16,11 +16,10 @@
  *
  */
 
-#ifndef _IOTX_COMMON_SHA1_H_
-#define _IOTX_COMMON_SHA1_H_
+#ifndef __UTILS_SHA1_H__
+#define __UTILS_SHA1_H__
 
 #include "iot_import.h"
-
 
 /**
  * \brief          SHA-1 context structure

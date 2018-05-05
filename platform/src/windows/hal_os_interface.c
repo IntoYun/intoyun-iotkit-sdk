@@ -20,9 +20,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <memory.h>
-
-#include "hal_import.h"
-
 #include <process.h>
 #include <windows.h>
 #include <stdio.h>
@@ -30,14 +27,17 @@
 #include <stdarg.h>
 #include <memory.h>
 
-#define PLATFORM_WINOS_PERROR printf
+#include "hal_import.h"
+#include "iot_import.h"
+
+const static char *TAG = "hal:os";
 
 void *HAL_MutexCreate(void)
 {
     HANDLE mutex;
 
     if (NULL == (mutex = CreateMutex(NULL, FALSE, NULL))) {
-        PLATFORM_WINOS_PERROR("create mutex error");
+        MOLMC_LOGE(TAG, "create mutex error");
     }
 
     return mutex;
@@ -46,21 +46,21 @@ void *HAL_MutexCreate(void)
 void HAL_MutexDestroy(void *mutex)
 {
     if (0 == CloseHandle(mutex)) {
-        PLATFORM_WINOS_PERROR("destroy mutex error");
+        MOLMC_LOGE(TAG, "destroy mutex error");
     }
 }
 
 void HAL_MutexLock(void *mutex)
 {
     if (WAIT_FAILED == WaitForSingleObject(mutex, INFINITE)) {
-        PLATFORM_WINOS_PERROR("lock mutex error");
+        MOLMC_LOGE(TAG, "lock mutex error");
     }
 }
 
 void HAL_MutexUnlock(void *mutex)
 {
     if (WAIT_FAILED == WaitForSingleObject(mutex, INFINITE)) {
-        PLATFORM_WINOS_PERROR("lock mutex error");
+        MOLMC_LOGE(TAG, "lock mutex error");
     }
 }
 

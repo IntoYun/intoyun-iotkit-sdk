@@ -18,7 +18,7 @@
 
 #include "iot_export.h"
 
-const static char *TAG = "user-ota";
+const static char *TAG = "user:ota";
 
 static void otaProgressCallback(void *handle, uint8_t *data, size_t len, uint32_t currentSize, uint32_t totalSize)
 {

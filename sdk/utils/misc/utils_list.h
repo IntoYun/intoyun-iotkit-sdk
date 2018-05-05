@@ -17,8 +17,8 @@
  */
 
 
-#ifndef _IOTX_COMMON_LIST_H
-#define _IOTX_COMMON_LIST_H
+#ifndef __UTILS_LIST_H__
+#define __UTILS_LIST_H__
 
 #include <stdlib.h>
 

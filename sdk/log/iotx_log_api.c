@@ -43,7 +43,7 @@ typedef struct uncached_tag_entry_{
     char tag[0];    // beginning of a zero-terminated string
 } uncached_tag_entry_t;
 
-static molmc_log_level_t s_log_default_level = MOLMC_LOG_VERBOSE;
+static molmc_log_level_t s_log_default_level = MOLMC_LOG_NONE;
 static SLIST_HEAD(log_tags_head , uncached_tag_entry_) s_log_tags = SLIST_HEAD_INITIALIZER(s_log_tags);
 static cached_tag_entry_t s_log_cache[TAG_CACHE_SIZE];
 static uint32_t s_log_cache_max_generation = 0;
@@ -304,7 +304,7 @@ void molmc_log_buffer_hex_internal(const char *tag, const void *buffer, uint16_t
         }
 
         for( int i = 0; i < bytes_cur_line; i ++ ) {
-            sprintf( hex_buffer + 3*i, "%02x ", ptr_line[i] );
+            sprintf( hex_buffer + 3*i, "%02x ", (uint8_t)ptr_line[i] );
         }
         MOLMC_LOG_LEVEL( log_level, tag, "%s", hex_buffer );
         buffer += bytes_cur_line;
@@ -376,7 +376,7 @@ void molmc_log_buffer_hexdump_internal( const char *tag, const void *buffer, uin
                 ptr_hd += sprintf( ptr_hd, " " );
             }
             if ( i < bytes_cur_line ) {
-                ptr_hd += sprintf( ptr_hd, " %02x", ptr_line[i] );
+                ptr_hd += sprintf( ptr_hd, " %02x", (uint8_t)ptr_line[i] );
             } else {
                 ptr_hd += sprintf( ptr_hd, "   " );
             }

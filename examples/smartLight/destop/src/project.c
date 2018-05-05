@@ -20,45 +20,30 @@
 #include "project_config.h"
 #include "ota_update.h"
 
-const static char *TAG = "user_main";
+const static char *TAG = "user:project";
 
-#define DEVICE_ID_DEF                             "0dvo0bdoy00000000000068f"         //设备标识
-#define DEVICE_SECRET_DEF                         "c08e66a8b08fd8436dac0dce9cc3bca9" //设备密钥
+#define DEVICE_ID_DEF                   "0dvo0bdoy00000000000068f"         //设备标识
+#define DEVICE_SECRET_DEF               "c08e66a8b08fd8436dac0dce9cc3bca9" //设备密钥
 
-#define DPID_NUMBER_SOIL_HUMIDITY                 1  //数值型            土壤湿度
-#define DPID_NUMBER_AIR_HUMIDITY                  2  //数值型            空气湿度
-#define DPID_NUMBER_TEMPERATURE                   3  //数值型            温度
-#define DPID_NUMBER_ILLUMINATION                  4  //数值型            光照强度
-#define DPID_NUMBER_CO2                           5  //数值型            二氧化碳浓度
-#define DPID_ENUM_BIRDS                           6  //枚举型            鸟类危害程度
-#define DPID_BOOL_SPRINKLER_SWITCH                7  //布尔型            洒水器开关
+#define DPID_BOOL_SWITCH                1  //布尔型            开关
+#define DPID_DOUBLE_ILLUMINATION        2  //数值型            光照强度
 
-double dpDoubleSoil_humidity;                     // 土壤湿度
-double dpDoubleAir_humidity;                      // 空气湿度
-double dpDoubleTemperature;                       // 温度
-double dpDoubleIllumination;                      // 光照强度
-int dpIntCO2;                                     // 二氧化碳浓度
-int dpEnumBirds;                                  // 鸟类危害程度
-bool dpBoolSprinkler_switch;                      // 洒水器开关
+bool dpBoolSwitch;                      // 开关
+double dpDoubleIllumination = 100;      // 光照强度
 
-void eventProcess(int event, int param, uint8_t *data, uint32_t len)
+uint32_t timerID;
+
+void eventProcess(int event, int param, uint8_t *data, uint32_t datalen)
 {
     if(event == event_cloud_comm) {
-        switch(param){
+        switch(param) {
             case ep_cloud_comm_data:
-                //光照强度
-                if (RESULT_DATAPOINT_NEW == Cloud.readDatapointNumberDouble(DPID_NUMBER_ILLUMINATION, &dpDoubleIllumination)) {
-                    //用户代码
-                    MOLMC_LOGI(TAG, "dpDoubleIllumination = %f", dpDoubleIllumination);
-                }
-                //洒水器开关
-                if (RESULT_DATAPOINT_NEW == Cloud.readDatapointBool(DPID_BOOL_SPRINKLER_SWITCH, &dpBoolSprinkler_switch)) {
-                    //用户代码
-                    MOLMC_LOGI(TAG, "dpBoolSprinkler_switch = %d", dpBoolSprinkler_switch);
+                if (RESULT_DATAPOINT_NEW == Cloud.readDatapointBool(DPID_BOOL_SWITCH, &dpBoolSwitch)) {
+                    MOLMC_LOGI(TAG, "dpBoolSwitch = %d", dpBoolSwitch);
                 }
                 break;
             case ep_cloud_comm_ota:
-                otaUpdate(data, len);
+                otaUpdate(data, datalen);
                 break;
             default:
                 break;
@@ -71,10 +56,15 @@ void eventProcess(int event, int param, uint8_t *data, uint32_t len)
             case ep_network_status_connected:     //模组已连接路由器
                 MOLMC_LOGI(TAG, "event network connect router");
                 break;
-            case ep_cloud_status_disconnected:  //模组已断开平台
+            default:
+                break;
+        }
+    } else if(event == event_cloud_status) {
+        switch(param){
+            case ep_cloud_status_disconnected:    //模组已断开平台
                 MOLMC_LOGI(TAG, "event cloud disconnect server");
                 break;
-            case ep_cloud_status_connected:     //模组已连接平台
+            case ep_cloud_status_connected:       //模组已连接平台
                 MOLMC_LOGI(TAG, "event cloud connect server");
                 break;
             default:
@@ -91,35 +81,24 @@ void userInit(void)
     System.setEventCallback(eventProcess);
 
     //添加数据点定义
-    Cloud.defineDatapointNumber(DPID_NUMBER_SOIL_HUMIDITY, DP_PERMISSION_UP_ONLY, 0, 100, 1, 0); //土壤湿度
-    Cloud.defineDatapointNumber(DPID_NUMBER_AIR_HUMIDITY, DP_PERMISSION_UP_ONLY, 0, 100, 1, 0); //空气湿度
-    Cloud.defineDatapointNumber(DPID_NUMBER_TEMPERATURE, DP_PERMISSION_UP_ONLY, -50, 50, 1, 0); //温度
-    Cloud.defineDatapointNumber(DPID_NUMBER_ILLUMINATION, DP_PERMISSION_UP_DOWN, 0, 100, 1, 0); //光照强度
-    Cloud.defineDatapointNumber(DPID_NUMBER_CO2, DP_PERMISSION_UP_ONLY, 0, 100, 0, 0); //二氧化碳浓度
-    Cloud.defineDatapointEnum(DPID_ENUM_BIRDS, DP_PERMISSION_UP_ONLY, 0); //鸟类危害程度
-    Cloud.defineDatapointBool(DPID_BOOL_SPRINKLER_SWITCH, DP_PERMISSION_UP_DOWN, false); //洒水器开关
+    Cloud.defineDatapointBool(DPID_BOOL_SWITCH, DP_PERMISSION_UP_DOWN, false); //灯开关
+    Cloud.defineDatapointNumber(DPID_DOUBLE_ILLUMINATION, DP_PERMISSION_UP_ONLY, 0, 10000, 1, 0); //光照强度
 
+    /*************此处修改和添加用户初始化代码**************/
     Cloud.connect();
+    timerID = timerGetId();
+    /*******************************************************/
 }
 
 void userHandle(void)
 {
     if(Cloud.connected()) {
-        //处理需要上送到云平台的数据
-        dpDoubleSoil_humidity += 0.1;
-        dpDoubleAir_humidity += 0.1;
-        dpDoubleTemperature += 0.1;
-        dpDoubleIllumination += 0.1;
-        dpIntCO2 += 1;
+        if(timerIsEnd(timerID, 10000)) {
+            timerID = timerGetId();
 
-        Cloud.writeDatapointNumberDouble(DPID_NUMBER_SOIL_HUMIDITY, dpDoubleSoil_humidity);
-        Cloud.writeDatapointNumberDouble(DPID_NUMBER_AIR_HUMIDITY, dpDoubleAir_humidity);
-        Cloud.writeDatapointNumberDouble(DPID_NUMBER_TEMPERATURE, dpDoubleTemperature);
-        Cloud.writeDatapointNumberDouble(DPID_NUMBER_ILLUMINATION, dpDoubleIllumination);
-        Cloud.writeDatapointNumberInt32(DPID_NUMBER_CO2, dpIntCO2);
-        Cloud.writeDatapointEnum(DPID_ENUM_BIRDS, dpEnumBirds);
-        Cloud.writeDatapointBool(DPID_BOOL_SPRINKLER_SWITCH, dpBoolSprinkler_switch);
-        delay(20000);
+            dpDoubleIllumination += 1;
+            Cloud.writeDatapointNumberDouble(DPID_DOUBLE_ILLUMINATION, dpDoubleIllumination);
+        }
     }
 }
 

@@ -100,15 +100,15 @@ void IOT_DataPoint_Control(dp_transmit_mode_t mode, uint32_t lapse);
 void IOT_DataPoint_DefineBool(const uint16_t dpID, dp_permission_t permission, const bool value);
 void IOT_DataPoint_DefineNumber(const uint16_t dpID, dp_permission_t permission, const double minValue, const double maxValue, const int resolution, const double value);
 void IOT_DataPoint_DefineEnum(const uint16_t dpID, dp_permission_t permission, const int value);
-void IOT_DataPoint_DefineString(const uint16_t dpID, dp_permission_t permission, const char *value);
-void IOT_DataPoint_DefineBinary(const uint16_t dpID, dp_permission_t permission, const uint8_t *value, const uint16_t len);
+void IOT_DataPoint_DefineString(const uint16_t dpID, dp_permission_t permission, const uint16_t maxLen, const char *value);
+void IOT_DataPoint_DefineBinary(const uint16_t dpID, dp_permission_t permission, const uint16_t maxLen, const uint8_t *value, const uint16_t len);
 
 read_datapoint_result_t IOT_DataPoint_ReadBool(const uint16_t dpID, bool *value);
 read_datapoint_result_t IOT_DataPoint_ReadNumberInt32(const uint16_t dpID, int32_t *value);
 read_datapoint_result_t IOT_DataPoint_ReadNumberDouble(const uint16_t dpID, double *value);
 read_datapoint_result_t IOT_DataPoint_ReadEnum(const uint16_t dpID, int *value);
-read_datapoint_result_t IOT_DataPoint_ReadString(const uint16_t dpID, char *value);
-read_datapoint_result_t IOT_DataPoint_ReadBinary(const uint16_t dpID, uint8_t *value, uint16_t len);
+read_datapoint_result_t IOT_DataPoint_ReadString(const uint16_t dpID, char **value);
+read_datapoint_result_t IOT_DataPoint_ReadBinary(const uint16_t dpID, uint8_t **value, uint16_t *len);
 
 void IOT_DataPoint_WriteBool(const uint16_t dpID, bool value);
 void IOT_DataPoint_WriteNumberInt32(const uint16_t dpID, int32_t value);
@@ -125,7 +125,6 @@ int IOT_DataPoint_SendString(const uint16_t dpID, const char *value);
 int IOT_DataPoint_SendBinary(const uint16_t dpID, const uint8_t *value, uint16_t len);
 
 void IOT_DataPoint_ParseReceiveDatapoints(const uint8_t *payload, uint32_t len);
-int IOT_DataPoint_SendAll(bool dpForm);
 int IOT_DataPoint_SendAllDatapointManual(void);
 int IOT_DataPoint_SendDatapointAutomatic(void);
 

@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef _IOTX_COMMON_HMAC_H_
-#define _IOTX_COMMON_HMAC_H_
+#ifndef __UTILS_HMAC_H__
+#define __UTILS_HMAC_H__
 
 #include <string.h>
 

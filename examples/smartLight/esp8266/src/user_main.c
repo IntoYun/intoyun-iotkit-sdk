@@ -114,6 +114,10 @@ void user_init(void)
     stop_wifi_ap();
     start_wifi_station(CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
 
+    //Log.setLogLevel("*", MOLMC_LOG_VERBOSE);
+    Log.setLogLevel("user:project", MOLMC_LOG_VERBOSE);
+    Log.setLogLevel("user:ota", MOLMC_LOG_VERBOSE);
+	
     if (xTaskCreate(&userMain, "user_main_task", 4096*2, NULL, 5, NULL) != pdPASS) {
         os_printf("user_main_task");
     }

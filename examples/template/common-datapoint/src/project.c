@@ -20,45 +20,73 @@
 #include "project_config.h"
 #include "ota_update.h"
 
-const static char *TAG = "user_main";
+const static char *TAG = "user:project";
 
 #define DEVICE_ID_DEF                             "0dvo0bdoy00000000000068f"         //设备标识
 #define DEVICE_SECRET_DEF                         "c08e66a8b08fd8436dac0dce9cc3bca9" //设备密钥
 
-#define DPID_NUMBER_SOIL_HUMIDITY                 1  //数值型            土壤湿度
-#define DPID_NUMBER_AIR_HUMIDITY                  2  //数值型            空气湿度
-#define DPID_NUMBER_TEMPERATURE                   3  //数值型            温度
-#define DPID_NUMBER_ILLUMINATION                  4  //数值型            光照强度
-#define DPID_NUMBER_CO2                           5  //数值型            二氧化碳浓度
-#define DPID_ENUM_BIRDS                           6  //枚举型            鸟类危害程度
-#define DPID_BOOL_SPRINKLER_SWITCH                7  //布尔型            洒水器开关
+//定义数据点ID
+//格式：DPID_数据类型_数据点英文名. 如果英文名相同的，则在后面添加_1 _2 _3形式。
+//说明：布尔型: BOOL. 数值型: INT32或者DOUBLE. 枚举型: ENUM. 字符串型: STRING. 透传型: BINARY
+#define DPID_BOOL_SWITCH                      1  //布尔型     开关(可上送可下发)
+#define DPID_DOUBLE_TEMPERATURE               2  //浮点型     温度(可上送可下发)
+#define DPID_INT32_HUMIDITY                   3  //整型       湿度(可上送可下发)
+#define DPID_ENUM_COLOR                       4  //枚举型     颜色模式(可上送可下发)
+#define DPID_STRING_DISPLAY                   5  //字符串型   显示字符串(可上送可下发)
+#define DPID_BINARY_LOCATION                  6  //透传型     位置(可上送可下发)
 
-double dpDoubleSoil_humidity;                     // 土壤湿度
-double dpDoubleAir_humidity;                      // 空气湿度
-double dpDoubleTemperature;                       // 温度
-double dpDoubleIllumination;                      // 光照强度
-int dpIntCO2;                                     // 二氧化碳浓度
-int dpEnumBirds;                                  // 鸟类危害程度
-bool dpBoolSprinkler_switch;                      // 洒水器开关
+//定义数据点变量
+//格式：数据类型+数据点英文名. 如果英文名相同的，则在后面添加_1 _2 _3形式。
+//布尔型为bool
+//枚举型为int
+//整型为int32_t
+//浮点型为double
+//字符型为String
+//透传型为uint8_t*型
+//透传型长度为uint16_t型
+bool dpBoolSwitch;              //开关
+double dpDoubleTemperature;     //温度
+int32_t dpInt32Humidity;        //湿度
+int dpEnumColor;                //颜色模式
+char *dpStringDisplay;         //显示字符串
+uint8_t *dpBinaryLocation;      //位置
+uint16_t dpBinaryLocationLen;   //位置长度
 
-void eventProcess(int event, int param, uint8_t *data, uint32_t len)
+uint32_t timerID;
+
+void eventProcess(int event, int param, uint8_t *data, uint32_t datalen)
 {
     if(event == event_cloud_comm) {
         switch(param){
             case ep_cloud_comm_data:
-                //光照强度
-                if (RESULT_DATAPOINT_NEW == Cloud.readDatapointNumberDouble(DPID_NUMBER_ILLUMINATION, &dpDoubleIllumination)) {
-                    //用户代码
-                    MOLMC_LOGI(TAG, "dpDoubleIllumination = %f", dpDoubleIllumination);
+                //开关
+                if(RESULT_DATAPOINT_NEW == Cloud.readDatapointBool(DPID_BOOL_SWITCH, &dpBoolSwitch)) {
+                    MOLMC_LOGI(TAG, "dpBoolSwitch = %d", dpBoolSwitch);
                 }
-                //洒水器开关
-                if (RESULT_DATAPOINT_NEW == Cloud.readDatapointBool(DPID_BOOL_SPRINKLER_SWITCH, &dpBoolSprinkler_switch)) {
-                    //用户代码
-                    MOLMC_LOGI(TAG, "dpBoolSprinkler_switch = %d", dpBoolSprinkler_switch);
+                //温度
+                if(RESULT_DATAPOINT_NEW == Cloud.readDatapointNumberDouble(DPID_DOUBLE_TEMPERATURE, &dpDoubleTemperature)) {
+                    MOLMC_LOGI(TAG, "dpDoubleTemperature = %f", dpDoubleTemperature);
+                }
+                //湿度
+                if(RESULT_DATAPOINT_NEW == Cloud.readDatapointNumberInt32(DPID_INT32_HUMIDITY, &dpInt32Humidity)) {
+                    MOLMC_LOGI(TAG, "dpInt32Humidity = %d", dpInt32Humidity);
+                }
+                // 颜色模式
+                if (RESULT_DATAPOINT_NEW == Cloud.readDatapointEnum(DPID_ENUM_COLOR, &dpEnumColor)) {
+                    MOLMC_LOGI(TAG, "dpEnumColor = %d", dpEnumColor);
+                }
+                // 显示字符串
+                if (RESULT_DATAPOINT_NEW == Cloud.readDatapointString(DPID_STRING_DISPLAY, &dpStringDisplay)) {
+                    MOLMC_LOGI(TAG, "dpStringDisplay = %s", dpStringDisplay);
+                }
+                // 位置信息
+                if (RESULT_DATAPOINT_NEW == Cloud.readDatapointBinary(DPID_BINARY_LOCATION, &dpBinaryLocation, &dpBinaryLocationLen)) {
+                    MOLMC_LOGI(TAG, "dpBinaryLocationLen = %d", dpBinaryLocationLen);
+                    MOLMC_LOG_BUFFER_HEX(TAG, dpBinaryLocation, dpBinaryLocationLen);
                 }
                 break;
             case ep_cloud_comm_ota:
-                otaUpdate(data, len);
+                otaUpdate(data, datalen);
                 break;
             default:
                 break;
@@ -94,37 +122,33 @@ void userInit(void)
     System.init();
     System.setDeviceInfo(DEVICE_ID_DEF, DEVICE_SECRET_DEF, PRODUCT_ID_DEF, PRODUCT_SECRET_DEF, HARDWARE_VERSION_DEF, SOFTWARE_VERSION_DEF);
     System.setEventCallback(eventProcess);
-
-    //添加数据点定义
-    Cloud.defineDatapointNumber(DPID_NUMBER_SOIL_HUMIDITY, DP_PERMISSION_UP_ONLY, 0, 100, 1, 0); //土壤湿度
-    Cloud.defineDatapointNumber(DPID_NUMBER_AIR_HUMIDITY, DP_PERMISSION_UP_ONLY, 0, 100, 1, 0); //空气湿度
-    Cloud.defineDatapointNumber(DPID_NUMBER_TEMPERATURE, DP_PERMISSION_UP_ONLY, -50, 50, 1, 0); //温度
-    Cloud.defineDatapointNumber(DPID_NUMBER_ILLUMINATION, DP_PERMISSION_UP_DOWN, 0, 100, 1, 0); //光照强度
-    Cloud.defineDatapointNumber(DPID_NUMBER_CO2, DP_PERMISSION_UP_ONLY, 0, 100, 0, 0); //二氧化碳浓度
-    Cloud.defineDatapointEnum(DPID_ENUM_BIRDS, DP_PERMISSION_UP_ONLY, 0); //鸟类危害程度
-    Cloud.defineDatapointBool(DPID_BOOL_SPRINKLER_SWITCH, DP_PERMISSION_UP_DOWN, false); //洒水器开关
-
+    //定义产品数据点
+    Cloud.defineDatapointBool(DPID_BOOL_SWITCH, DP_PERMISSION_UP_DOWN, false);                            //开关
+    Cloud.defineDatapointNumber(DPID_DOUBLE_TEMPERATURE, DP_PERMISSION_UP_DOWN, 0, 100, 1, 0);            //温度
+    Cloud.defineDatapointNumber(DPID_INT32_HUMIDITY, DP_PERMISSION_UP_DOWN, 0, 100, 0, 0);                //湿度
+    Cloud.defineDatapointEnum(DPID_ENUM_COLOR, DP_PERMISSION_UP_DOWN, 1);                                 //颜色模式
+    Cloud.defineDatapointString(DPID_STRING_DISPLAY, DP_PERMISSION_UP_DOWN, 255, "hello! intoyun!");      //显示字符串
+    Cloud.defineDatapointBinary(DPID_BINARY_LOCATION, DP_PERMISSION_UP_DOWN, 255, "\x12\x34\x56\x78", 4); //位置信息
+    /*************此处修改和添加用户初始化代码**************/
     Cloud.connect();
+    timerID = timerGetId();
+    /*******************************************************/
 }
 
 void userHandle(void)
 {
     if(Cloud.connected()) {
-        //处理需要上送到云平台的数据
-        dpDoubleSoil_humidity += 0.1;
-        dpDoubleAir_humidity += 0.1;
-        dpDoubleTemperature += 0.1;
-        dpDoubleIllumination += 0.1;
-        dpIntCO2 += 1;
+        if(timerIsEnd(timerID, 10000)) {
+            timerID = timerGetId();
 
-        Cloud.writeDatapointNumberDouble(DPID_NUMBER_SOIL_HUMIDITY, dpDoubleSoil_humidity);
-        Cloud.writeDatapointNumberDouble(DPID_NUMBER_AIR_HUMIDITY, dpDoubleAir_humidity);
-        Cloud.writeDatapointNumberDouble(DPID_NUMBER_TEMPERATURE, dpDoubleTemperature);
-        Cloud.writeDatapointNumberDouble(DPID_NUMBER_ILLUMINATION, dpDoubleIllumination);
-        Cloud.writeDatapointNumberInt32(DPID_NUMBER_CO2, dpIntCO2);
-        Cloud.writeDatapointEnum(DPID_ENUM_BIRDS, dpEnumBirds);
-        Cloud.writeDatapointBool(DPID_BOOL_SPRINKLER_SWITCH, dpBoolSprinkler_switch);
-        delay(20000);
+            //更新数据点数据（数据点具备：上送属性）
+            Cloud.writeDatapointBool(DPID_BOOL_SWITCH, dpBoolSwitch);
+            Cloud.writeDatapointNumberDouble(DPID_DOUBLE_TEMPERATURE, dpDoubleTemperature);
+            Cloud.writeDatapointNumberInt32(DPID_INT32_HUMIDITY, dpInt32Humidity);
+            Cloud.writeDatapointEnum(DPID_ENUM_COLOR, dpEnumColor);
+            Cloud.writeDatapointString(DPID_STRING_DISPLAY, "hello! intoyun!");
+            Cloud.writeDatapointBinary(DPID_BINARY_LOCATION, "\x12\x34\x56\x78", 4);
+        }
     }
 }
 

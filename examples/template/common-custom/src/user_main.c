@@ -22,6 +22,10 @@ extern int userMain(void);
 
 int main(void)
 {
+    //Log.setLogLevel("*", MOLMC_LOG_VERBOSE);
+    Log.setLogLevel("user:project", MOLMC_LOG_VERBOSE);
+    Log.setLogLevel("user:ota", MOLMC_LOG_VERBOSE);
+
     Network.setState(IOTX_NETWORK_STATE_CONNECTED);
     userMain();
     return 0;
