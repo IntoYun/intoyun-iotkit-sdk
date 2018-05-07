@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include "CoAPSerialize.h"
+#include "lite-list.h"
 #include "CoAPExport.h"
 
 int CoAPSerialize_Header(CoAPMessage *msg, unsigned char *buf, unsigned short buflen)
@@ -107,7 +108,7 @@ unsigned short CoAPSerialize_Options(CoAPMessage *msg,  unsigned char * buf, uns
     int i      = 0;
     unsigned short count  = 0;
 
-    for (i = 0; i < msg->optnum; i++)
+    for (i = 0; i < msg->optcount; i++)
     {
         unsigned short len = 0;
         len = CoAPSerialize_Option(&msg->options[i], &buf[count]);
@@ -154,7 +155,7 @@ unsigned short CoAPSerialize_OptionsLen(CoAPMessage *msg)
     int i      = 0;
     unsigned short count  = 0;
 
-    for (i = 0; i < msg->optnum; i++)
+    for (i = 0; i < msg->optcount; i++)
     {
         unsigned short len = 0;
         len = CoAPSerialize_OptionLen(&msg->options[i]);
@@ -173,7 +174,7 @@ unsigned short CoAPSerialize_OptionsLen(CoAPMessage *msg)
 int CoAPSerialize_Payload(CoAPMessage *msg, unsigned char *buf, int buflen)
 {
     if(msg->payloadlen + 1 > buflen){
-        return -1;
+        return 0;
     }
     if(msg->payloadlen > 0 && NULL != msg->payload)
     {
@@ -220,7 +221,6 @@ int CoAPSerialize_Message(CoAPMessage *msg, unsigned char *buf, unsigned short b
     count = CoAPSerialize_Token(msg, ptr, remlen);
     ptr += count;
     remlen -= count;
-
 
     count = CoAPSerialize_Options(msg, ptr, remlen);
     ptr += count;

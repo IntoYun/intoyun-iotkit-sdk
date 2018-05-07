@@ -348,7 +348,7 @@ static int iotx_conn_handle_reconnect(void)
         if (IOTX_CONN_RECONNECT_INTERVAL_MAX_MS > pconn_info->reconnect_param.reconnect_time_interval_ms) {
             pconn_info->reconnect_param.reconnect_time_interval_ms *= 2;
         } else {
-            pconn_info->reconnect_param.reconnect_time_interval_ms = IOTX_MC_RECONNECT_INTERVAL_MAX_MS;
+            pconn_info->reconnect_param.reconnect_time_interval_ms = IOTX_CONN_RECONNECT_INTERVAL_MIN_MS;
         }
     }
 
@@ -391,7 +391,7 @@ int IOT_Comm_Yield(void)
             } else {
                 MOLMC_LOGI(TAG, "network is reconnected!");
                 //iotx_mc_reconnect_callback();
-                pconn_info->reconnect_param.reconnect_time_interval_ms = IOTX_MC_RECONNECT_INTERVAL_MIN_MS;
+                pconn_info->reconnect_param.reconnect_time_interval_ms = IOTX_CONN_RECONNECT_INTERVAL_MAX_MS;
             }
 
             break;

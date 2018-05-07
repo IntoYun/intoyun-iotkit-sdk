@@ -128,7 +128,7 @@ const iot_coap_client_if_t CoAPClient =
 {
     IOT_CoAP_Init,
     IOT_CoAP_Deinit,
-    IOT_CoAP_DeviceNameAuth,
+    IOT_CoAP_Auth,
     IOT_CoAP_Yield,
     IOT_CoAP_SendMessage,
     IOT_CoAP_GetMessagePayload,

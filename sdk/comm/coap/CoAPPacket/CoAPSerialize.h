@@ -16,14 +16,21 @@
  *
  */
 
-
-#include "CoAPExport.h"
 #ifndef __COAP_SERIALIZE_H__
 #define __COAP_SERIALIZE_H__
+#include "CoAPExport.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 unsigned short CoAPSerialize_MessageLength(CoAPMessage *msg);
 
 int CoAPSerialize_Message(CoAPMessage *msg, unsigned char *buf, unsigned short buflen);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif
 

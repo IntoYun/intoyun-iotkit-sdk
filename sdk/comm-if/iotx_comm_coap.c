@@ -27,7 +27,7 @@ static int iotx_comm_connect(void)
 
 static bool iotx_comm_isconnected(void)
 {
-    return iotx_conn_info_get()->is_connected;
+    return false;
 }
 
 static int iotx_comm_disconnect(void)

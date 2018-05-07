@@ -33,7 +33,7 @@ void IOT_CoAP_Deinit(iotx_coap_context_t **pp_context)
 {
 }
 
-int IOT_CoAP_DeviceNameAuth(iotx_coap_context_t *p_context)
+int IOT_CoAP_Auth(iotx_coap_context_t *p_context)
 {
     return IOTX_SUCCESS;
 }

@@ -27,11 +27,14 @@ extern "C" {
 
 #define NETWORK_ADDR_LEN      (16)
 
-void *HAL_UDP_create(char *host, unsigned short port);
-void HAL_UDP_close(void *p_socket);
-int HAL_UDP_write(void *p_socket, const unsigned char *p_data, unsigned int datalen);
-int HAL_UDP_read(void *p_socket, unsigned char *p_data, unsigned int datalen);
-int HAL_UDP_readTimeout(void *p_socket, unsigned char *p_data, unsigned int datalen, unsigned int timeout);
+intptr_t HAL_UDP_create(const char *host, unsigned short port);
+void HAL_UDP_close(intptr_t p_socket);
+int HAL_UDP_write(intptr_t p_socket, const unsigned char *p_data, unsigned int datalen);
+int HAL_UDP_read(intptr_t p_socket, unsigned char *p_data, unsigned int datalen);
+int HAL_UDP_readTimeout(intptr_t p_socket, unsigned char *p_data, unsigned int datalen, unsigned int timeout);
+int HAL_UDP_recvfrom(intptr_t sockfd, NetworkAddr *p_remote, unsigned char *p_data, unsigned int datalen, unsigned int timeout_ms);
+int HAL_UDP_sendto(intptr_t sockfd, const NetworkAddr *p_remote, const unsigned char *p_data, unsigned int datalen, unsigned int timeout_ms);
+int HAL_UDP_joinmulticast(intptr_t sockfd, const char *p_group);
 
 #ifdef __cplusplus
 }
