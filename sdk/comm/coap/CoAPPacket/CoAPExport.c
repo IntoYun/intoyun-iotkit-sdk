@@ -20,173 +20,150 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-#include "iot_import_coap.h"
-
+#include "ctype.h"
+#include "iot_import.h"
+#include "CoAPPlatform.h"
+#include "CoAPInternal.h"
 #include "CoAPNetwork.h"
 #include "CoAPExport.h"
+#include "CoAPObserve.h"
+#ifdef COAP_WITH_YLOOP
+#include "aos/yloop.h"
+#endif
 
 #define COAP_DEFAULT_PORT           5683 /* CoAP default UDP port */
 #define COAPS_DEFAULT_PORT          5684 /* CoAP default UDP port for secure transmission */
+#define COAP_DEFAULT_SENDLIST_MAXCOUNT  8
+#define COAP_DEFAULT_RES_MAXCOUNT       32
+#define COAP_DEFAULT_OBS_MAXCOUNT       8
 
 #define COAP_DEFAULT_SCHEME         "coap" /* the default scheme for CoAP URIs */
 #define COAP_DEFAULT_HOST_LEN       128
 #define COAP_DEFAULT_WAIT_TIME_MS   2000
 
-unsigned int CoAPUri_parse(char *p_uri, coap_endpoint_type *p_endpoint_type,
-                           char host[COAP_DEFAULT_HOST_LEN], unsigned short *port)
+#ifdef COAP_WITH_YLOOP
+extern int CoAPMessage_process(CoAPContext *context, unsigned int timeout);
+
+static void cb_recv(int fd, void *arg)
 {
-    int len = 0;
-    char *p = NULL, *q = NULL;
-    if (NULL == p_uri  || NULL == p_endpoint_type) {
-        return COAP_ERROR_INVALID_PARAM;
+    CoAPContext *p_ctx = (CoAPContext *)arg;
+    if (NULL == p_ctx ) {
+        COAP_ERR("Invalid paramter\r\n");
+        return ;
     }
-
-    len = strlen(p_uri);
-    p = p_uri;
-    q = (char *)COAP_DEFAULT_SCHEME;
-    while (len && *q && tolower(*p) == *q) {
-        ++p;
-        ++q;
-        --len;
-    }
-
-    if (*q) {
-        return COAP_ERROR_INVALID_URI;
-    }
-    if (tolower(*p) == 's') {
-        ++p;
-        --len;
-        *p_endpoint_type = COAP_ENDPOINT_DTLS;
-        *port     = COAPS_DEFAULT_PORT;
-    } else {
-        *p_endpoint_type = COAP_ENDPOINT_NOSEC;
-        *port     = COAP_DEFAULT_PORT;
-    }
-    COAP_DEBUG("The endpoint type is: %d", *p_endpoint_type);
-
-    q = (char *)"://";
-    while (len && *q && tolower(*p) == *q) {
-        ++p;
-        ++q;
-        --len;
-    }
-
-    if (*q) {
-        return COAP_ERROR_INVALID_URI;
-    }
-
-    q = p;
-    while (len && *q != ':') {
-        ++q;
-        --len;
-    }
-    if (p == q) {
-        return COAP_ERROR_INVALID_URI;
-    }
-
-    if (COAP_DEFAULT_HOST_LEN - 1 < (q - p)) {
-        return COAP_ERROR_INVALID_URI;
-    } else {
-        memset(host, 0x00, COAP_DEFAULT_HOST_LEN);
-        strncpy(host, p, q - p);
-    }
-    COAP_DEBUG("The host name is: %s", host);
-    if (len && *q == ':') {
-        p = ++q;
-        --len;
-
-        while (len && isdigit(*q)) {
-            ++q;
-            --len;
-        }
-
-        if (p < q) {
-            int uri_port = 0;
-
-            while (p < q) {
-                uri_port = uri_port * 10 + (*p++ - '0');
-            }
-
-            if (uri_port > 65535) {
-                return COAP_ERROR_INVALID_URI;
-            }
-            *port = uri_port;
-        }
-    }
-    COAP_DEBUG("The port is: %d", *port);
-
-    return COAP_SUCCESS;
+    CoAPMessage_process(p_ctx,1);
 }
+#endif
 
+#ifdef COAP_WITH_YLOOP
+static void read_event(void * ctx)
+{
+    if(ctx==NULL){
+        return;
+    }
+    CoAPIntContext    *p_ctx = ctx;
+    NetworkConf *p_netconf=(NetworkConf *)(p_ctx->p_network);
+    aos_poll_read_fd(p_netconf->fd, cb_recv, p_ctx);
+}
+#endif
 
 CoAPContext *CoAPContext_create(CoAPInitParam *param)
 {
-    unsigned int    ret   = COAP_SUCCESS;
-    CoAPContext    *p_ctx = NULL;
-    coap_network_init_t network_param;
-    char host[COAP_DEFAULT_HOST_LEN] = {0};
+    CoAPIntContext    *p_ctx = NULL;
+    NetworkInit    network_param;
 
-    memset(&network_param, 0x00, sizeof(coap_network_init_t));
-    p_ctx = coap_malloc(sizeof(CoAPContext));
+    memset(&network_param, 0x00, sizeof(NetworkInit));
+    p_ctx = coap_malloc(sizeof(CoAPIntContext));
     if (NULL == p_ctx) {
         COAP_ERR("malloc for coap context failed");
         goto err;
     }
+    COAP_DEBUG("Send List Max-Count:      %d", param->send_maxcount);
+    COAP_DEBUG("Observe Server Max-Count: %d", param->obs_maxcount);
+    COAP_DEBUG("Observe Client Max-Count: %d", param->obs_maxcount);
+    COAP_DEBUG("Resource Max-Count:       %d", param->res_maxcount);
+    COAP_DEBUG("MultiCast Address:        %s:%d", param->group, param->port);
+    COAP_DEBUG("Send/Recv Wait time:      %dms", param->waittime);
 
-    memset(p_ctx, 0, sizeof(CoAPContext));
+    memset(p_ctx, 0, sizeof(CoAPIntContext));
     p_ctx->message_id = 1;
     p_ctx->notifier = param->notifier;
+    p_ctx->appdata = param->appdata;
+
+#ifdef USE_SENDBUFF
     p_ctx->sendbuf = coap_malloc(COAP_MSG_MAX_PDU_LEN);
     if (NULL == p_ctx->sendbuf) {
         COAP_ERR("not enough memory");
         goto err;
     }
+    memset(p_ctx->sendbuf, 0x00, COAP_MSG_MAX_PDU_LEN);
+#endif
 
     p_ctx->recvbuf = coap_malloc(COAP_MSG_MAX_PDU_LEN);
     if (NULL == p_ctx->recvbuf) {
         COAP_ERR("not enough memory");
         goto err;
     }
+    memset(p_ctx->recvbuf, 0x00, COAP_MSG_MAX_PDU_LEN);
 
     if (0 == param->waittime) {
         p_ctx->waittime = COAP_DEFAULT_WAIT_TIME_MS;
     } else {
         p_ctx->waittime = param->waittime;
     }
-
-    /*CoAP message send list*/
-    INIT_LIST_HEAD(&p_ctx->list.sendlist);
-    p_ctx->list.count = 0;
-    p_ctx->list.maxcount = param->maxcount;
-
-    /*set the endpoint type by uri schema*/
-    if (NULL != param->url) {
-        ret = CoAPUri_parse(param->url, &network_param.ep_type, host, &network_param.port);
-    }
-
-    if (COAP_SUCCESS != ret) {
+    p_ctx->mutex = HAL_MutexCreate();
+    if(NULL == p_ctx->mutex){
+        COAP_ERR("Mutex Create failed");
         goto err;
     }
+
+    /*Init message send list mutex*/
+    p_ctx->sendlist.list_mutex = HAL_MutexCreate();
+    /*CoAP message send list*/
+    INIT_LIST_HEAD(&p_ctx->sendlist.list);
+    p_ctx->sendlist.count = 0;
+    if(0 != param->send_maxcount)
+        p_ctx->sendlist.maxcount = param->send_maxcount;
+    else
+        p_ctx->sendlist.maxcount = COAP_DEFAULT_SENDLIST_MAXCOUNT;
+
+    if(0 == param->res_maxcount)
+        param->res_maxcount = COAP_DEFAULT_RES_MAXCOUNT;
+    CoAPResource_init(p_ctx, param->res_maxcount);
+
+#ifndef COAP_OBSERVE_SERVER_DISABLE
+    if(0 == param->obs_maxcount)
+        param->obs_maxcount = COAP_DEFAULT_OBS_MAXCOUNT;
+    CoAPObsServer_init(p_ctx, param->obs_maxcount);
+#endif
+
+#ifndef COAP_OBSERVE_CLIENT_DISABLE
+    if(0 == param->obs_maxcount)
+        param->obs_maxcount = COAP_DEFAULT_OBS_MAXCOUNT;
+    CoAPObsClient_init(p_ctx, param->obs_maxcount);
+#endif
 
 #ifdef COAP_DTLS_SUPPORT
-    if (COAP_ENDPOINT_DTLS == network_param.ep_type) {
-        extern const char *iotx_coap_get_ca(void);
-        network_param.p_ca_cert_pem  = (unsigned char *)iotx_coap_get_ca();
-    }
+    network_param.type = COAP_NETWORK_DTLS;
+    network_param.port = COAPS_DEFAULT_PORT;
+#else
+    network_param.type = COAP_NETWORK_NOSEC;
+    network_param.port = param->port;
+    network_param.group = param->group;
 #endif
-    if (COAP_ENDPOINT_NOSEC == network_param.ep_type) {
-        network_param.p_ca_cert_pem = NULL;
-    }
-    network_param.p_host = host;
+
 
     /*CoAP network init*/
-    ret = CoAPNetwork_init(&network_param, &p_ctx->network);
+    p_ctx->p_network = CoAPNetwork_init(&network_param);
 
-    if (COAP_SUCCESS != ret) {
+    if (NULL == p_ctx->p_network) {
+        COAP_ERR("CoAP Network init failed, exit");
         goto err;
     }
 
+#ifdef COAP_WITH_YLOOP
+    aos_schedule_call(read_event, p_ctx);
+#endif
     return p_ctx;
 err:
     if (NULL == p_ctx) {
@@ -198,28 +175,82 @@ err:
         p_ctx->recvbuf = NULL;
     }
 
+#ifdef USE_SENDBUFF
     if (NULL != p_ctx->sendbuf) {
         coap_free(p_ctx->sendbuf);
         p_ctx->sendbuf = NULL;
+    }
+#endif
+
+#ifndef COAP_OBSERVE_SERVER_DISABLE
+    CoAPObsServer_deinit(p_ctx);
+#endif
+
+#ifndef COAP_OBSERVE_CLIENT_DISABLE
+    CoAPObsClient_deinit(p_ctx);
+#endif
+
+    CoAPResource_deinit(p_ctx);
+
+    if(NULL != p_ctx->sendlist.list_mutex){
+        HAL_MutexDestroy(p_ctx->sendlist.list_mutex);
+        p_ctx->sendlist.list_mutex = NULL;
+    }
+
+    if(NULL != p_ctx->mutex){
+        HAL_MutexDestroy(p_ctx->mutex);
+        p_ctx->mutex = NULL;
     }
 
     coap_free(p_ctx);
     p_ctx = NULL;
 
-    return p_ctx;
+    return (CoAPContext *)p_ctx;
 }
 
-void CoAPContext_free(CoAPContext *p_ctx)
+void *CoAPContextAppdata_get(CoAPContext *context)
 {
-    if (NULL == p_ctx) {
+    CoAPIntContext *p_ctx = (CoAPIntContext *)context;
+    if(NULL == p_ctx){
+        return NULL;
+    }
+
+    return (void *)p_ctx->appdata;
+}
+#ifdef COAP_WITH_YLOOP
+extern void  CoAPMessage_write_with_timeout(void *context);
+static void cancel_write_event(void *context)
+{
+    if(context == NULL){
+        return;
+    }
+    CoAPIntContext *p_ctx = context;
+    aos_cancel_delayed_action(p_ctx->waittime, CoAPMessage_write_with_timeout, context);
+}
+#endif 
+void CoAPContext_free(CoAPContext *context)
+{
+    CoAPIntContext *p_ctx = NULL;
+    if (NULL == context) {
         return;
     }
 
+    p_ctx = (CoAPIntContext *)context;
     CoAPSendNode *cur, *next;
 
-    CoAPNetwork_deinit(&p_ctx->network);
+#ifdef COAP_WITH_YLOOP
+    HAL_MutexLock(p_ctx->sendlist.list_mutex);
+    NetworkConf *p_netconf=(NetworkConf *)(p_ctx->p_network);
+    aos_cancel_poll_read_fd(p_netconf->fd,cb_recv,p_ctx);
+    aos_schedule_call(cancel_write_event,context);
+    HAL_MutexUnlock(p_ctx->sendlist.list_mutex);
+#endif 
+  
+    CoAPNetwork_deinit(p_ctx->p_network);
+    COAP_DEBUG("CoAP Network Deinit");
 
-    list_for_each_entry_safe(cur, next, &p_ctx->list.sendlist, sendlist, CoAPSendNode) {
+    HAL_MutexLock(p_ctx->sendlist.list_mutex);
+    list_for_each_entry_safe(cur, next, &p_ctx->sendlist.list, sendlist, CoAPSendNode) {
         if (NULL != cur) {
             if (NULL != cur->message) {
                 coap_free(cur->message);
@@ -229,20 +260,44 @@ void CoAPContext_free(CoAPContext *p_ctx)
             cur = NULL;
         }
     }
+    INIT_LIST_HEAD(&p_ctx->sendlist.list);
+    HAL_MutexUnlock(p_ctx->sendlist.list_mutex);
+    HAL_MutexDestroy(p_ctx->sendlist.list_mutex);
+    p_ctx->sendlist.list_mutex = NULL;
+    HAL_MutexDestroy(p_ctx->mutex);
+    p_ctx->mutex = NULL;
+    COAP_DEBUG("Release Send List and Memory");
+
+#ifndef COAP_OBSERVE_SERVER_DISABLE
+    CoAPObsServer_deinit(p_ctx);
+    COAP_DEBUG("CoAP Observe Server Deinit");
+#endif
+
+
+#ifndef COAP_OBSERVE_CLIENT_DISABLE
+    CoAPObsClient_deinit(p_ctx);
+    COAP_DEBUG("CoAP Observe Client Deinit");
+#endif
+
+    CoAPResource_deinit(p_ctx);
+    COAP_DEBUG("CoAP Resource unregister");
 
     if (NULL != p_ctx->recvbuf) {
         coap_free(p_ctx->recvbuf);
         p_ctx->recvbuf = NULL;
+        COAP_DEBUG("Release The Recv Memory");
     }
-
+#ifdef USE_SENDBUFF
     if (NULL != p_ctx->sendbuf) {
         coap_free(p_ctx->sendbuf);
         p_ctx->sendbuf = NULL;
+        COAP_DEBUG("Release The Send Memory");
     }
-
+#endif
 
     if (NULL != p_ctx) {
         coap_free(p_ctx);
         p_ctx    =  NULL;
+        COAP_DEBUG("Release The CoAP Context");
     }
 }

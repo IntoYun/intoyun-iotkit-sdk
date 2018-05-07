@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2018 Molmc Group. All rights reserved.
+ * Copyright (c) 2014-2016 Alibaba Group. All rights reserved.
  * License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -16,40 +16,32 @@
  *
  */
 
-#ifndef __HAL_IMPORT_H__
-#define __HAL_IMPORT_H__
+
+#ifndef __COAP_PLATFORM_OS_H__
+#define __COAP_PLATFORM_OS_H__
+#include <stdio.h>
+#ifdef COAP_USE_PLATFORM_MEMORY
+#include "lite-utils.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-#include <stdarg.h>
-#include <inttypes.h>
+#define coap_malloc HAL_Malloc
+#define coap_free   HAL_Free
 
+#define COAP_TRC
+#define COAP_DUMP
+#define COAP_DEBUG
+#define COAP_INFO
+#define COAP_WARN
+#define COAP_ERR
 
-#define NETWORK_ADDR_LEN 16
-
-typedef struct
-{
-    char addr[NETWORK_ADDR_LEN];
-    unsigned short port;
-}NetworkAddr;
-
-
-#include "hal_os_interface.h"
-#include "hal_tcp_interface.h"
-#include "hal_udp_interface.h"
-#include "hal_dtls_interface.h"
-#include "hal_tls_interface.h"
+int platform_is_multicast(const char *ip_str);
 
 #ifdef __cplusplus
 }
+#endif /* __cplusplus */
+
 #endif
-
-#endif  /* __HAL_IMPORT_H__ */
-

@@ -158,20 +158,7 @@ void IOT_CoAP_Deinit(iotx_coap_context_t **p_context);
  * @retval IOTX_ERR_AUTH_FAILED     : Authenticate failed or timeout.
  * @see iotx_ret_code_t.
  */
-int  IOT_CoAP_DeviceNameAuth(iotx_coap_context_t *p_context);
-
-
-/**
- * @brief   Handle CoAP response packet from remote server,
- *        and process timeout request etc..
- *
- * @param [in] p_context : Pointer of contex, specify the CoAP client.
- *
- * @return status.
- * @see iotx_ret_code_t.
- */
-int  IOT_CoAP_Yield(iotx_coap_context_t *p_context);
-
+int  IOT_CoAP_Auth(iotx_coap_context_t *p_context);
 
 /**
  * @brief   Send a message with specific path to server.
@@ -213,6 +200,18 @@ int  IOT_CoAP_GetMessagePayload(void *p_message, unsigned char **pp_payload, int
 * @see iotx_ret_code_t.
 **/
 int  IOT_CoAP_GetMessageCode(void *p_message, iotx_coap_resp_code_t *p_resp_code);
+
+/**
+ * @brief   Handle CoAP response packet from remote server,
+ *        and process timeout request etc..
+ *
+ * @param [in] p_context : Pointer of contex, specify the CoAP client.
+ *
+ * @return status.
+ * @see iotx_ret_code_t.
+ */
+int  IOT_CoAP_Yield(iotx_coap_context_t *p_context);
+
 
 /** @} */ /* end of api_coap */
 /** @} */ /* end of api */

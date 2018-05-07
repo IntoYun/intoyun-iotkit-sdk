@@ -18,26 +18,41 @@
 
 #include "hal_import.h"
 
-void *HAL_UDP_create(char *host, unsigned short port)
+intptr_t HAL_UDP_create(const char *host, unsigned short port)
 {
     return NULL;
 }
 
-void HAL_UDP_close(void *p_socket)
+void HAL_UDP_close(intptr_t p_socket)
 {
 }
 
-int HAL_UDP_write(void *p_socket, const unsigned char *p_data, unsigned int datalen)
-{
-    return 0;
-}
-
-int HAL_UDP_read(void *p_socket, unsigned char *p_data, unsigned int datalen)
+int HAL_UDP_write(intptr_t p_socket, const unsigned char *p_data, unsigned int datalen)
 {
     return 0;
 }
 
-int HAL_UDP_readTimeout(void *p_socket, unsigned char *p_data, unsigned int datalen, unsigned int timeout)
+int HAL_UDP_read(intptr_t p_socket, unsigned char *p_data, unsigned int datalen)
+{
+    return 0;
+}
+
+int HAL_UDP_readTimeout(intptr_t p_socket, unsigned char *p_data, unsigned int datalen, unsigned int timeout)
+{
+    return 0;
+}
+
+int HAL_UDP_recvfrom(intptr_t sockfd, NetworkAddr *p_remote, unsigned char *p_data, unsigned int datalen, unsigned int timeout_ms)
+{
+    return 0;
+}
+
+int HAL_UDP_sendto(intptr_t sockfd, const NetworkAddr *p_remote, const unsigned char *p_data, unsigned int datalen, unsigned int timeout_ms)
+{
+    return 0;
+}
+
+int HAL_UDP_joinmulticast(intptr_t sockfd, const char *p_group)
 {
     return 0;
 }

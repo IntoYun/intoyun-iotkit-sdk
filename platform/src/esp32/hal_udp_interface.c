@@ -28,9 +28,9 @@
 #include "hal_import.h"
 #include "iot_import.h"
 
-const static char *TAG = "hal:tcp";
+const static char *TAG = "hal:udp";
 
-void *HAL_UDP_create(char *host, unsigned short port)
+intptr_t HAL_UDP_create(const char *host, unsigned short port)
 {
     struct addrinfo hints;
     struct addrinfo *addrInfoList = NULL;
@@ -84,10 +84,10 @@ void *HAL_UDP_create(char *host, unsigned short port)
     }
     freeaddrinfo(addrInfoList);
 
-    return (void *)rc;
+    return (intptr_t)rc;
 }
 
-void HAL_UDP_close(void *p_socket)
+void HAL_UDP_close(intptr_t p_socket)
 {
     long            socket_id = -1;
 
@@ -95,7 +95,7 @@ void HAL_UDP_close(void *p_socket)
     close(socket_id);
 }
 
-int HAL_UDP_write(void *p_socket, const unsigned char *p_data, unsigned int datalen)
+int HAL_UDP_write(intptr_t p_socket, const unsigned char *p_data, unsigned int datalen)
 {
     int             rc = -1;
     long            socket_id = -1;
@@ -109,7 +109,7 @@ int HAL_UDP_write(void *p_socket, const unsigned char *p_data, unsigned int data
     return rc;
 }
 
-int HAL_UDP_read(void *p_socket, unsigned char *p_data, unsigned int datalen)
+int HAL_UDP_read(intptr_t p_socket, unsigned char *p_data, unsigned int datalen)
 {
     long            socket_id = -1;
     int             count = -1;
@@ -124,7 +124,7 @@ int HAL_UDP_read(void *p_socket, unsigned char *p_data, unsigned int datalen)
     return count;
 }
 
-int HAL_UDP_readTimeout(void *p_socket, unsigned char *p_data, unsigned int datalen, unsigned int timeout)
+int HAL_UDP_readTimeout(intptr_t p_socket, unsigned char *p_data, unsigned int datalen, unsigned int timeout)
 {
     int                 ret;
     struct timeval      tv;
@@ -163,5 +163,20 @@ int HAL_UDP_readTimeout(void *p_socket, unsigned char *p_data, unsigned int data
 
     /* This call will not block */
     return HAL_UDP_read(p_socket, p_data, datalen);
+}
+
+int HAL_UDP_recvfrom(intptr_t sockfd, NetworkAddr *p_remote, unsigned char *p_data, unsigned int datalen, unsigned int timeout_ms)
+{
+    return 0;
+}
+
+int HAL_UDP_sendto(intptr_t sockfd, const NetworkAddr *p_remote, const unsigned char *p_data, unsigned int datalen, unsigned int timeout_ms)
+{
+    return 0;
+}
+
+int HAL_UDP_joinmulticast(intptr_t sockfd, const char *p_group)
+{
+    return 0;
 }
 
