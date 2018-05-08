@@ -234,14 +234,14 @@ int IOT_Comm_Init(void)
     return 0;
 }
 
-int IOT_Comm_Connect(void)
+void IOT_Comm_Connect(void)
 {
     if(!IOT_Network_IsConnected()) {
-        return -1;
+        return;
     }
 
     if(IOTX_CONN_STATE_CONNECTED == iotx_get_conn_state()) {
-        return 0;
+        return;
     }
 
     MOLMC_LOGI(TAG, "iotx_comm_connect");
@@ -251,8 +251,6 @@ int IOT_Comm_Connect(void)
     } else {
         iotx_set_conn_state(IOTX_CONN_STATE_CONNECTED);
     }
-
-    return rst;
 }
 
 bool IOT_Comm_IsConnected(void)
@@ -274,10 +272,10 @@ bool IOT_Comm_IsConnected(void)
     return rst;
 }
 
-int IOT_Comm_Disconnect(void)
+void IOT_Comm_Disconnect(void)
 {
     iotx_set_conn_state(IOTX_CONN_STATE_INITIALIZED);
-    return iotx_comm_disconnect();
+    iotx_comm_disconnect();
 }
 
 int IOT_Comm_SendData(const uint8_t *data, uint16_t datalen)

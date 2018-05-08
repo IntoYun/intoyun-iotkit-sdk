@@ -33,7 +33,7 @@ typedef struct
     void (*init)(void);
     void (*loop)(void);
     //应用操作接口
-    void (*setDeviceInfo)(char *productID, char *productSecret, char *hardwareVersion, char *softwareVersion, char *deviceId, char *deviceSecret);
+    void (*setDeviceInfo)(char *deviceId, char *deviceSecret, char *productID, char *productSecret, char *hardwareVersion, char *softwareVersion);
     void (*setEventCallback)(event_handler_t handler);
 #if CONFIG_CLOUD_DATAPOINT_ENABLED == 1
     void (*setDatapointControl)(dp_transmit_mode_t mode, uint32_t lapse);

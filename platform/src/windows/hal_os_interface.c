@@ -84,11 +84,6 @@ uint32_t HAL_UptimeMs(void)
     return (uint32_t)(GetTickCount());
 }
 
-void HAL_SleepMs(uint32_t ms)
-{
-    Sleep(ms);
-}
-
 uint32_t orig_seed = 2;
 void HAL_Srandom(uint32_t seed)
 {

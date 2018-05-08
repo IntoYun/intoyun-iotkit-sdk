@@ -131,14 +131,6 @@ uint32_t HAL_Random(uint32_t region)
     return (region > 0) ? (rand() % region) : 0;
 }
 
-void HAL_SleepMs(uint32_t ms)
-{
-    if ((ms > 0) && (ms < portTICK_RATE_MS)) {
-        ms = portTICK_RATE_MS;
-    }
-    vTaskDelay(ms/portTICK_RATE_MS);
-}
-
 void HAL_Print(const char * output)
 {
     printf("%s", output);

@@ -28,9 +28,9 @@ extern "C" {
 
 typedef struct
 {
-    int (*connect)(void);
+    void (*connect)(void);
     bool (*connected)(void);
-    int (*disconnect)(void);
+    void (*disconnect)(void);
     //发送自定义数据
     int (*sendCustomData)(const uint8_t *buffer, uint16_t length);
 #if CONFIG_CLOUD_DATAPOINT_ENABLED == 1

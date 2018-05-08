@@ -53,10 +53,6 @@ uint32_t HAL_UptimeMs(void)
     return 0;
 }
 
-void HAL_SleepMs(uint32_t ms)
-{
-}
-
 void HAL_Srandom(uint32_t seed)
 {
 }

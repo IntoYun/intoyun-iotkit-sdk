@@ -96,11 +96,6 @@ uint32_t HAL_UptimeMs(void)
     return tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
 
-void HAL_SleepMs(uint32_t ms)
-{
-    usleep(1000 * ms);
-}
-
 void HAL_Srandom(uint32_t seed)
 {
     srandom(seed);

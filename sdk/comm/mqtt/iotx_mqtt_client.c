@@ -2148,12 +2148,8 @@ static int iotx_mc_release(iotx_mc_client_t *pClient)
         return NULL_VALUE_ERROR;
     }
 
-    /* iotx_delete_thread(pClient); */
-    HAL_SleepMs(100);
-
     iotx_mc_disconnect(pClient);
     iotx_mc_set_client_state(pClient, IOTX_MC_STATE_INVALID);
-    HAL_SleepMs(100);
 
     HAL_MutexDestroy(pClient->lock_generic);
     HAL_MutexDestroy(pClient->lock_list_sub);

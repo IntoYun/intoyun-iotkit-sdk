@@ -132,16 +132,6 @@ void HAL_SystemReboot(void);
 uint32_t HAL_UptimeMs(void);
 
 /**
- * @brief sleep thread itself.
- *
- * @param [in] ms @n the time interval for which execution is to be suspended, in milliseconds.
- * @return None.
- * @see None.
- * @note None.
- */
-void HAL_SleepMs(uint32_t ms);
-
-/**
  * @brief Set seed for a sequence of pseudo-random integers, which will be returned by HAL_Random()
  *
  * @param [in] seed @n A start point for the random number sequence

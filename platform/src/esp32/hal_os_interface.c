@@ -84,11 +84,6 @@ uint32_t HAL_UptimeMs(void)
     return time_ms;
 }
 
-void HAL_SleepMs(uint32_t ms)
-{
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-}
-
 void HAL_Srandom(uint32_t seed)
 {
     srand(seed);
