@@ -68,11 +68,11 @@ static void _guider_get_timestamp_str(char *buf, int len)
     } while (ret == 0 && ++retry < 10);
 
     if (retry > 1) {
-        MOLMC_LOGE(TAG, "utils_get_epoch_time_from_ntp() retry = %d.", retry);
+        MOLMC_LOGE(TAG, "utils_get_epoch_time() retry = %d.", retry);
     }
 
     if (ret == 0) {
-        MOLMC_LOGE(TAG, "utils_get_epoch_time_from_ntp() failed!");
+        MOLMC_LOGE(TAG, "utils_get_epoch_time() failed!");
     }
 
     return;
