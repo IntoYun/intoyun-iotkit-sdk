@@ -18,6 +18,8 @@
 
 #include <stdlib.h>
 #include <stddef.h>
+#include "utils_list.h"
+#include "lite-utils.h"
 #include "sdk_impl_internal.h"
 #include "iotx_mqtt_client.h"
 
@@ -1082,7 +1084,7 @@ static int iotx_mc_handle_recv_PUBLISH(iotx_mc_client_t *c)
               topicName.lenstring.data);
     MOLMC_LOGD(TAG, "%20s : %d / %d", "Payload Len/Room",
               topic_msg.payload_len,
-              c->buf_read + c->buf_size_read - topic_msg.payload);
+              (int)(c->buf_read + c->buf_size_read - topic_msg.payload));
     MOLMC_LOGD(TAG, "%20s : %d", "Receive Buflen", c->buf_size_read);
 
 #if defined(INSPECT_MQTT_FLOW)

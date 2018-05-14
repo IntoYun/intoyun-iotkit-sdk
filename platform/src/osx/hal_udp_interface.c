@@ -44,7 +44,7 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
     struct sockaddr_in     *sa = NULL;
 
     if (NULL == host) {
-        return (void *)(-1);
+        return (intptr_t)(-1);
     }
 
     sprintf(port_ptr, "%u", port);
@@ -56,7 +56,7 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
     rc = getaddrinfo(host, port_ptr, &hints, &res);
     if (0 != rc) {
         MOLMC_LOGE(TAG, "getaddrinfo error");
-        return (void *)(-1);
+        return (intptr_t)(-1);
     }
 
     for (ainfo = res; ainfo != NULL; ainfo = ainfo->ai_next) {
@@ -109,7 +109,7 @@ int HAL_UDP_read(intptr_t p_socket, unsigned char *p_data, unsigned int datalen)
     long            socket_id = -1;
     int             count = -1;
 
-    if (NULL == p_data || NULL == p_socket) {
+    if (NULL == p_data) {
         return -1;
     }
 
@@ -126,7 +126,7 @@ int HAL_UDP_readTimeout(intptr_t p_socket, unsigned char *p_data, unsigned int d
     fd_set              read_fds;
     long                socket_id = -1;
 
-    if (NULL == p_socket || NULL == p_data) {
+    if (NULL == p_data) {
         return -1;
     }
     socket_id = (long)p_socket;

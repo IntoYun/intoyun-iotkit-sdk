@@ -29,6 +29,7 @@ extern "C" {
 #include <stdlib.h>
 #include <stdarg.h>
 #include <inttypes.h>
+#include <ctype.h>
 
 #include "hal_import.h"
 #include "sdk_config.h"

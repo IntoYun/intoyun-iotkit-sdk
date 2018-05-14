@@ -61,9 +61,9 @@ uint64_t utils_get_epoch_time(char copy[], int len)
         if(NULL == tsObject) {
             goto do_exit;
         }
-        uint64_t res = tsObject->valueint;
+        uint32_t res = tsObject->valueint;
         cJSON_Delete(tsJson);
-        snprintf(copy, len, "%lu", res);
+        snprintf(copy, len, "%u", res);
         return res;
     }
 

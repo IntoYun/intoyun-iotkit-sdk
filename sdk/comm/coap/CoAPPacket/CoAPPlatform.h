@@ -19,10 +19,9 @@
 
 #ifndef __COAP_PLATFORM_OS_H__
 #define __COAP_PLATFORM_OS_H__
+
 #include <stdio.h>
-#ifdef COAP_USE_PLATFORM_MEMORY
 #include "lite-utils.h"
-#endif
 
 #ifdef __cplusplus
 extern "C" {
