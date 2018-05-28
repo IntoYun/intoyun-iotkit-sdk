@@ -68,7 +68,8 @@ static void cloud_action_callback(void *pcontext, void *pclient, iotx_mqtt_event
 
 static int iotx_mqtt_pre_auth_process(void)
 {
-    return iotx_guider_authenticate();
+    char time_stamp_str[16] = {0};
+    return iotx_guider_authenticate(time_stamp_str);
 }
 
 static int iotx_mqtt_post_auth_process(void)

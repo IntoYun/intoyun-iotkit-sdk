@@ -374,7 +374,6 @@ static int CoAPRespMessage_handle(CoAPContext *context, CoAPMessage *message)
     }
     
     list_for_each_entry(node, &context->list.sendlist, sendlist, CoAPSendNode) {
-      if(node->observer == COAP_DEREGISTER_OBSERVE) {
         if (0 != node->tokenlen && node->tokenlen == message->header.tokenlen
             && 0 == memcmp(node->token, message->token, message->header.tokenlen)) {
 
@@ -391,44 +390,18 @@ static int CoAPRespMessage_handle(CoAPContext *context, CoAPMessage *message)
             }
 
             MOLMC_LOGD("", "Remove the message id %d from list", node->msgid);
-            list_del_init(&node->sendlist);
-            context->list.count--;
-            if (NULL != node->message) {
-                coap_free(node->message);
+            if(node->observer == COAP_DEREGISTER_OBSERVE) 
+            {
+                list_del_init(&node->sendlist);
+                context->list.count--;
+                if (NULL != node->message) {
+                    coap_free(node->message);
+                }
+                coap_free(node);
+                node = NULL;
             }
-            coap_free(node);
-            node = NULL;
             return COAP_SUCCESS;
         }
-      } else {
-        char *topic = NULL;
-        char *ptr = NULL;
-        char *pstr = NULL;
-        pstr = coap_malloc(message->payloadlen);
-        memcpy(pstr, message->payload, message->payloadlen);
-        ptr = pstr;
-        for(int i=0; i<message->payloadlen; i++) {
-          if(':' == *ptr){
-            topic = coap_malloc(8);
-            memset(topic, 0x00, sizeof(topic));
-            memcpy(topic, pstr, i);
-            if(0 == memcmp(topic, node->topic, strlen(topic))){
-                message->payloadlen = message->payloadlen - i - 1;
-                memset(message->payload, 0x00, message->payloadlen);
-                ptr++;
-                memcpy(message->payload, ptr, message->payloadlen);
-                if (NULL != node->handler) {
-                    node->handler(node->user, message);
-                }
-                coap_free(pstr);
-                return COAP_SUCCESS;
-            }
-            break;
-          }
-          ptr++;
-        } 
-        coap_free(pstr);
-      }
     }
     return COAP_ERROR_NOT_FOUND;
 }

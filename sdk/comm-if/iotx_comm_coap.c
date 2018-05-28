@@ -33,13 +33,16 @@ static int send_mata_info(iotx_coap_context_t *coap_context);
 static int send_device_auth(iotx_coap_context_t *coap_context, char re_auth);
 static int sub_action_topic(iotx_coap_context_t *coap_context);
 static int sub_data_topic(iotx_coap_context_t *coap_context);
+static parse_response_code_log(uint8_t code);
+static int iotx_comm_get_timestamp(iotx_response_callback_t *callback);
+static void iotx_comm_get_timestamp_callback(void *pcontext, void *p_message);
 
 /**
  * 获取aes access token
  * */
 static int iotx_coap_pre_auth_process(void)
 {
-    return iotx_guider_authenticate();
+    return iotx_comm_get_timestamp(iotx_comm_get_timestamp_callback);
 }
 
 static int iotx_coap_post_auth_process(void)
@@ -55,6 +58,50 @@ static parse_response_code_log(uint8_t code)
     uint8_t x = (code & 0xe0) >> 5;
     uint8_t xx = code & 0x1f;
     MOLMC_LOGI(TAG, "Response Code : %d.%02d", x, xx);
+}
+
+/** 
+ * 获取时间戳回调 
+ * */
+static void iotx_comm_get_timestamp_callback(void *pcontext, void *p_message)
+{
+    int ret_code = IOTX_SUCCESS;
+    iotx_coap_t *p_iotx_coap = NULL;
+    CoAPMessage *message = (CoAPMessage *)p_message;
+
+    p_iotx_coap = (iotx_coap_t *)pcontext;
+
+    if (NULL == message) {
+        MOLMC_LOGE(TAG, "Invalid paramter, message %p",  message);
+        return;
+    }
+
+    if (NULL == p_iotx_coap) {
+        MOLMC_LOGE(TAG, "Invalid paramter, pcontext %p",  pcontext);
+        return;
+    }
+
+    parse_response_code_log(message->header.code);
+    MOLMC_LOGD(TAG, "Receive auth response message: %s", message->payload);
+
+    switch (message->header.code) {
+        case COAP_MSG_CODE_205_CONTENT:
+            {
+              char time_stamp_str[16] = {0};
+              memcpy(&time_stamp_str, message->payload, message->payloadlen);
+              iotx_guider_authenticate(time_stamp_str);
+              send_device_auth((iotx_coap_context_t *) pcontext , IOT_FALSE);
+              break;
+            }
+        case COAP_MSG_CODE_500_INTERNAL_SERVER_ERROR:
+            {
+                MOLMC_LOGI(TAG, "CoAP internal server error, get timestamp failed, will retry it");
+                iotx_comm_get_timestamp(iotx_comm_get_timestamp_callback);
+                break;
+            }
+        default:
+            break;
+    }
 }
 
 /**
@@ -90,6 +137,8 @@ static void iotx_device_auth_callback(void *pcontext, void *p_message)
     switch (message->header.code) {
         case COAP_MSG_CODE_205_CONTENT:
             {
+                iotx_coap_post_auth_process();
+
                 strncpy(p_iotx_coap->p_auth_token, message->payload, p_iotx_coap->auth_token_len);
                 p_iotx_coap->is_authed = IOT_TRUE;
                 MOLMC_LOGI(TAG, "CoAP authenticate success token: %s", p_iotx_coap->p_auth_token);
@@ -176,7 +225,10 @@ static void cloud_data_receive_callback(void *pcontext, void *p_message)
     MOLMC_LOGD(TAG, "cloud_data_receive_callback");
     parse_response_code_log(message->header.code);
     MOLMC_LOGD(TAG, "* Payload: ");
-    MOLMC_LOG_BUFFER_HEX(TAG, message->payload, message->payloadlen);
+    if (message->payload != NULL)
+    {
+        MOLMC_LOG_BUFFER_HEX(TAG, message->payload, message->payloadlen);
+    }
 
     switch (message->header.code) {
         case COAP_MSG_CODE_205_CONTENT:
@@ -277,7 +329,7 @@ static int iotx_comm_connect(void)
     memset(coap_config, 0x00, sizeof(iotx_coap_config_t));
     coap_config->p_host = pconn_info->host_name;
     coap_config->p_port = pconn_info->port;
-    coap_config->wait_time_ms = 500;
+    coap_config->wait_time_ms = 400;
     coap_config->event_handle = NULL;
     coap_config->p_devinfo = HAL_Malloc(sizeof(iotx_deviceinfo_t));
     memset(coap_config->p_devinfo, 0x00, sizeof(iotx_device_info_t));
@@ -292,9 +344,8 @@ static int iotx_comm_connect(void)
 
     pconn_info->pclient = pclient;
 
-    iotx_coap_pre_auth_process();
+    rc = iotx_coap_pre_auth_process();
 
-    rc = send_device_auth((iotx_coap_context_t *) pclient, IOT_FALSE);
     if (rc < 0) {
         MOLMC_LOGE(TAG, "IOT_CoAP_Auth() failed, rc = %d", rc);
         goto do_exit;
@@ -515,6 +566,32 @@ static int iotx_comm_send(iotx_conn_send_t sendType, const uint8_t *data, uint16
     ret = IOT_CoAP_Client_Send((iotx_coap_context_t *)pclient, &message);
     // 重新设置心跳间隔时间
     utils_time_countdown_ms(&(pclient->heartbeat_timer), IOTX_COAP_PING_INTERVAL_S);
+    return ret;
+}
+
+/**
+ * 获取时间戳 
+ * */
+static int iotx_comm_get_timestamp(iotx_response_callback_t *callback)
+{
+    int ret = COAP_SUCCESS;
+
+    iotx_coap_t *pclient = (iotx_coap_t *)iotx_conn_info_get()->pclient;
+    iotx_deviceinfo_t *pdev_info = pclient->p_devinfo;
+
+    char uri[] = "/v2/device/ts";
+
+    iotx_message_t message;
+    memset(&message, 0, sizeof(iotx_message_t));
+    message.method = COAP_MSG_CODE_GET;
+    message.p_url = uri;
+    message.p_querystr = NULL;
+    message.p_payload = NULL;
+    message.payload_len = 0;
+    message.resp_callback = callback;
+    message.msg_type = IOTX_MESSAGE_CON;
+    message.content_type = IOTX_CONTENT_TYPE_JSON;
+    ret = IOT_CoAP_Client_Send((iotx_coap_context_t *)pclient, &message);
     return ret;
 }
 
