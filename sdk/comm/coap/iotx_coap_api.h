@@ -90,7 +90,7 @@ typedef struct
 {
     char     device_id[IOTX_DEVICE_ID_LEN + 1];
     char     device_secret[IOTX_DEVICE_SECRET_LEN + 1];
-} iotx_deviceinfo_t;
+} iotx_deviceinfo_t, *iotx_deviceinfo_pt;
 
 /* IoTx initializa parameters */
 typedef struct
@@ -124,13 +124,13 @@ typedef struct {
   int                  auth_token_len;
   char                 is_authed;
   char                 is_connected;
-  iotx_deviceinfo_t   *p_devinfo;
-  CoAPContext         *p_coap_ctx;
+  iotx_deviceinfo_t    *p_devinfo;
+  CoAPContext          *p_coap_ctx;
   unsigned int         coap_token;
   iotx_time_t          heartbeat_timer;         /* the next time point of ping */
   iotx_time_t          auth_timer;         /* the next time point of device auth */
   iotx_event_handle_t  event_handle;
-} iotx_coap_t;
+} iotx_coap_t, *iotx_coap_pt;
 
 /*iotx coap context definition*/
 typedef void iotx_coap_context_t;

@@ -325,16 +325,20 @@ static int iotx_comm_connect(void)
 
     iotx_device_info_pt pdev_info = iotx_device_info_get();
 
-    coap_config = HAL_Malloc(sizeof(iotx_coap_config_t));
+    coap_config = (iotx_coap_config_t *)HAL_Malloc(sizeof(iotx_coap_config_t));
+    if(NULL == coap_config) {
+        MOLMC_LOGE(TAG, "Allocate memory for coap_config failed");
+        goto do_exit;
+    }
     memset(coap_config, 0x00, sizeof(iotx_coap_config_t));
     coap_config->p_host = pconn_info->host_name;
     coap_config->p_port = pconn_info->port;
     coap_config->wait_time_ms = 400;
     coap_config->event_handle = NULL;
     coap_config->p_devinfo = HAL_Malloc(sizeof(iotx_deviceinfo_t));
-    memset(coap_config->p_devinfo, 0x00, sizeof(iotx_device_info_t));
-    strncpy(coap_config->p_devinfo->device_id, pdev_info->device_id, DEVICE_ID_LEN);
-    strncpy(coap_config->p_devinfo->device_secret, pdev_info->device_secret, IOTX_DEVICE_SECRET_LEN);
+    memset(coap_config->p_devinfo, 0x00, sizeof(iotx_deviceinfo_t));
+    memcpy(coap_config->p_devinfo->device_id, pdev_info->device_id, DEVICE_ID_LEN);
+    memcpy(coap_config->p_devinfo->device_secret, pdev_info->device_secret, IOTX_DEVICE_SECRET_LEN);
 
     pclient = IOT_CoAP_Init(coap_config);
     if(NULL == pclient) {
@@ -353,8 +357,15 @@ static int iotx_comm_connect(void)
     return 0;
 
 do_exit:
+    if(NULL != coap_config) {
+      if(NULL != coap_config->p_devinfo) {
+        HAL_Free(&(coap_config->p_devinfo));
+      }
+      HAL_Free(&coap_config);
+    }
+
     if(NULL != pclient) {
-        IOT_CoAP_Yield(&pclient);
+        IOT_CoAP_Deinit(&pclient);
     }
     return -1;
 }

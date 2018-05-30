@@ -32,7 +32,6 @@
 #include "iot_import.h"
 
 const static char *TAG = "hal:udp";
-static struct sockaddr_in s_server_addr; 
 
 intptr_t HAL_UDP_create(const char *host, unsigned short port)
 {

@@ -288,7 +288,7 @@ iotx_coap_context_t *IOT_CoAP_Init(iotx_coap_config_t *p_config)
         return NULL;
     }
 
-    p_iotx_coap = coap_malloc(sizeof(iotx_coap_t));
+    p_iotx_coap = (iotx_coap_t *)coap_malloc(sizeof(iotx_coap_t));
     if (NULL == p_iotx_coap) {
         MOLMC_LOGE(TAG, " Allocate memory for iotx_coap_context_t failed");
         return NULL;

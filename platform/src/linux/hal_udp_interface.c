@@ -42,10 +42,9 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
     char                    addr[NETWORK_ADDR_LEN] = {0};
     struct addrinfo        *res, *ainfo;
     struct sockaddr_in     *sa = NULL;
+    int flag = 1;
 
-    if (NULL == host) {
-        return (void *)(-1);
-    }
+    MOLMC_LOGI(TAG, "establish udp connection with server(host=%s port=%u)", host, port);
 
     sprintf(port_ptr, "%u", port);
     memset((char *)&hints, 0x00, sizeof(hints));
@@ -68,6 +67,11 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
             socket_id = socket(ainfo->ai_family, ainfo->ai_socktype, ainfo->ai_protocol);
             if (socket_id < 0) {
                 MOLMC_LOGE(TAG, "create socket error");
+                continue;
+            }
+            int retr = setsockopt(socket_id, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
+            if (socket_id < 0) {
+                MOLMC_LOGE(TAG, "socket set opt error");
                 continue;
             }
             if (0 == connect(socket_id, ainfo->ai_addr, ainfo->ai_addrlen)) {
