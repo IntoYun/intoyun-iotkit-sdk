@@ -82,6 +82,9 @@ static void iotx_comm_get_timestamp_callback(void *pcontext, void *p_message)
     }
 
     parse_response_code_log(message->header.code);
+    if (NULL == message->payload) {
+        return;
+    }
     MOLMC_LOGD(TAG, "Receive auth response message: %s", message->payload);
 
     switch (message->header.code) {
@@ -132,7 +135,9 @@ static void iotx_device_auth_callback(void *pcontext, void *p_message)
     }
 
     parse_response_code_log(message->header.code);
-    MOLMC_LOGD(TAG, "Receive auth response message: %s", message->payload);
+    if(NULL != message->payload) {
+        MOLMC_LOGD(TAG, "Receive auth response message: %s", message->payload);
+    }
 
     switch (message->header.code) {
         case COAP_MSG_CODE_205_CONTENT:
@@ -186,7 +191,10 @@ static void iotx_send_meta_info_callback(void *pcontext, void *p_message)
     }
 
     parse_response_code_log(message->header.code);
-    MOLMC_LOGD(TAG, "Receive meta info response message: %s", message->payload);
+    if (NULL != message->payload) {
+      MOLMC_LOGD(TAG, "Receive meta info response message: %s", message->payload);
+    }
+
     switch (message->header.code) {
         case COAP_MSG_CODE_205_CONTENT:
             {
@@ -225,10 +233,11 @@ static void cloud_data_receive_callback(void *pcontext, void *p_message)
     MOLMC_LOGD(TAG, "cloud_data_receive_callback");
     parse_response_code_log(message->header.code);
     MOLMC_LOGD(TAG, "* Payload: ");
-    if (message->payload != NULL)
+    if (message->payload == NULL)
     {
-        MOLMC_LOG_BUFFER_HEX(TAG, message->payload, message->payloadlen);
+        return;
     }
+    MOLMC_LOG_BUFFER_HEX(TAG, message->payload, message->payloadlen);
 
     switch (message->header.code) {
         case COAP_MSG_CODE_205_CONTENT:
@@ -271,7 +280,12 @@ static void cloud_action_callback(void *pcontext, void *p_message)
 
     MOLMC_LOGD(TAG, "cloud_action_callback");
     parse_response_code_log(message->header.code);
-    MOLMC_LOGD(TAG, "* Payload: %s", message->payload);
+    MOLMC_LOGD(TAG, "* Payload: ");
+    if (message->payload == NULL)
+    {
+      return;
+    }
+    MOLMC_LOG_BUFFER_HEX(TAG, message->payload, message->payloadlen);
     switch (message->header.code) {
         case COAP_MSG_CODE_205_CONTENT:
             {
@@ -310,7 +324,9 @@ static void iotx_publish_callback(void *pcontext, void *p_message)
 
     MOLMC_LOGD(TAG, "iotx_publish_callback");
     parse_response_code_log(message->header.code);
-    MOLMC_LOGD(TAG, "* Payload: %s", message->payload);
+    if(message->payload != NULL) {
+        MOLMC_LOGD(TAG, "* Payload: %s", message->payload);
+    }
 }
 
 /**

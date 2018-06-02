@@ -70,7 +70,7 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
                 continue;
             }
             int retr = setsockopt(socket_id, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
-            if (socket_id < 0) {
+            if (retr < 0) {
                 MOLMC_LOGE(TAG, "socket set opt error");
                 continue;
             }
