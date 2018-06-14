@@ -23,7 +23,9 @@
 #include "CoAPSerialize.h"
 #include "CoAPDeserialize.h"
 #include "iot_import.h"
+#include "iot_import_coap.h"
 
+const static char *TAG = "sdk:coappacket";
 
 #define COAPAckMsg(header) \
     ((header.code == COAP_MSG_CODE_EMPTY_MESSAGE) \
@@ -59,12 +61,12 @@ int CoAPStrOption_add(CoAPMessage *message, unsigned short optnum, unsigned char
 {
     unsigned char *ptr = NULL;
     if (COAP_MSG_MAX_OPTION_NUM <= message->optnum) {
-        MOLMC_LOGE("coap option", "Invalidate option");
+        MOLMC_LOGE(TAG, "Invalidate option");
         return COAP_ERROR_INVALID_PARAM;
     }
 
     message->options[message->optnum].num = optnum - message->optdelta;
-    
+
     message->options[message->optnum].len = datalen;
     ptr = (unsigned char *)coap_malloc(datalen);
     if (NULL != ptr) {
@@ -82,7 +84,7 @@ int CoAPUintOption_add(CoAPMessage *message, unsigned short  optnum, unsigned in
 {
     unsigned char *ptr = NULL;
     if (COAP_MSG_MAX_OPTION_NUM <= message->optnum) {
-        MOLMC_LOGE("coap option", "Invalidate option");
+        MOLMC_LOGE(TAG, "Invalidate option");
         return COAP_ERROR_INVALID_PARAM;
     }
     if(optnum == COAP_OPTION_OBSERVE) {
@@ -162,10 +164,10 @@ int CoAPMessageTopic_set(CoAPMessage *message, unsigned char *topic)
     if (NULL == message) {
         return COAP_ERROR_NULL;
     }
-    int topic_len = strlen(topic);
-    message->topic = coap_malloc(topic_len); 
-    memset(message->topic, 0x00, topic_len); 
-    memcpy(message->topic, topic, strlen(topic));
+    int topic_len = strlen((char *)topic);
+    message->topic = coap_malloc(topic_len);
+    memset(message->topic, 0x00, topic_len);
+    memcpy(message->topic, topic, strlen((char *)topic));
     return COAP_SUCCESS;
 }
 
@@ -276,7 +278,7 @@ static int CoAPMessageList_add(CoAPContext *context, CoAPMessage *message, int l
         node->timeout_val  = COAP_ACK_TIMEOUT * COAP_ACK_RANDOM_FACTOR;
         node->observer     = message->observer;
         node->topic        = message->topic;
-        MOLMC_LOGD("", "send node topic: %s",  message->topic);
+        MOLMC_LOGD(TAG, "send node topic: %s",  message->topic);
 
         if (COAP_MESSAGE_TYPE_CON == message->header.type) {
             node->timeout       = node->timeout_val;
@@ -317,26 +319,26 @@ int CoAPMessage_send(CoAPContext *context, CoAPMessage *message)
     /* TODO: get the message length */
     msglen = CoAPSerialize_MessageLength(message);
     if (COAP_MSG_MAX_PDU_LEN < msglen) {
-        MOLMC_LOGD("", "The message length %d is too loog", msglen);
+        MOLMC_LOGD(TAG, "The message length %d is too loog", msglen);
         return COAP_ERROR_DATA_SIZE;
     }
 
     memset(context->sendbuf, 0x00, COAP_MSG_MAX_PDU_LEN);
     msglen = CoAPSerialize_Message(message, context->sendbuf, COAP_MSG_MAX_PDU_LEN);
-    MOLMC_LOGD("", "----The message length %d-----", msglen);
+    MOLMC_LOGD(TAG, "----The message length %d-----", msglen);
 
 
     ret = CoAPNetwork_write(&context->network, context->sendbuf, (unsigned int)msglen);
     if (COAP_SUCCESS == ret) {
         if (CoAPReqMsg(message->header) || CoAPCONRespMsg(message->header)) {
-            MOLMC_LOGD("", "Add message id %d len %d to the list",
+            MOLMC_LOGD(TAG, "Add message id %d len %d to the list",
                        message->header.msgid, msglen);
             CoAPMessageList_add(context, message, msglen);
         } else {
-            MOLMC_LOGD("", "The message doesn't need to be retransmitted");
+            MOLMC_LOGD(TAG, "The message doesn't need to be retransmitted");
         }
     } else {
-        MOLMC_LOGE("", "CoAP transoprt write failed, return %d", ret);
+        MOLMC_LOGE(TAG, "CoAP transoprt write failed, return %d", ret);
     }
 
     return ret;
@@ -372,12 +374,12 @@ static int CoAPRespMessage_handle(CoAPContext *context, CoAPMessage *message)
     if (COAP_MESSAGE_TYPE_CON == message->header.type) {
         CoAPAckMessage_send(context, message->header.msgid);
     }
-    
+
     list_for_each_entry(node, &context->list.sendlist, sendlist, CoAPSendNode) {
         if (0 != node->tokenlen && node->tokenlen == message->header.tokenlen
             && 0 == memcmp(node->token, message->token, message->header.tokenlen)) {
 
-            MOLMC_LOGD("", "Find the node by token");
+            MOLMC_LOGD(TAG, "Find the node by token");
             message->user  = node->user;
             if (COAP_MSG_CODE_400_BAD_REQUEST <= message->header.code) {
                 if (NULL != context->notifier) {
@@ -389,8 +391,8 @@ static int CoAPRespMessage_handle(CoAPContext *context, CoAPMessage *message)
                 node->handler(node->user, message);
             }
 
-            MOLMC_LOGD("", "Remove the message id %d from list", node->msgid);
-            if(node->observer == COAP_DEREGISTER_OBSERVE) 
+            MOLMC_LOGD(TAG, "Remove the message id %d from list", node->msgid);
+            if(node->observer == COAP_DEREGISTER_OBSERVE)
             {
                 list_del_init(&node->sendlist);
                 context->list.count--;
@@ -416,13 +418,13 @@ static void CoAPMessage_handle(CoAPContext *context,
 
     ret = CoAPDeserialize_Message(&message, buf, datalen);
     if (NULL != message.payload) {
-        MOLMC_LOGD("", "-----payload: ---");
+        MOLMC_LOGD(TAG, "-----payload: ---");
         MOLMC_LOG_BUFFER_HEX("token", message.payload, message.payloadlen);
     }
-    MOLMC_LOGD("", "-----code   : 0x%x---", message.header.code);
-    MOLMC_LOGD("", "-----type   : 0x%x---", message.header.type);
-    MOLMC_LOGD("", "-----msgid  : %d---", message.header.msgid);
-    MOLMC_LOGD("", "-----opt    : %d---", message.optnum);
+    MOLMC_LOGD(TAG, "-----code   : 0x%x---", message.header.code);
+    MOLMC_LOGD(TAG, "-----type   : 0x%x---", message.header.type);
+    MOLMC_LOGD(TAG, "-----msgid  : %d---", message.header.msgid);
+    MOLMC_LOGD(TAG, "-----opt    : %d---", message.optnum);
     /** MOLMC_LOG_BUFFER_HEX("token", message.token, 4); */
 
     if (COAP_SUCCESS != ret) {
@@ -433,10 +435,10 @@ static void CoAPMessage_handle(CoAPContext *context,
     }
 
     if (COAPAckMsg(message.header)) {
-        MOLMC_LOGD("", "Receive CoAP ACK Message,ID %d", message.header.msgid);
+        MOLMC_LOGD(TAG, "Receive CoAP ACK Message,ID %d", message.header.msgid);
         CoAPAckMessage_handle(context, &message);
     } else if (CoAPRespMsg(message.header)) {
-        MOLMC_LOGD("", "Receive CoAP Response Message,ID %d", message.header.msgid);
+        MOLMC_LOGD(TAG, "Receive CoAP Response Message,ID %d", message.header.msgid);
         CoAPRespMessage_handle(context, &message);
     }
 }
@@ -496,12 +498,12 @@ int CoAPMessage_cycle(CoAPContext *context)
                         /* TODO: */
                         /* context->notifier(context, event); */
                     }
-                    
+
                     if(node->observer == COAP_DEREGISTER_OBSERVE) {
                         /*Remove the node from the list*/
                         list_del_init(&node->sendlist);
                         context->list.count--;
-                        COAP_INFO("Retransmit timeout,remove the message id %d count %d",
+                        MOLMC_LOGI(TAG, "Retransmit timeout,remove the message id %d count %d",
                                   node->msgid, context->list.count);
                         coap_free(node->message);
                         coap_free(node);

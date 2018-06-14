@@ -38,7 +38,7 @@ typedef struct
 {
     char addr[NETWORK_ADDR_LEN];
     unsigned short port;
-}NetworkAddr;
+} NetworkAddr;
 
 
 #include "hal_os_interface.h"

@@ -26,16 +26,15 @@
 #include "lwip/netdb.h"
 
 #include "hal_import.h"
-#include "iot_import.h"
 
 const static char *TAG = "hal:udp";
 
 char *s_host;
 char s_port[6];
-struct addrinfo s_hints = { 
+struct addrinfo s_hints = {
   .ai_family = AF_INET,
   .ai_socktype = SOCK_DGRAM,
-  .ai_protocol = IPPROTO_UDP,  
+  .ai_protocol = IPPROTO_UDP,
 };
 
 
@@ -49,11 +48,11 @@ int getUdpAddrInfo(char *host, unsigned short port, struct addrinfo **ainfo)
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_protocol = IPPROTO_UDP;
     sprintf(p_port, "%u", port);
-    
-    MOLMC_LOGI(TAG, "host: %s; port: %s", host, p_port);
-    
+
+    ESP_LOGI(TAG, "host: %s; port: %s", host, p_port);
+
     if (getaddrinfo(host, p_port, &hints, ainfo) < 0) {
-        MOLMC_LOGE(TAG, "getaddrinfo error");
+        ESP_LOGI(TAG, "getaddrinfo error");
         HAL_Free(&hints);
         return -1;
     }
@@ -63,7 +62,7 @@ int getUdpAddrInfo(char *host, unsigned short port, struct addrinfo **ainfo)
 
 intptr_t HAL_UDP_create(const char *host, unsigned short port)
 {
-      
+
     struct sockaddr_in saddr;
     int socket_id = -1;
     int rc = -1;
@@ -72,15 +71,15 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
     struct addrinfo *res, ainfo;
     char p_port[6];
     int flag = 1;
-    
+
     s_host = HAL_Malloc(strlen(host) + 1);
     memset(s_host, 0, strlen(host) + 1);
     memcpy(s_host, host, strlen(host));
     sprintf(s_port, "%u", port);
-    
+
     /** memset(&hints, 0, sizeof(hints)); */
 
-    MOLMC_LOGI(TAG, "establish udp connection with server(host=%s port=%u)", host, port);
+    ESP_LOGI(TAG, "establish udp connection with server(host=%s port=%u)", host, port);
 
 /**     hints.ai_family = AF_INET; //only IPv4
   *     hints.ai_socktype = SOCK_DGRAM;
@@ -88,35 +87,35 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
   *     sprintf(p_port, "%u", port);
   *
   *     if ((rc = getaddrinfo(host, p_port, &hints, &res)) != 0) {
-  *         MOLMC_LOGE(TAG, "getaddrinfo error");
+  *         ESP_LOGI(TAG, "getaddrinfo error");
   *         return 0;
   *     } */
 
-    
+
     socket_id = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if(socket_id < 0) {
-        MOLMC_LOGE(TAG, "create socket failed");
+        ESP_LOGI(TAG, "create socket failed");
         return -1;
     }
-    
+
     saddr.sin_family = AF_INET;
     saddr.sin_port = htons(9200);
     saddr.sin_addr.s_addr = INADDR_ANY;
 
     /** rc = setsockopt(socket_id, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
       * if (rc < 0) {
-      *     MOLMC_LOGE(TAG, "socket set opt error, rc=%d", rc);
+      *     ESP_LOGI(TAG, "socket set opt error, rc=%d", rc);
       *     return -1;
       * } */
-    
+
 
     rc = bind(socket_id, (struct sockaddr *) &saddr, sizeof(saddr));
     if(rc < 0) {
-        MOLMC_LOGE(TAG, "bind socket failed");
+        ESP_LOGI(TAG, "bind socket failed");
         return -1;
     }
-    
-    MOLMC_LOGI(TAG, "create socket success socket id: %d", socket_id);
+
+    ESP_LOGI(TAG, "create socket success socket id: %d", socket_id);
 
     return (intptr_t)socket_id;
 
@@ -132,7 +131,7 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
   *
   *     memset(&hints, 0, sizeof(hints));
   *
-  *     MOLMC_LOGI(TAG, "establish udp connection with server(host=%s port=%u)", host, port);
+  *     ESP_LOGI(TAG, "establish udp connection with server(host=%s port=%u)", host, port);
   *
   *     hints.ai_family = AF_INET; //only IPv4
   *     hints.ai_socktype = SOCK_DGRAM;
@@ -140,7 +139,7 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
   *     sprintf(service, "%u", port);
   *
   *     if ((rc = getaddrinfo(host, service, &hints, &addrInfoList)) != 0) {
-  *         MOLMC_LOGE(TAG, "getaddrinfo error");
+  *         ESP_LOGI(TAG, "getaddrinfo error");
   *         return -1;
   *     }
   *
@@ -148,17 +147,17 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
   *         if (cur->ai_family == AF_INET) {
   *
   *           fd = socket(cur->ai_family, cur->ai_socktype, cur->ai_protocol);
-  *           MOLMC_LOGI(TAG, "sockfd = %d", fd);
+  *           ESP_LOGI(TAG, "sockfd = %d", fd);
   *
   *           if (fd < 0) {
-  *               MOLMC_LOGE(TAG, "create socket error");
+  *               ESP_LOGI(TAG, "create socket error");
   *               rc = -1;
   *               continue;
   *           }
   *
   *           rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
   *           if (rc < 0) {
-  *               MOLMC_LOGE(TAG, "socket set opt error, rc=%d", rc);
+  *               ESP_LOGI(TAG, "socket set opt error, rc=%d", rc);
   *               continue;
   *           }
   *
@@ -167,16 +166,16 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
   *           }
   *
   *           close(fd);
-  *           MOLMC_LOGE(TAG, "connect error");
+  *           ESP_LOGI(TAG, "connect error");
   *           rc = -1;
   *         }
   *     }
   *
   *     if (rc < 0) {
-  *         MOLMC_LOGI(TAG, "fail to establish udp");
+  *         ESP_LOGI(TAG, "fail to establish udp");
   *         return (void *)(-1);
   *     } else {
-  *         MOLMC_LOGI(TAG, "success to establish udp, fd = %d", fd);
+  *         ESP_LOGI(TAG, "success to establish udp, fd = %d", fd);
   *     }
   *     freeaddrinfo(addrInfoList);
   *
@@ -199,20 +198,20 @@ int HAL_UDP_write(intptr_t p_socket, const unsigned char *p_data, unsigned int d
     struct addrinfo *ainfo;
 
     socket_id = (long)p_socket;
-    MOLMC_LOGI(TAG, "send data %d", p_socket);
-    
+    ESP_LOGI(TAG, "send data %d", p_socket);
+
     if (getaddrinfo(s_host, s_port, &s_hints, &ainfo) < 0) {
-        MOLMC_LOGE(TAG, "getaddrinfo error");
+        ESP_LOGI(TAG, "getaddrinfo error");
         return -1;
     }
 
-    struct sockaddr_in *sa = (struct sockaddr_in *) ainfo->ai_addr; 
+    struct sockaddr_in *sa = (struct sockaddr_in *) ainfo->ai_addr;
     inet_ntop(AF_INET, &sa->sin_addr, addr, NETWORK_ADDR_LEN);
-    MOLMC_LOGE(TAG, "send The host IP %s, port is %d", addr, ntohs(sa->sin_port));
+    ESP_LOGI(TAG, "send The host IP %s, port is %d", addr, ntohs(sa->sin_port));
 
     rc = sendto(socket_id, (char *)p_data, (int)datalen, 0, ainfo->ai_addr, ainfo->ai_addrlen);
-    
-    MOLMC_LOGI(TAG, "send data result rc: %d", rc);
+
+    ESP_LOGI(TAG, "send data result rc: %d", rc);
     HAL_Free(ainfo);
 
     if (rc < 0) {
@@ -234,24 +233,24 @@ int HAL_UDP_read(intptr_t p_socket, unsigned char *p_data, unsigned int datalen)
     }
 
     socket_id = (long)p_socket;
-    
+
     if (socket_id < 0) {
-        MOLMC_LOGI(TAG, "socket error");
+        ESP_LOGI(TAG, "socket error");
         return -1;
     }
-    
+
     if (getaddrinfo(s_host, s_port, &s_hints, &ainfo) < 0) {
-        MOLMC_LOGE(TAG, "getaddrinfo error");
+        ESP_LOGI(TAG, "getaddrinfo error");
         return -1;
     }
-    
-    struct sockaddr_in *sa = (struct sockaddr_in *) ainfo->ai_addr; 
+
+    struct sockaddr_in *sa = (struct sockaddr_in *) ainfo->ai_addr;
     inet_ntop(AF_INET, &sa->sin_addr, addr, NETWORK_ADDR_LEN);
-    MOLMC_LOGE(TAG, "The host IP %s, port is %d", addr, ntohs(sa->sin_port));
+    ESP_LOGI(TAG, "The host IP %s, port is %d", addr, ntohs(sa->sin_port));
 
     count = recvfrom(socket_id, p_data, (size_t)datalen, 0, &ainfo->ai_addr, &ainfo->ai_addrlen);
-    
-    MOLMC_LOGI(TAG, "read data count: %d", count);
+
+    ESP_LOGI(TAG, "read data count: %d", count);
     HAL_Free(ainfo);
 
     return count;
@@ -265,14 +264,14 @@ int HAL_UDP_readTimeout(intptr_t p_socket, unsigned char *p_data, unsigned int d
     long                socket_id = -1;
 
     if (NULL == p_data) {
-        MOLMC_LOGE(TAG, "p_data is NULL");
+        ESP_LOGI(TAG, "p_data is NULL");
         return -1;
     }
     socket_id = (long)p_socket;
-    
+
 
     if (socket_id < 0) {
-        MOLMC_LOGE(TAG, "socket_id error");
+        ESP_LOGI(TAG, "socket_id error");
         return -1;
     }
 
@@ -283,7 +282,7 @@ int HAL_UDP_readTimeout(intptr_t p_socket, unsigned char *p_data, unsigned int d
     tv.tv_usec = (timeout % 1000) * 1000;
 
     ret = select(socket_id + 1, &read_fds, NULL, NULL, timeout == 0 ? NULL : &tv);
-    
+
     /* Zero fds ready means we timed out */
     if (ret == 0) {
         return -2;    /* receive timeout */

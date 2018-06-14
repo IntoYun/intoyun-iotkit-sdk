@@ -20,6 +20,8 @@
 #include "iot_import.h"
 #include "utils_net.h"
 
+const static char *TAG = "sdk:httpc";
+
 /*** TCP connection ***/
 int read_tcp(utils_network_pt pNetwork, char *buffer, uint32_t len, uint32_t timeout_ms)
 {
@@ -33,27 +35,26 @@ static int write_tcp(utils_network_pt pNetwork, const char *buffer, uint32_t len
 
 static int disconnect_tcp(utils_network_pt pNetwork)
 {
-    if (0 == pNetwork->handle) {
+    if (pNetwork->handle < 0) {
         return -1;
     }
 
     HAL_TCP_Destroy(pNetwork->handle);
-    pNetwork->handle = 0;
+    pNetwork->handle = -1;
     return 0;
 }
 
 static int connect_tcp(utils_network_pt pNetwork)
 {
     if (NULL == pNetwork) {
-        MOLMC_LOGE("net", "network is null");
+        MOLMC_LOGE(TAG, "network is null");
         return 1;
     }
 
     pNetwork->handle = HAL_TCP_Establish(pNetwork->pHostAddress, pNetwork->port);
-    if (0 == pNetwork->handle) {
+    if (pNetwork->handle < 0) {
         return -1;
     }
-
     return 0;
 }
 
@@ -62,32 +63,32 @@ static int connect_tcp(utils_network_pt pNetwork)
 static int read_ssl(utils_network_pt pNetwork, char *buffer, uint32_t len, uint32_t timeout_ms)
 {
     if (NULL == pNetwork) {
-        MOLMC_LOGE("net", "network is null");
+        MOLMC_LOGE(TAG, "network is null");
         return -1;
     }
 
-    return HAL_SSL_Read((uintptr_t)pNetwork->handle, buffer, len, timeout_ms);
+    return HAL_SSL_Read((intptr_t)pNetwork->handle, buffer, len, timeout_ms);
 }
 
 static int write_ssl(utils_network_pt pNetwork, const char *buffer, uint32_t len, uint32_t timeout_ms)
 {
     if (NULL == pNetwork) {
-        MOLMC_LOGE("net", "network is null");
+        MOLMC_LOGE(TAG, "network is null");
         return -1;
     }
 
-    return HAL_SSL_Write((uintptr_t)pNetwork->handle, buffer, len, timeout_ms);
+    return HAL_SSL_Write((intptr_t)pNetwork->handle, buffer, len, timeout_ms);
 }
 
 static int disconnect_ssl(utils_network_pt pNetwork)
 {
     if (NULL == pNetwork) {
-        MOLMC_LOGE("net", "network is null");
+        MOLMC_LOGE(TAG, "network is null");
         return -1;
     }
 
-    HAL_SSL_Destroy((uintptr_t)pNetwork->handle);
-    pNetwork->handle = 0;
+    HAL_SSL_Destroy((intptr_t)pNetwork->handle);
+    pNetwork->handle = -1;
 
     return 0;
 }
@@ -95,15 +96,15 @@ static int disconnect_ssl(utils_network_pt pNetwork)
 static int connect_ssl(utils_network_pt pNetwork)
 {
     if (NULL == pNetwork) {
-        MOLMC_LOGE("net", "network is null");
+        MOLMC_LOGE(TAG, "network is null");
         return 1;
     }
 
-    if (0 != (pNetwork->handle = (intptr_t)HAL_SSL_Establish(
+    if ((pNetwork->handle = (intptr_t)HAL_SSL_Establish(
                                      pNetwork->pHostAddress,
                                      pNetwork->port,
                                      pNetwork->ca_crt,
-                                     pNetwork->ca_crt_len + 1))) {
+                                     pNetwork->ca_crt_len + 1)) >= 0) {
         return 0;
     } else {
         /* TODO SHOLUD not remove this handle space */
@@ -178,7 +179,7 @@ int iotx_net_connect(utils_network_pt pNetwork)
 int iotx_net_init(utils_network_pt pNetwork, const char *host, uint16_t port, const char *ca_crt)
 {
     if (!pNetwork || !host) {
-        MOLMC_LOGE("net", "parameter error! pNetwork=%p, host = %p", pNetwork, host);
+        MOLMC_LOGE(TAG, "parameter error! pNetwork=%p, host = %p", pNetwork, host);
         return -1;
     }
     pNetwork->pHostAddress = host;
@@ -191,7 +192,7 @@ int iotx_net_init(utils_network_pt pNetwork, const char *host, uint16_t port, co
         pNetwork->ca_crt_len = strlen(ca_crt);
     }
 
-    pNetwork->handle = 0;
+    pNetwork->handle = -1;
     pNetwork->read = utils_net_read;
     pNetwork->write = utils_net_write;
     pNetwork->disconnect = iotx_net_disconnect;

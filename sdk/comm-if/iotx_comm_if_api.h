@@ -26,13 +26,13 @@ extern "C"
 {
 #endif
 
-#define INTOYUN_MQTT_SERVER_DOMAIN        "ghgyliot.intoyun.com"
+#define INTOYUN_MQTT_SERVER_DOMAIN        "iot.intoyun.com"
 #define INTOYUN_MQTT_SERVER_PORT          1883
 
 #define INTOYUN_COAP_SERVER_DOMAIN        "coap://ghgyliot.intoyun.com"
 #define INTOYUN_COAP_SERVER_PORT          5683
 
-#define INTOYUN_HTTP_SERVER_DOMAIN        "ghgylwww.intoyun.com"
+#define INTOYUN_HTTP_SERVER_DOMAIN        "www.intoyun.com"
 #define INTOYUN_HTTP_SERVER_PORT          80
 
 /* Minimum interval of reconnect in millisecond */
@@ -91,12 +91,6 @@ typedef struct {
     iotx_conn_state_t conn_state;
     iotx_conn_reconnect_param_t reconnect_param;
 } iotx_conn_info_t, *iotx_conn_info_pt;
-
-/* send type */
-typedef enum {
-    IOTX_CONN_SEND_DATA = 0,               /* 发送数据 */
-    IOTX_CONN_SEND_ACTION_REPLY = 1,       /* 发送指令回复 */
-} iotx_conn_send_t;
 
 /* action reply of OTA */
 typedef enum {

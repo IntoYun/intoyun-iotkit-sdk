@@ -16,13 +16,24 @@
  *
  */
 
-
+#include "iot_import.h"
+#include "sdk_config.h"
+#include "utils_list.h"
+#include "lite-utils.h"
+#include "iotx_comm_if_api.h"
 #include "iot_import_mqtt.h"
 #include "iotx_mqtt_client.h"
 #include "iotx_guider_api.h"
 #include "iotx_crypto_api.h"
+#include "iotx_system_api.h"
+#include "iotx_comm_if.h"
+#include "iotx_datapoint_api.h"
 
-#define MQTT_MSGLEN              (1024)
+#if CONFIG_CLOUD_CHANNEL == 1     //MQTT
+
+const static char *TAG = "sdk:comm-if-mqtt";
+
+#define MQTT_MSGLEN                   (1024)
 
 #define SUB_TX_TOPIC                  "tx"
 #define PUB_RX_TOPIC                  "rx"
@@ -30,7 +41,7 @@
 #define SUB_ACTION_TOPIC              "action"
 #define PUB_REPLY_TOPIC               "reply"
 
-static int iotx_comm_disconnect(void);
+extern int iotx_get_device_info(char *buf, uint16_t buflen);
 
 static int gen_mqt_topic(char *buf, uint16_t buf_len, const char *name)
 {
@@ -68,8 +79,7 @@ static void cloud_action_callback(void *pcontext, void *pclient, iotx_mqtt_event
 
 static int iotx_mqtt_pre_auth_process(void)
 {
-    char time_stamp_str[16] = {0};
-    return iotx_guider_authenticate(time_stamp_str);
+    return iotx_guider_authenticate();
 }
 
 static int iotx_mqtt_post_auth_process(void)
@@ -141,7 +151,7 @@ exit:
     return ret;
 }
 
-static int iotx_comm_connect(void)
+int iotx_comm_connect(void)
 {
     int rc = 0;
     char *msg_writebuf = NULL, *msg_readbuf = NULL;
@@ -262,7 +272,7 @@ do_exit:
     return -1;
 }
 
-static bool iotx_comm_isconnected(void)
+bool iotx_comm_isconnected(void)
 {
     void *pclient = iotx_conn_info_get()->pclient;
 
@@ -273,7 +283,7 @@ static bool iotx_comm_isconnected(void)
     return IOT_MQTT_CheckStateNormal(pclient);
 }
 
-static int iotx_comm_disconnect(void)
+int iotx_comm_disconnect(void)
 {
     iotx_mc_client_t *pclient = iotx_conn_info_get()->pclient;
     char *msg_writebuf = NULL, *msg_readbuf = NULL;
@@ -294,7 +304,7 @@ static int iotx_comm_disconnect(void)
     return 0;
 }
 
-static int iotx_comm_send(iotx_conn_send_t sendType, const uint8_t *data, uint16_t datalen)
+int iotx_comm_send(iotx_conn_send_t sendType, const uint8_t *data, uint16_t datalen)
 {
     char topic_name[TOPIC_NAME_LEN] = {0}, topic_tail[16] = {0};
     iotx_mqtt_topic_info_t topic_msg;
@@ -337,7 +347,7 @@ static int iotx_comm_send(iotx_conn_send_t sendType, const uint8_t *data, uint16
     return rc;
 }
 
-static int iotx_comm_yield(void)
+int iotx_comm_yield(void)
 {
     void *pclient = iotx_conn_info_get()->pclient;
 
@@ -346,4 +356,6 @@ static int iotx_comm_yield(void)
     }
     return 0;
 }
+
+#endif
 

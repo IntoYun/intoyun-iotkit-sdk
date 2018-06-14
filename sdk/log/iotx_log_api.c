@@ -15,7 +15,7 @@
  * limitations under the License.
  *
  */
-
+#include <stddef.h>
 #include "iot_import.h"
 #include "iotx_log_api.h"
 #include "utils_queue.h"

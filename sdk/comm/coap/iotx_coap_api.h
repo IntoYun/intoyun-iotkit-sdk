@@ -19,7 +19,6 @@
 #ifndef __IOTX_COAP_API_H__
 #define __IOTX_COAP_API_H__
 
-#include "CoAPPacket/CoAPExport.h"
 #include "CoAPPacket/CoAPMessage.h"
 
 #ifdef __cplusplus
@@ -119,19 +118,6 @@ typedef struct
     iotx_response_callback_t resp_callback;
 } iotx_message_t;
 
-typedef struct {
-  char                *p_auth_token;
-  int                  auth_token_len;
-  char                 is_authed;
-  char                 is_connected;
-  iotx_deviceinfo_t    *p_devinfo;
-  CoAPContext          *p_coap_ctx;
-  unsigned int         coap_token;
-  iotx_time_t          heartbeat_timer;         /* the next time point of ping */
-  iotx_time_t          auth_timer;         /* the next time point of device auth */
-  iotx_event_handle_t  event_handle;
-} iotx_coap_t, *iotx_coap_pt;
-
 /*iotx coap context definition*/
 typedef void iotx_coap_context_t;
 
@@ -195,7 +181,7 @@ int  IOT_CoAP_Auth(iotx_coap_context_t *p_context, iotx_message_t *message);
  * @retval IOTX_ERR_NOT_AUTHED      : The client hasn't authenticated with server
  * @see iotx_ret_code_t.
  */
-int  IOT_CoAP_SendMessage(iotx_coap_context_t *p_context, iotx_message_t *p_message);
+int IOT_CoAP_SendMessage(iotx_coap_context_t *p_context, iotx_message_t *p_message);
 
 
 int IOT_CoAP_Client_Observe_Send(iotx_coap_context_t *p_context, iotx_message_t *p_message);

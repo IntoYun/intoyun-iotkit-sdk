@@ -93,8 +93,8 @@ void molmc_log_write(molmc_log_level_t level, const char* tag, const char* forma
 
 #include "iotx_log_internal.h"
 
-#ifndef LOG_LOCAL_LEVEL
-#define LOG_LOCAL_LEVEL  CONFIG_LOG_DEFAULT_LEVEL
+#ifndef MOLMC_LOG_LOCAL_LEVEL
+#define MOLMC_LOG_LOCAL_LEVEL  CONFIG_MOLMC_LOG_DEFAULT_LEVEL
 #endif
 
 /**
@@ -111,7 +111,7 @@ void molmc_log_write(molmc_log_level_t level, const char* tag, const char* forma
  */
 #define MOLMC_LOG_BUFFER_HEX_LEVEL( tag, buffer, buff_len, level ) \
     do {\
-        if ( LOG_LOCAL_LEVEL >= (level) ) { \
+        if ( MOLMC_LOG_LOCAL_LEVEL >= (level) ) { \
             molmc_log_buffer_hex_internal( tag, buffer, buff_len, level ); \
         } \
     } while(0)
@@ -130,7 +130,7 @@ void molmc_log_write(molmc_log_level_t level, const char* tag, const char* forma
  */
 #define MOLMC_LOG_BUFFER_CHAR_LEVEL( tag, buffer, buff_len, level ) \
     do {\
-        if ( LOG_LOCAL_LEVEL >= (level) ) { \
+        if ( MOLMC_LOG_LOCAL_LEVEL >= (level) ) { \
             molmc_log_buffer_char_internal( tag, buffer, buff_len, level ); \
         } \
     } while(0)
@@ -156,7 +156,7 @@ void molmc_log_write(molmc_log_level_t level, const char* tag, const char* forma
  */
 #define MOLMC_LOG_BUFFER_HEXDUMP( tag, buffer, buff_len, level ) \
     do { \
-        if ( LOG_LOCAL_LEVEL >= (level) ) { \
+        if ( MOLMC_LOG_LOCAL_LEVEL >= (level) ) { \
             molmc_log_buffer_hexdump_internal( tag, buffer, buff_len, level); \
         } \
     } while(0)
@@ -175,7 +175,7 @@ void molmc_log_write(molmc_log_level_t level, const char* tag, const char* forma
  */
 #define MOLMC_LOG_BUFFER_HEX(tag, buffer, buff_len) \
     do { \
-        if (LOG_LOCAL_LEVEL > MOLMC_LOG_INFO) { \
+        if (MOLMC_LOG_LOCAL_LEVEL > MOLMC_LOG_INFO) { \
             MOLMC_LOG_BUFFER_HEX_LEVEL( tag, buffer, buff_len, MOLMC_LOG_INFO ); \
         }\
     } while(0)
@@ -194,37 +194,37 @@ void molmc_log_write(molmc_log_level_t level, const char* tag, const char* forma
  */
 #define MOLMC_LOG_BUFFER_CHAR(tag, buffer, buff_len) \
     do { \
-        if (LOG_LOCAL_LEVEL > MOLMC_LOG_INFO) { \
+        if (MOLMC_LOG_LOCAL_LEVEL > MOLMC_LOG_INFO) { \
             MOLMC_LOG_BUFFER_CHAR_LEVEL( tag, buffer, buff_len, MOLMC_LOG_INFO ); \
         }\
     } while(0)
 
-#if CONFIG_LOG_COLORS
-#define LOG_COLOR_BLACK   "30"
-#define LOG_COLOR_RED     "31"
-#define LOG_COLOR_GREEN   "32"
-#define LOG_COLOR_BROWN   "33"
-#define LOG_COLOR_BLUE    "34"
-#define LOG_COLOR_PURPLE  "35"
-#define LOG_COLOR_CYAN    "36"
-#define LOG_COLOR(COLOR)  "\033[0;" COLOR "m"
-#define LOG_BOLD(COLOR)   "\033[1;" COLOR "m"
-#define LOG_RESET_COLOR   "\033[0m"
-#define LOG_COLOR_E       LOG_COLOR(LOG_COLOR_RED)
-#define LOG_COLOR_W       LOG_COLOR(LOG_COLOR_BROWN)
-#define LOG_COLOR_I       LOG_COLOR(LOG_COLOR_GREEN)
-#define LOG_COLOR_D
-#define LOG_COLOR_V
-#else //CONFIG_LOG_COLORS
-#define LOG_COLOR_E
-#define LOG_COLOR_W
-#define LOG_COLOR_I
-#define LOG_COLOR_D
-#define LOG_COLOR_V
-#define LOG_RESET_COLOR
-#endif //CONFIG_LOG_COLORS
+#if CONFIG_MOLMC_LOG_COLORS
+#define MOLMC_LOG_COLOR_BLACK   "30"
+#define MOLMC_LOG_COLOR_RED     "31"
+#define MOLMC_LOG_COLOR_GREEN   "32"
+#define MOLMC_LOG_COLOR_BROWN   "33"
+#define MOLMC_LOG_COLOR_BLUE    "34"
+#define MOLMC_LOG_COLOR_PURPLE  "35"
+#define MOLMC_LOG_COLOR_CYAN    "36"
+#define MOLMC_LOG_COLOR(COLOR)  "\033[0;" COLOR "m"
+#define MOLMC_LOG_BOLD(COLOR)   "\033[1;" COLOR "m"
+#define MOLMC_LOG_RESET_COLOR   "\033[0m"
+#define MOLMC_LOG_COLOR_E       MOLMC_LOG_COLOR(MOLMC_LOG_COLOR_RED)
+#define MOLMC_LOG_COLOR_W       MOLMC_LOG_COLOR(MOLMC_LOG_COLOR_BROWN)
+#define MOLMC_LOG_COLOR_I       MOLMC_LOG_COLOR(MOLMC_LOG_COLOR_GREEN)
+#define MOLMC_LOG_COLOR_D
+#define MOLMC_LOG_COLOR_V
+#else //CONFIG_MOLMC_LOG_COLORS
+#define MOLMC_LOG_COLOR_E
+#define MOLMC_LOG_COLOR_W
+#define MOLMC_LOG_COLOR_I
+#define MOLMC_LOG_COLOR_D
+#define MOLMC_LOG_COLOR_V
+#define MOLMC_LOG_RESET_COLOR
+#endif //CONFIG_MOLMC_LOG_COLORS
 
-#define LOG_FORMAT(letter, format)  LOG_COLOR_ ## letter #letter " [%010u]:[%-12.12s]: " format LOG_RESET_COLOR "\n"
+#define MOLMC_LOG_FORMAT(letter, format)  MOLMC_LOG_COLOR_ ## letter #letter " [%010u]:[%-12.12s]: " format MOLMC_LOG_RESET_COLOR "\n"
 
 #define MOLMC_LOGE( tag, format, ... ) MOLMC_LOG_LEVEL_LOCAL(MOLMC_LOG_ERROR,   tag, format, ##__VA_ARGS__)
 #define MOLMC_LOGW( tag, format, ... ) MOLMC_LOG_LEVEL_LOCAL(MOLMC_LOG_WARN,    tag, format, ##__VA_ARGS__)
@@ -244,20 +244,20 @@ void molmc_log_write(molmc_log_level_t level, const char* tag, const char* forma
  *
  * @see ``printf``
  */
-#define MOLMC_LOG_LEVEL(level, tag, format, ...) do {                     \
-        if (level==MOLMC_LOG_ERROR )          { molmc_log_write(MOLMC_LOG_ERROR,      tag, LOG_FORMAT(E, format), molmc_log_timestamp(), tag, ##__VA_ARGS__); } \
-        else if (level==MOLMC_LOG_WARN )      { molmc_log_write(MOLMC_LOG_WARN,       tag, LOG_FORMAT(W, format), molmc_log_timestamp(), tag, ##__VA_ARGS__); } \
-        else if (level==MOLMC_LOG_DEBUG )     { molmc_log_write(MOLMC_LOG_DEBUG,      tag, LOG_FORMAT(D, format), molmc_log_timestamp(), tag, ##__VA_ARGS__); } \
-        else if (level==MOLMC_LOG_VERBOSE )   { molmc_log_write(MOLMC_LOG_VERBOSE,    tag, LOG_FORMAT(V, format), molmc_log_timestamp(), tag, ##__VA_ARGS__); } \
-        else                                  { molmc_log_write(MOLMC_LOG_INFO,       tag, LOG_FORMAT(I, format), molmc_log_timestamp(), tag, ##__VA_ARGS__); } \
+#define MOLMC_LOG_LEVEL(level, tag, format, ...) do { \
+        if (level==MOLMC_LOG_ERROR )          { molmc_log_write(MOLMC_LOG_ERROR,      tag, MOLMC_LOG_FORMAT(E, format), molmc_log_timestamp(), tag, ##__VA_ARGS__); } \
+        else if (level==MOLMC_LOG_WARN )      { molmc_log_write(MOLMC_LOG_WARN,       tag, MOLMC_LOG_FORMAT(W, format), molmc_log_timestamp(), tag, ##__VA_ARGS__); } \
+        else if (level==MOLMC_LOG_DEBUG )     { molmc_log_write(MOLMC_LOG_DEBUG,      tag, MOLMC_LOG_FORMAT(D, format), molmc_log_timestamp(), tag, ##__VA_ARGS__); } \
+        else if (level==MOLMC_LOG_VERBOSE )   { molmc_log_write(MOLMC_LOG_VERBOSE,    tag, MOLMC_LOG_FORMAT(V, format), molmc_log_timestamp(), tag, ##__VA_ARGS__); } \
+        else                                  { molmc_log_write(MOLMC_LOG_INFO,       tag, MOLMC_LOG_FORMAT(I, format), molmc_log_timestamp(), tag, ##__VA_ARGS__); } \
     } while(0)
 
-/** runtime macro to output logs at a specified level. Also check the level with ``LOG_LOCAL_LEVEL``.
+/** runtime macro to output logs at a specified level. Also check the level with ``MOLMC_LOG_LOCAL_LEVEL``.
  *
  * @see ``printf``, ``ESP_LOG_LEVEL``
  */
-#define MOLMC_LOG_LEVEL_LOCAL(level, tag, format, ...) do {               \
-        if ( LOG_LOCAL_LEVEL >= level ) MOLMC_LOG_LEVEL(level, tag, format, ##__VA_ARGS__); \
+#define MOLMC_LOG_LEVEL_LOCAL(level, tag, format, ...) do { \
+        if ( MOLMC_LOG_LOCAL_LEVEL >= level ) MOLMC_LOG_LEVEL(level, tag, format, ##__VA_ARGS__); \
     } while(0)
 
 #ifdef __cplusplus

@@ -19,22 +19,22 @@
 #include "hal_import.h"
 
 
-uintptr_t HAL_SSL_Establish(const char *host, uint16_t port, const char *ca_crt, size_t ca_crt_len)
+intptr_t HAL_SSL_Establish(const char *host, uint16_t port, const char *ca_crt, size_t ca_crt_len)
 {
     return 0;
 }
 
-int32_t HAL_SSL_Destroy(uintptr_t handle)
+int32_t HAL_SSL_Destroy(intptr_t handle)
 {
     return 0;
 }
 
-int HAL_SSL_Read(uintptr_t handle, char *buf, int len, int timeout_ms)
+int HAL_SSL_Read(intptr_t handle, char *buf, int len, int timeout_ms)
 {
     return 0;
 }
 
-int HAL_SSL_Write(uintptr_t handle, const char *buf, int len, int timeout_ms)
+int HAL_SSL_Write(intptr_t handle, const char *buf, int len, int timeout_ms)
 {
     return 0;
 }

@@ -18,9 +18,9 @@
 
 #include <stdio.h>
 
-#include "iot_import_coap.h"
 #include "lite-utils.h"
-#include "iotx_coap_api.h"
+#include "iot_import_coap.h"
+#include "iotx_coap_client.h"
 
 
 #define IOTX_AUTH_TOKEN_LEN      (32+1)
@@ -39,43 +39,6 @@ static unsigned int iotx_get_coap_token(iotx_coap_t *p_iotx_coap, unsigned char 
     p_iotx_coap->coap_token++;
     MOLMC_LOG_BUFFER_HEX(TAG, p_encoded_data, 4);
     return sizeof(unsigned int);
-}
-
-static int iotx_get_token_from_json(char *p_str, char *p_token, int len)
-{
-    char *p_value = NULL;
-    cJSON *tokenJson = NULL;
-    if (NULL == p_str || NULL == p_token) {
-        MOLMC_LOGE(TAG, "Invalid paramter p_str %p, p_token %p", p_str, p_token);
-        return IOTX_ERR_INVALID_PARAM;
-    }
-
-    tokenJson = cJSON_Parse(p_str);
-    if(NULL == tokenJson) {
-        goto do_exit;
-    }
-    cJSON *tkObj = cJSON_GetObjectItem(tokenJson, "token");
-    if(NULL == tkObj) {
-        goto do_exit;
-    }
-    p_value = tkObj->valuestring;
-    if (NULL != p_value) {
-        if (len - 1 < strlen(p_value)) {
-            return IOTX_ERR_BUFF_TOO_SHORT;
-        }
-        memset(p_token, 0x00, len);
-        strncpy(p_token, p_value, strlen(p_value));
-        coap_free(p_value);
-        cJSON_Delete(tokenJson);
-        return IOTX_SUCCESS;
-    }
-
-do_exit:
-    if(NULL != tokenJson) {
-        cJSON_Delete(tokenJson);
-    }
-
-    return IOTX_ERR_AUTH_FAILED;
 }
 
 static int iotx_path_2_option(char *uri, CoAPMessage *message)
@@ -111,7 +74,7 @@ static int iotx_path_2_option(char *uri, CoAPMessage *message)
             MOLMC_LOGD(TAG, "topic: %s,len=%d", path, (int)strlen(path));
             CoAPStrOption_add(message, COAP_OPTION_URI_PATH,
                     (unsigned char *)path, (int)strlen(path));
-            CoAPMessageTopic_set(message, path);
+            CoAPMessageTopic_set(message, (unsigned char *)path);
         }
         ptr ++;
     }
@@ -197,7 +160,7 @@ int IOT_CoAP_Client_Observe_Send(iotx_coap_context_t *p_context, iotx_message_t 
     CoAPMessageType_set(&message, COAP_MESSAGE_TYPE_CON);
     CoAPMessageCode_set(&message, p_message->method);
     CoAPMessageId_set(&message, CoAPMessageId_gen(p_coap_ctx));
-    tokenlen = iotx_get_coap_token(p_coap_ctx, token);
+    tokenlen = iotx_get_coap_token(p_iotx_coap, token);
     CoAPMessageToken_set(&message, token, tokenlen);
     CoAPMessageHandler_set(&message, p_message->resp_callback);
     CoAPMessageUserData_set(&message, (void *)p_iotx_coap);
@@ -243,7 +206,7 @@ int IOT_CoAP_Client_Send(iotx_coap_context_t *p_context, iotx_message_t *p_messa
     CoAPMessageType_set(&message, COAP_MESSAGE_TYPE_CON);
     CoAPMessageCode_set(&message, p_message->method);
     CoAPMessageId_set(&message, CoAPMessageId_gen(p_coap_ctx));
-    tokenlen = iotx_get_coap_token(p_coap_ctx, token);
+    tokenlen = iotx_get_coap_token(p_iotx_coap, token);
     CoAPMessageToken_set(&message, token, tokenlen);
     CoAPMessageHandler_set(&message, p_message->resp_callback);
     CoAPMessageUserData_set(&message, (void *)p_iotx_coap);
@@ -372,12 +335,10 @@ err:
 
 int IOT_CoAP_Auth(iotx_coap_context_t *p_context, iotx_message_t *message)
 {
-    int len = 0;
+    //int len = 0;
     int ret = COAP_SUCCESS;
-    CoAPContext      *p_coap_ctx = NULL;
+    //CoAPContext      *p_coap_ctx = NULL;
     iotx_coap_t      *p_iotx_coap = NULL;
-    unsigned char    *p_payload   = NULL;
-    unsigned char     token[8] = {0};
 
     p_iotx_coap = (iotx_coap_t *)p_context;
     if (NULL == p_iotx_coap || (NULL != p_iotx_coap && (NULL == p_iotx_coap->p_auth_token
@@ -386,8 +347,7 @@ int IOT_CoAP_Auth(iotx_coap_context_t *p_context, iotx_message_t *message)
         return IOTX_ERR_INVALID_PARAM;
     }
 
-    p_coap_ctx = (CoAPContext *)p_iotx_coap->p_coap_ctx;
-
+    //p_coap_ctx = (CoAPContext *)p_iotx_coap->p_coap_ctx;
 
     ret = IOT_CoAP_Client_Send(p_context, message);
 

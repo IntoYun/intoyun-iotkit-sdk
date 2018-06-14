@@ -37,8 +37,8 @@ struct utils_network {
     /**< NULL, TCP connection; NOT NULL, SSL connection */
     const char *ca_crt;
 
-    /**< connection handle: 0, NOT connection; NOT 0, handle of the connection */
-    uintptr_t handle;
+    /**< connection handle: -1, NOT connection; >= 0, handle of the connection */
+    intptr_t handle;
 
     /**< Read data from server function pointer. */
     int (*read)(utils_network_pt, char *, uint32_t, uint32_t);

@@ -16,25 +16,30 @@
  *
  */
 
-#include <time.h>
-#include <reent.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <pthread.h>
-#include <unistd.h>
+#include <stdint.h>
+#include <sys/socket.h>
+
 #include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/semphr.h"
+
 #include "esp_timer.h"
-#include "lwip/sockets.h"
+#include "esp_system.h"
+
 #include "hal_import.h"
 
+#define MOLMC_LOGD(tag, format, ...) do { \
+        printf("D [%010u]:[%-12.12s]: "format"\n", HAL_UptimeMs(), tag, ##__VA_ARGS__);\
+    } while(0)
+
+typedef xSemaphoreHandle osi_mutex_t;
 static os_timer_t hal_micros_overflow_timer;
-static uint32 hal_micros_at_last_overflow_tick = 0;
-static uint32 hal_micros_overflow_count = 0;
+static uint32_t hal_micros_at_last_overflow_tick = 0;
+static uint32_t hal_micros_overflow_count = 0;
 
 static void hal_micros_overflow_tick(void *arg)
 {
-    uint32 m = system_get_time();
+    uint32_t m = system_get_time();
 
     if (m < hal_micros_at_last_overflow_tick) {
         hal_micros_overflow_count ++;
@@ -52,12 +57,10 @@ void hal_micros_set_default_time(void)
 
 unsigned long hal_millis(void)
 {
-    uint32 m = system_get_time();
-    uint32 c = hal_micros_overflow_count + ((m < hal_micros_at_last_overflow_tick) ? 1 : 0);
+    uint32_t m = system_get_time();
+    uint32_t c = hal_micros_overflow_count + ((m < hal_micros_at_last_overflow_tick) ? 1 : 0);
     return c * 4294967 + m / 1000;
 }
-
-void mygettimeofday(struct timeval *tv, void *tz);
 
 /**
  * @brief  gain millisecond time
@@ -66,7 +69,7 @@ void mygettimeofday(struct timeval *tv, void *tz);
  * */
 void mygettimeofday(struct timeval *tv, void *tz)
 {
-    uint32 current_time_us = system_get_time();
+    uint32_t current_time_us = system_get_time();
 
     if (tv == NULL) {
         return;
@@ -83,22 +86,29 @@ void mygettimeofday(struct timeval *tv, void *tz)
 
 void *HAL_MutexCreate(void)
 {
-    return NULL;
+    osi_mutex_t *p_mutex = NULL;
+    p_mutex = (osi_mutex_t *)malloc(sizeof(osi_mutex_t));
+    if(p_mutex == NULL)
+        return NULL;
+
+    *p_mutex = xSemaphoreCreateMutex();
+    return p_mutex;
 }
 
 void HAL_MutexDestroy(void *mutex)
 {
-
+    vSemaphoreDelete(*((osi_mutex_t*)mutex));
+    free(mutex);
 }
 
 void HAL_MutexLock(void *mutex)
 {
-
+    xSemaphoreTake(*((osi_mutex_t*)mutex), portMAX_DELAY);
 }
 
 void HAL_MutexUnlock(void *mutex)
 {
-
+    xSemaphoreGive(*((osi_mutex_t*)mutex));
 }
 
 void *HAL_Malloc(uint32_t size)
@@ -128,7 +138,7 @@ void HAL_Srandom(uint32_t seed)
 
 uint32_t HAL_Random(uint32_t region)
 {
-    return (region > 0) ? (rand() % region) : 0;
+    return os_random();
 }
 
 void HAL_Print(const char * output)

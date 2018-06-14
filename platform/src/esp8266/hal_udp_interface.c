@@ -24,10 +24,12 @@
 #include "lwip/netdb.h"
 
 #include "hal_import.h"
-#include "iot_import.h"
+
+#define MOLMC_LOGD(tag, format, ...) do { \
+        printf("D [%010u]:[%-12.12s]: "format"\n", HAL_UptimeMs(), tag, ##__VA_ARGS__);\
+    } while(0)
 
 const static char *TAG = "hal:udp";
-
 
 intptr_t HAL_UDP_create(const char *host, unsigned short port)
 {
@@ -41,7 +43,7 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
 
     memset(&hints, 0, sizeof(hints));
 
-    MOLMC_LOGI(TAG, "establish udp connection with server(host=%s port=%u)", host, port);
+    MOLMC_LOGD(TAG, "establish udp connection with server(host=%s port=%u)", host, port);
 
     hints.ai_family = AF_INET; //only IPv4
     hints.ai_socktype = SOCK_DGRAM;
@@ -49,27 +51,27 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
     sprintf(service, "%u", port);
 
     if ((rc = getaddrinfo(host, service, &hints, &addrInfoList)) != 0) {
-        MOLMC_LOGE(TAG, "getaddrinfo error");
+        MOLMC_LOGD(TAG, "getaddrinfo error");
         return 0;
     }
 
     for (cur = addrInfoList; cur != NULL; cur = cur->ai_next) {
         if (cur->ai_family != AF_INET) {
-            MOLMC_LOGE(TAG, "socket type error");
+            MOLMC_LOGD(TAG, "socket type error");
             rc = 0;
             continue;
         }
 
         fd = socket(cur->ai_family, cur->ai_socktype, cur->ai_protocol);
         if (fd < 0) {
-            MOLMC_LOGE(TAG, "create socket error");
+            MOLMC_LOGD(TAG, "create socket error");
             rc = 0;
             continue;
         }
-        
+
         rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
         if (rc < 0) {
-            MOLMC_LOGE(TAG, "socket set opt error");
+            MOLMC_LOGD(TAG, "socket set opt error");
             continue;
         }
 
@@ -79,18 +81,18 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
         }
 
         close(fd);
-        MOLMC_LOGE(TAG, "connect error");
+        MOLMC_LOGD(TAG, "connect error");
         rc = 0;
     }
 
     if (0 == rc) {
-        MOLMC_LOGI(TAG, "fail to establish tcp");
+        MOLMC_LOGD(TAG, "fail to establish tcp");
     } else {
-        MOLMC_LOGI(TAG, "success to establish tcp, fd=%d", rc);
+        MOLMC_LOGD(TAG, "success to establish tcp, fd=%d", rc);
     }
     freeaddrinfo(addrInfoList);
 
-    return (uintptr_t)rc;
+    return (intptr_t)rc;
 }
 
 void HAL_UDP_close(intptr_t p_socket)
@@ -120,7 +122,7 @@ int HAL_UDP_read(intptr_t p_socket, unsigned char *p_data, unsigned int datalen)
     long            socket_id = -1;
     int             count = -1;
 
-    if (NULL == p_data || NULL == p_socket) {
+    if (NULL == p_data) {
         return -1;
     }
 
@@ -137,7 +139,7 @@ int HAL_UDP_readTimeout(intptr_t p_socket, unsigned char *p_data, unsigned int d
     fd_set              read_fds;
     long                socket_id = -1;
 
-    if (NULL == p_socket || NULL == p_data) {
+    if (NULL == p_data) {
         return -1;
     }
     socket_id = (long)p_socket;

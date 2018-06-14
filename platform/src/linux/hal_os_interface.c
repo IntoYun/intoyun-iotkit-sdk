@@ -26,7 +26,10 @@
 #include <sys/time.h>
 
 #include "hal_import.h"
-#include "iot_import.h"
+
+#define MOLMC_LOGD(tag, format, ...) do { \
+        printf("D [%010u]:[%-12.12s]: "format"\n", HAL_UptimeMs(), tag, ##__VA_ARGS__);\
+    } while(0)
 
 const static char *TAG = "hal:os";
 
@@ -39,7 +42,7 @@ void *HAL_MutexCreate(void)
     }
 
     if (0 != (err_num = pthread_mutex_init(mutex, NULL))) {
-        MOLMC_LOGE(TAG, "create mutex failed");
+        MOLMC_LOGD(TAG, "create mutex failed");
         HAL_Free(mutex);
         return NULL;
     }
@@ -51,7 +54,7 @@ void HAL_MutexDestroy(void *mutex)
 {
     int err_num;
     if (0 != (err_num = pthread_mutex_destroy((pthread_mutex_t *)mutex))) {
-        MOLMC_LOGE(TAG, "destroy mutex failed");
+        MOLMC_LOGD(TAG, "destroy mutex failed");
     }
 
     HAL_Free(mutex);
@@ -61,7 +64,7 @@ void HAL_MutexLock(void *mutex)
 {
     int err_num;
     if (0 != (err_num = pthread_mutex_lock((pthread_mutex_t *)mutex))) {
-        MOLMC_LOGE(TAG, "lock mutex failed");
+        MOLMC_LOGD(TAG, "lock mutex failed");
     }
 }
 
@@ -69,7 +72,7 @@ void HAL_MutexUnlock(void *mutex)
 {
     int err_num;
     if (0 != (err_num = pthread_mutex_unlock((pthread_mutex_t *)mutex))) {
-        MOLMC_LOGE(TAG, "unlock mutex failed");
+        MOLMC_LOGD(TAG, "unlock mutex failed");
     }
 }
 
