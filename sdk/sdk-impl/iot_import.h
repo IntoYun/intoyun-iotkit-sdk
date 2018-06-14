@@ -29,9 +29,12 @@ extern "C" {
 #include <stdlib.h>
 #include <stdarg.h>
 #include <inttypes.h>
+#include <ctype.h>
+#include <limits.h>
 
 #include "hal_import.h"
 #include "sdk_config.h"
+#include "iotx_log_api.h"
 #include "iot_import_errno.h"
 #include "iot_import_utils.h"
 

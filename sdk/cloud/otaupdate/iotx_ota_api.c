@@ -16,18 +16,19 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "iotx_log_api.h"
+#include "iot_import.h"
 #include "iotx_ota_api.h"
 #include "iotx_comm_if_api.h"
+#include "ca.h"
 
-const static char *TAG = "sdk:ota";
+const static char *TAG = "sdk:otaupdate";
 
-#include "iotx_ota_lib.c"
-#include "iotx_ota_fetch.c"
-
+/* ofc, OTA fetch channel */
+typedef struct {
+    const char *url;
+    httpclient_t http;              /* http client */
+    httpclient_data_t http_data;    /* http client data */
+} otahttp_Struct_t, *otahttp_Struct_pt;
 
 typedef struct  {
     IOT_OTA_State_t state;         /* OTA state */
@@ -43,6 +44,88 @@ typedef struct  {
     THandlerFunction_Progress cb;  /* progress callback */
 } OTA_Struct_t, *OTA_Struct_pt;
 
+static void *otalib_MD5Init(void)
+{
+    iot_md5_context *ctx = HAL_Malloc(sizeof(iot_md5_context));
+    if (NULL == ctx) {
+        return NULL;
+    }
+
+    utils_md5_init(ctx);
+    utils_md5_starts(ctx);
+    return ctx;
+}
+
+static void otalib_MD5Update(void *md5, const char *buf, size_t buf_len)
+{
+    utils_md5_update(md5, (unsigned char *)buf, buf_len);
+}
+
+static void otalib_MD5Finalize(void *md5, char *output_str)
+{
+    int i;
+    unsigned char buf_out[16];
+    utils_md5_finish(md5, buf_out);
+
+    for (i = 0; i < 16; ++i) {
+        output_str[i * 2] = utils_hb2hex(buf_out[i] >> 4);
+        output_str[i * 2 + 1] = utils_hb2hex(buf_out[i]);
+    }
+    output_str[32] = '\0';
+}
+
+static void otalib_MD5Deinit(void *md5)
+{
+    if (NULL != md5) {
+        HAL_Free(md5);
+    }
+}
+
+static void *ofc_Init(const char *url)
+{
+    otahttp_Struct_pt h_odc;
+
+    if (NULL == (h_odc = HAL_Malloc(sizeof(otahttp_Struct_t)))) {
+        MOLMC_LOGE(TAG, "allocate for h_odc failed");
+        return NULL;
+    }
+
+    memset(h_odc, 0, sizeof(otahttp_Struct_t));
+    httpclient_init(&h_odc->http);
+
+    /* set http request-header parameter */
+    h_odc->http.header = "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n" \
+                         "Accept-Encoding: gzip, deflate\r\n";
+    h_odc->url = url;
+    return h_odc;
+}
+
+static int32_t ofc_Fetch(void *handle, char *buf, uint32_t buf_len, uint32_t timeout_s)
+{
+    int diff;
+    otahttp_Struct_pt h_odc = (otahttp_Struct_pt)handle;
+
+    h_odc->http_data.response_buf = buf;
+    h_odc->http_data.response_buf_len = buf_len;
+    diff = h_odc->http_data.response_content_len - h_odc->http_data.retrieve_len;
+
+    if (0 != httpclient_common(&h_odc->http, h_odc->url, 80, NULL, HTTPCLIENT_GET, timeout_s * 1000,
+                               &h_odc->http_data)) {
+        MOLMC_LOGE(TAG, "fetch firmware failed");
+        return -1;
+    }
+
+    return h_odc->http_data.response_content_len - h_odc->http_data.retrieve_len - diff;
+}
+
+static int ofc_Deinit(void *handle)
+{
+    if (NULL != handle) {
+        HAL_Free(handle);
+    }
+
+    return 0;
+}
 
 /* Initialize OTA module */
 void *IOT_OTA_Init(uint8_t fileType, const char *url, const char *md5, uint32_t size)

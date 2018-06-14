@@ -18,6 +18,7 @@
 
 #include "iot_import.h"
 #include "iotx_datapoint_api.h"
+#include "iotx_comm_if_api.h"
 
 const static char *TAG = "sdk:ota";
 
@@ -638,7 +639,7 @@ void IOT_DataPoint_ParseReceiveDatapoints(const uint8_t *payload, uint32_t len)
 
     //0x31 dpid(1-2 bytes)+data type(1 byte)+data len(1-2 bytes)+data(n bytes)
     //大端表示，如果最高位是1，则表示两个字节，否则是一个字节
-    if((payload[0] != 0x31 ) || (len == 0)) {
+    if(payload == NULL || (payload[0] != 0x31 ) || (len == 0)) {
         return;
     }
 

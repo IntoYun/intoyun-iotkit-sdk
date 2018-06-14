@@ -28,7 +28,10 @@
 #include <netdb.h>
 
 #include "hal_import.h"
-#include "iot_import.h"
+
+#define MOLMC_LOGD(tag, format, ...) do { \
+        printf("D [%010u]:[%-12.12s]: "format"\n", HAL_UptimeMs(), tag, ##__VA_ARGS__);\
+    } while(0)
 
 const static char *TAG = "hal:tcp";
 
@@ -57,7 +60,7 @@ static uint64_t _linux_time_left(uint64_t t_end, uint64_t t_now)
     return t_left;
 }
 
-uintptr_t HAL_TCP_Establish(const char *host, uint16_t port)
+intptr_t HAL_TCP_Establish(const char *host, uint16_t port)
 {
     struct addrinfo hints;
     struct addrinfo *addrInfoList = NULL;
@@ -68,7 +71,7 @@ uintptr_t HAL_TCP_Establish(const char *host, uint16_t port)
 
     memset(&hints, 0, sizeof(hints));
 
-    MOLMC_LOGI(TAG, "establish tcp connection with server(host=%s port=%u)", host, port);
+    MOLMC_LOGD(TAG, "establish tcp connection with server(host=%s port=%u)", host, port);
 
     hints.ai_family = AF_INET; /* only IPv4 */
     hints.ai_socktype = SOCK_STREAM;
@@ -76,20 +79,20 @@ uintptr_t HAL_TCP_Establish(const char *host, uint16_t port)
     sprintf(service, "%u", port);
 
     if ((rc = getaddrinfo(host, service, &hints, &addrInfoList)) != 0) {
-        MOLMC_LOGE(TAG, "getaddrinfo error");
+        MOLMC_LOGD(TAG, "getaddrinfo error");
         return 0;
     }
 
     for (cur = addrInfoList; cur != NULL; cur = cur->ai_next) {
         if (cur->ai_family != AF_INET) {
-            MOLMC_LOGE(TAG, "socket type error");
+            MOLMC_LOGD(TAG, "socket type error");
             rc = 0;
             continue;
         }
 
         fd = socket(cur->ai_family, cur->ai_socktype, cur->ai_protocol);
         if (fd < 0) {
-            MOLMC_LOGE(TAG, "create socket error");
+            MOLMC_LOGD(TAG, "create socket error");
             rc = 0;
             continue;
         }
@@ -100,35 +103,35 @@ uintptr_t HAL_TCP_Establish(const char *host, uint16_t port)
         }
 
         close(fd);
-        MOLMC_LOGE(TAG, "connect error");
+        MOLMC_LOGD(TAG, "connect error");
         rc = 0;
     }
 
     if (0 == rc) {
-        MOLMC_LOGI(TAG, "fail to establish tcp");
+        MOLMC_LOGD(TAG, "fail to establish tcp");
     } else {
-        MOLMC_LOGI(TAG, "success to establish tcp, fd=%d", rc);
+        MOLMC_LOGD(TAG, "success to establish tcp, fd=%d", rc);
     }
     freeaddrinfo(addrInfoList);
 
-    return (uintptr_t)rc;
+    return (intptr_t)rc;
 }
 
 
-int HAL_TCP_Destroy(uintptr_t fd)
+int HAL_TCP_Destroy(intptr_t fd)
 {
     int rc;
 
     /* Shutdown both send and receive operations. */
     rc = shutdown((int) fd, 2);
     if (0 != rc) {
-        MOLMC_LOGE(TAG, "shutdown error");
+        MOLMC_LOGD(TAG, "shutdown error");
         return -1;
     }
 
     rc = close((int) fd);
     if (0 != rc) {
-        MOLMC_LOGE(TAG, "closesocket error");
+        MOLMC_LOGD(TAG, "closesocket error");
         return -1;
     }
 
@@ -136,7 +139,7 @@ int HAL_TCP_Destroy(uintptr_t fd)
 }
 
 
-int32_t HAL_TCP_Write(uintptr_t fd, const char *buf, uint32_t len, uint32_t timeout_ms)
+int32_t HAL_TCP_Write(intptr_t fd, const char *buf, uint32_t len, uint32_t timeout_ms)
 {
     int ret;
     uint32_t len_sent;
@@ -162,21 +165,21 @@ int32_t HAL_TCP_Write(uintptr_t fd, const char *buf, uint32_t len, uint32_t time
             ret = select(fd + 1, NULL, &sets, NULL, &timeout);
             if (ret > 0) {
                 if (0 == FD_ISSET(fd, &sets)) {
-                    MOLMC_LOGI(TAG, "Should NOT arrive");
+                    MOLMC_LOGD(TAG, "Should NOT arrive");
                     /* If timeout in next loop, it will not sent any data */
                     ret = 0;
                     continue;
                 }
             } else if (0 == ret) {
-                MOLMC_LOGI(TAG, "select-write timeout %d", (int)fd);
+                MOLMC_LOGD(TAG, "select-write timeout %d", (int)fd);
                 break;
             } else {
                 if (EINTR == errno) {
-                    MOLMC_LOGI(TAG, "EINTR be caught");
+                    MOLMC_LOGD(TAG, "EINTR be caught");
                     continue;
                 }
 
-                MOLMC_LOGE(TAG, "select-write fail");
+                MOLMC_LOGD(TAG, "select-write fail");
                 break;
             }
         }
@@ -186,14 +189,14 @@ int32_t HAL_TCP_Write(uintptr_t fd, const char *buf, uint32_t len, uint32_t time
             if (ret > 0) {
                 len_sent += ret;
             } else if (0 == ret) {
-                MOLMC_LOGI(TAG, "No data be sent");
+                MOLMC_LOGD(TAG, "No data be sent");
             } else {
                 if (EINTR == errno) {
-                    MOLMC_LOGI(TAG, "EINTR be caught");
+                    MOLMC_LOGD(TAG, "EINTR be caught");
                     continue;
                 }
 
-                MOLMC_LOGE(TAG, "send fail");
+                MOLMC_LOGD(TAG, "send fail");
                 break;
             }
         }
@@ -203,7 +206,7 @@ int32_t HAL_TCP_Write(uintptr_t fd, const char *buf, uint32_t len, uint32_t time
 }
 
 
-int32_t HAL_TCP_Read(uintptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms)
+int32_t HAL_TCP_Read(intptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms)
 {
     int ret, err_code;
     uint32_t len_recv;
@@ -232,22 +235,22 @@ int32_t HAL_TCP_Read(uintptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms)
             if (ret > 0) {
                 len_recv += ret;
             } else if (0 == ret) {
-                MOLMC_LOGE(TAG, "connection is closed");
+                MOLMC_LOGD(TAG, "connection is closed");
                 err_code = -1;
                 break;
             } else {
                 if (EINTR == errno) {
-                    MOLMC_LOGI(TAG, "EINTR be caught");
+                    MOLMC_LOGD(TAG, "EINTR be caught");
                     continue;
                 }
-                MOLMC_LOGE(TAG, "recv fail");
+                MOLMC_LOGD(TAG, "recv fail");
                 err_code = -2;
                 break;
             }
         } else if (0 == ret) {
             break;
         } else {
-            MOLMC_LOGE(TAG, "select-recv fail");
+            MOLMC_LOGD(TAG, "select-recv fail");
             err_code = -2;
             break;
         }

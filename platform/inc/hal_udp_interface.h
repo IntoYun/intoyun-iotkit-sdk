@@ -25,8 +25,6 @@ extern "C" {
 
 #include "hal_import.h"
 
-#define NETWORK_ADDR_LEN      (16)
-
 intptr_t HAL_UDP_create(const char *host, unsigned short port);
 void HAL_UDP_close(intptr_t p_socket);
 int HAL_UDP_write(intptr_t p_socket, const unsigned char *p_data, unsigned int datalen);

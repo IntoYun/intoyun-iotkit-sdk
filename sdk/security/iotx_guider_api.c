@@ -16,11 +16,7 @@
  *
  */
 
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <limits.h>
-#include "iot_import_utils.h"
+#include "iot_import.h"
 #include "iotx_guider_api.h"
 #include "iotx_system_api.h"
 #include "iotx_comm_if_api.h"
@@ -64,7 +60,11 @@ static void _guider_get_timestamp_str(char *buf, int len)
     int retry = 0;
 
     do {
-        ret = utils_get_epoch_time(buf, len);
+#if CONFIG_CLOUD_CHANNEL == 1     //MQTT
+        ret = utils_http_get_epoch_time(buf, len);
+#else
+        ret = utils_coap_get_epoch_time(buf, len);
+#endif
     } while (ret == 0 && ++retry < 10);
 
     if (retry > 1) {
@@ -117,7 +117,8 @@ void print_comm_info(iotx_device_info_pt pdev_info, iotx_conn_info_pt pconn_info
 int iotx_guider_authenticate(void)
 {
     uint8_t ramdom_hex[4] = {0}, cMac_hex[16] = {0}, device_secret_hex[16] = {0};
-    char cMac_string[33] = {0}, time_stamp_str[16] = {0};
+    char cMac_string[33] = {0};
+    char time_stamp_str[16] = {0};
     SECURE_MODE secure_mode = MODE_TCP_GUIDER_FORMENCRYPT;
 
     iotx_device_info_pt pdev_info = iotx_device_info_get();

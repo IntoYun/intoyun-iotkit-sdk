@@ -16,10 +16,7 @@
  *
  */
 
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include "iot_import_utils.h"
+#include "iot_import.h"
 #include "iotx_crypto_api.h"
 #include "iotx_guider_api.h"
 #include "iotx_system_api.h"

@@ -31,7 +31,9 @@ extern "C" {
  *
  * @return 0, failed to get epoch time; OTHERS, the actual value of epoch time
  */
-uint64_t utils_get_epoch_time(char copy[], int len);
+uint64_t utils_http_get_epoch_time(char copy[], int len);
+
+uint64_t utils_coap_get_epoch_time(char copy[], int len);
 
 #ifdef __cplusplus
 extern "C" {

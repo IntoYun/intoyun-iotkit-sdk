@@ -23,7 +23,10 @@
 #pragma comment (lib, "ws2_32.lib") //加载 ws2_32.dll
 
 #include "hal_import.h"
-#include "iot_import.h"
+
+#define MOLMC_LOGD(tag, format, ...) do { \
+        printf("D [%010u]:[%-12.12s]: "format"\n", HAL_UptimeMs(), tag, ##__VA_ARGS__);\
+    } while(0)
 
 const static char *TAG = "hal:tcp";
 
@@ -40,16 +43,16 @@ static uint64_t time_left(uint64_t t_end, uint64_t t_now)
     return t_left;
 }
 
-uintptr_t HAL_TCP_Establish(const char *host, uint16_t port)
+intptr_t HAL_TCP_Establish(const char *host, uint16_t port)
 {
-    uintptr_t sockfd;
+    intptr_t sockfd;
     WSADATA wsaData;
     struct hostent *hp;
     struct sockaddr_in addrServer;
 
     WSAStartup(0x202, &wsaData);
 
-    MOLMC_LOGI(TAG, "host : %s, port : %u\n", host, port);
+    MOLMC_LOGD(TAG, "host : %s, port : %u\n", host, port);
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);   /* socket */
     hp = gethostbyname(host);
@@ -58,7 +61,7 @@ uintptr_t HAL_TCP_Establish(const char *host, uint16_t port)
     memset(&addrServer, 0, sizeof(addrServer));
     memcpy(&(addrServer.sin_addr), hp->h_addr, hp->h_length);
 
-    MOLMC_LOGI(TAG, "ip = %u.%u.%u.%u",
+    MOLMC_LOGD(TAG, "ip = %u.%u.%u.%u",
                          addrServer.sin_addr.S_un.S_un_b.s_b1,
                          addrServer.sin_addr.S_un.S_un_b.s_b2,
                          addrServer.sin_addr.S_un.S_un_b.s_b3,
@@ -67,38 +70,38 @@ uintptr_t HAL_TCP_Establish(const char *host, uint16_t port)
     addrServer.sin_family = AF_INET;
     addrServer.sin_port = htons((unsigned short)1883);
 
-    MOLMC_LOGI(TAG, "connecting to %s", host);
+    MOLMC_LOGD(TAG, "connecting to %s", host);
     if (connect(sockfd, (struct sockaddr *)&addrServer, sizeof(struct sockaddr))) {
-        MOLMC_LOGI(TAG, "connect failed!\n");
+        MOLMC_LOGD(TAG, "connect failed!\n");
         return -1;
     }
 
-    MOLMC_LOGI(TAG, "connect successfully!\n");
+    MOLMC_LOGD(TAG, "connect successfully!\n");
 
     return sockfd;
 }
 
 
-int32_t HAL_TCP_Destroy(uintptr_t fd)
+int32_t HAL_TCP_Destroy(intptr_t fd)
 {
     int rc;
 
     /* Shutdown both send and receive operations. */
     rc = shutdown((int) fd, 2);
     if (0 != rc) {
-        MOLMC_LOGE(TAG, "shutdown error");
+        MOLMC_LOGD(TAG, "shutdown error");
         return -1;
     }
 
     rc = closesocket((int) fd);
     if (0 != rc) {
-        MOLMC_LOGE(TAG, "closesocket error");
+        MOLMC_LOGD(TAG, "closesocket error");
         return -1;
     }
 
     rc = WSACleanup();
     if (0 != rc) {
-        MOLMC_LOGE(TAG, "WSACleanup error");
+        MOLMC_LOGD(TAG, "WSACleanup error");
         return -1;
     }
 
@@ -106,7 +109,7 @@ int32_t HAL_TCP_Destroy(uintptr_t fd)
 }
 
 
-int32_t HAL_TCP_Write(uintptr_t fd, const char *buf, uint32_t len, uint32_t timeout_ms)
+int32_t HAL_TCP_Write(intptr_t fd, const char *buf, uint32_t len, uint32_t timeout_ms)
 {
     int ret, err_code;
     uint32_t len_sent;
@@ -140,13 +143,13 @@ int32_t HAL_TCP_Write(uintptr_t fd, const char *buf, uint32_t len, uint32_t time
                     continue;
                 }
             } else if (0 == ret) {
-                MOLMC_LOGI(TAG, "select-write timeout");
+                MOLMC_LOGD(TAG, "select-write timeout");
                 break;
             } else {
                 if (WSAEINTR == WSAGetLastError()) {
                     continue;
                 }
-                MOLMC_LOGE(TAG, "select-write fail");
+                MOLMC_LOGD(TAG, "select-write fail");
                 err_code = -1;
                 break;
             }
@@ -157,10 +160,10 @@ int32_t HAL_TCP_Write(uintptr_t fd, const char *buf, uint32_t len, uint32_t time
             if (ret > 0) {
                 len_sent += ret;
             } else if (0 == ret) {
-                MOLMC_LOGI(TAG, "No any data be sent");
+                MOLMC_LOGD(TAG, "No any data be sent");
             } else {
                 /* socket error occur */
-                MOLMC_LOGE(TAG, "send fail");
+                MOLMC_LOGD(TAG, "send fail");
                 err_code = -1;
                 break;
             }
@@ -173,7 +176,7 @@ int32_t HAL_TCP_Write(uintptr_t fd, const char *buf, uint32_t len, uint32_t time
 }
 
 
-int32_t HAL_TCP_Read(uintptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms)
+int32_t HAL_TCP_Read(intptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms)
 {
     int ret, err_code;
     uint32_t len_recv;
@@ -200,14 +203,14 @@ int32_t HAL_TCP_Read(uintptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms)
             if (ret > 0) {
                 len_recv += ret;
             } else if (0 == ret) {
-                MOLMC_LOGI(TAG, "connection is closed");
+                MOLMC_LOGD(TAG, "connection is closed");
                 err_code = -1;
                 break;
             } else {
                 if (WSAEINTR == WSAGetLastError()) {
                     continue;
                 }
-                MOLMC_LOGE(TAG, "recv fail");
+                MOLMC_LOGD(TAG, "recv fail");
                 err_code = -2;
                 break;
             }
@@ -217,7 +220,7 @@ int32_t HAL_TCP_Read(uintptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms)
             if (WSAEINTR == WSAGetLastError()) {
                 continue;
             }
-            MOLMC_LOGE(TAG, "select-read fail");
+            MOLMC_LOGD(TAG, "select-read fail");
             err_code = -2;
             break;
         }

@@ -730,7 +730,7 @@ iotx_err_t httpclient_connect(httpclient_t *client)
 {
     iotx_err_t ret = ERROR_HTTP_CONN;
 
-    client->net.handle = 0;
+    client->net.handle = -1;
 
     ret = httpclient_conn(client);
     //    if (0 == ret)
@@ -745,7 +745,7 @@ iotx_err_t httpclient_send_request(httpclient_t *client, const char *url, int me
 {
     iotx_err_t ret = ERROR_HTTP_CONN;
 
-    if (0 == client->net.handle) {
+    if (client->net.handle < 0) {
         MOLMC_LOGD(TAG, "not connection have been established");
         return ret;
     }
@@ -773,7 +773,7 @@ iotx_err_t httpclient_recv_response(httpclient_t *client, uint32_t timeout_ms, h
     iotx_time_init(&timer);
     utils_time_countdown_ms(&timer, timeout_ms);
 
-    if (0 == client->net.handle) {
+    if (client->net.handle < 0) {
         MOLMC_LOGD(TAG, "not connection have been established");
         return ret;
     }
@@ -801,10 +801,20 @@ iotx_err_t httpclient_recv_response(httpclient_t *client, uint32_t timeout_ms, h
 
 void httpclient_close(httpclient_t *client)
 {
-    if (client->net.handle > 0) {
+    if (client->net.handle >= 0) {
         client->net.disconnect(&client->net);
     }
-    client->net.handle = 0;
+    client->net.handle = -1;
+}
+
+int httpclient_init(httpclient_t *client)
+{
+    if (client == NULL) {
+        return -1;
+    }
+    memset(client, 0, sizeof(httpclient_t));
+    client->net.handle = -1;
+    return 0;
 }
 
 int httpclient_common(httpclient_t *client, const char *url, int port, const char *ca_crt, int method,
@@ -815,8 +825,7 @@ int httpclient_common(httpclient_t *client, const char *url, int port, const cha
     int ret = 0;
     char host[HTTPCLIENT_MAX_HOST_LEN] = { 0 };
 
-
-    if (0 == client->net.handle) {
+    if (client->net.handle < 0) {
         //Establish connection if no.
         httpclient_parse_host(url, host, sizeof(host));
         MOLMC_LOGD(TAG, "host: '%s', port: %d", host, port);
@@ -864,11 +873,7 @@ int utils_get_response_code(httpclient_t *client)
     return client->response_code;
 }
 
-iotx_err_t iotx_post(
-        httpclient_t *client,
-        const char *url,
-        int port,
-        const char *ca_crt,
+iotx_err_t iotx_post(httpclient_t *client, const char *url, int port, const char *ca_crt,
         uint32_t timeout_ms,
         httpclient_data_t *client_data)
 {

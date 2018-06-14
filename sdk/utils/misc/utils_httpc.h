@@ -132,13 +132,11 @@ typedef struct {
  *                   printf("Data received: %s\r\n", client_data.response_buf);
  * @endcode
  */
-iotx_err_t iotx_post(
-            httpclient_t *client,
-            const char *url,
-            int port,
-            const char *ca_crt,
+iotx_err_t iotx_post(httpclient_t *client, const char *url, int port, const char *ca_crt,
             uint32_t timeout,
             httpclient_data_t *client_data);
+
+int httpclient_init(httpclient_t *client);
 
 int httpclient_common(httpclient_t *client, const char *url, int port, const char *ca_crt, int method,
                       uint32_t timeout_ms,

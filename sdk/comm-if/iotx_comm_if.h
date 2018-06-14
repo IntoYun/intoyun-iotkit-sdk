@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Alibaba Group. All rights reserved.
+ * Copyright (c) 2013-2018 Molmc Group. All rights reserved.
  * License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -16,32 +16,29 @@
  *
  */
 
+#ifndef __IOTX_COMM_IF_H__
+#define __IOTX_COMM_IF_H__
 
-#ifndef __COAP_PLATFORM_OS_H__
-#define __COAP_PLATFORM_OS_H__
-#include <stdio.h>
-#ifdef COAP_USE_PLATFORM_MEMORY
-#include "lite-utils.h"
-#endif
+/* send type */
+typedef enum {
+    IOTX_CONN_SEND_DATA = 0,               /* 发送数据 */
+    IOTX_CONN_SEND_ACTION_REPLY = 1,       /* 发送指令回复 */
+} iotx_conn_send_t;
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif
 
-#define coap_malloc HAL_Malloc
-#define coap_free   HAL_Free
-
-#define COAP_TRC
-#define COAP_DUMP
-#define COAP_DEBUG
-#define COAP_INFO
-#define COAP_WARN
-#define COAP_ERR
-
-int platform_is_multicast(const char *ip_str);
+int iotx_comm_connect(void);
+bool iotx_comm_isconnected(void);
+int iotx_comm_disconnect(void);
+int iotx_comm_send(iotx_conn_send_t type, const uint8_t *data, uint16_t datalen);
+int iotx_comm_yield(void);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif
 
 #endif
+

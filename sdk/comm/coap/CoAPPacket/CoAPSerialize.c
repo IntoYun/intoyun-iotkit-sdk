@@ -108,7 +108,7 @@ unsigned short CoAPSerialize_Options(CoAPMessage *msg,  unsigned char * buf, uns
     int i      = 0;
     unsigned short count  = 0;
 
-    for (i = 0; i < msg->optcount; i++)
+    for (i = 0; i < msg->optnum; i++)
     {
         unsigned short len = 0;
         len = CoAPSerialize_Option(&msg->options[i], &buf[count]);
@@ -155,7 +155,7 @@ unsigned short CoAPSerialize_OptionsLen(CoAPMessage *msg)
     int i      = 0;
     unsigned short count  = 0;
 
-    for (i = 0; i < msg->optcount; i++)
+    for (i = 0; i < msg->optnum; i++)
     {
         unsigned short len = 0;
         len = CoAPSerialize_OptionLen(&msg->options[i]);
@@ -174,7 +174,7 @@ unsigned short CoAPSerialize_OptionsLen(CoAPMessage *msg)
 int CoAPSerialize_Payload(CoAPMessage *msg, unsigned char *buf, int buflen)
 {
     if(msg->payloadlen + 1 > buflen){
-        return 0;
+        return -1;
     }
     if(msg->payloadlen > 0 && NULL != msg->payload)
     {

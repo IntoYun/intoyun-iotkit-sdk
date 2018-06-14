@@ -18,20 +18,17 @@
 
 #include "iot_import.h"
 #include "sdk_config.h"
-#include "iotx_log_api.h"
-#include "lite-utils.h"
-#include "utils_timer.h"
-#include "utils_cJSON.h"
 #include "iotx_comm_if_api.h"
 #include "iotx_system_api.h"
 #include "iotx_datapoint_api.h"
+#include "iotx_comm_if.h"
 
 const static char *TAG = "sdk:comm-if";
 
 static int iotx_conninfo_inited = 0;
 static iotx_conn_info_t iotx_conn_info;
 
-static int iotx_get_device_info(char *buf, uint16_t buflen)
+int iotx_get_device_info(char *buf, uint16_t buflen)
 {
     cJSON* root = NULL;
     char* json_out = NULL;
@@ -40,7 +37,7 @@ static int iotx_get_device_info(char *buf, uint16_t buflen)
 
     root = cJSON_CreateObject();
     cJSON_AddItemToObject(root, "productId", cJSON_CreateString(pdev_info->product_id));
-    cJSON_AddItemToObject(root, "bc", cJSON_CreateNumber(1));
+    //cJSON_AddItemToObject(root, "bc", cJSON_CreateNumber(1));  //暂时去掉， esp8266 JSON处理有问题
     cJSON_AddItemToObject(root, "swVer", cJSON_CreateString(pdev_info->software_version));
     cJSON_AddItemToObject(root, "hwVer", cJSON_CreateString(pdev_info->hardware_version));
     cJSON_AddItemToObject(root, "online", cJSON_CreateBool(true));
@@ -177,14 +174,6 @@ static void iotx_set_conn_state(iotx_conn_state_t newState)
     HAL_MutexUnlock(pconn_info->lock_generic);
 }
 
-#if CONFIG_CLOUD_CHANNEL == 1     //MQTT
-#include "iotx_comm_mqtt.c"
-#elif CONFIG_CLOUD_CHANNEL == 2   //COAP
-#include "iotx_comm_coap.c"
-#else
-#error "NOT support yet!"
-#endif
-
 bool IOT_Network_IsConnected(void)
 {
     if(IOTX_NETWORK_STATE_CONNECTED != iotx_get_network_state()) {
@@ -263,6 +252,7 @@ bool IOT_Comm_IsConnected(void)
         return false;
     }
 
+    //MOLMC_LOGI(TAG, "IOT_Comm_IsConnected");
     bool rst = iotx_comm_isconnected();
     if(rst) {
         iotx_set_conn_state(IOTX_CONN_STATE_CONNECTED);
@@ -274,6 +264,7 @@ bool IOT_Comm_IsConnected(void)
 
 void IOT_Comm_Disconnect(void)
 {
+    MOLMC_LOGI(TAG, "IOT_Comm_Disconnect");
     iotx_set_conn_state(IOTX_CONN_STATE_INITIALIZED);
     iotx_comm_disconnect();
 }
@@ -387,7 +378,7 @@ int IOT_Comm_Yield(void)
             if (SUCCESS_RETURN != rc) {
                 //MOLMC_LOGD(TAG, "reconnect network fail, rc = %d", rc);
             } else {
-                MOLMC_LOGI(TAG, "network is reconnected!");
+                MOLMC_LOGI(TAG, "comm is reconnected!");
                 //iotx_mc_reconnect_callback();
                 pconn_info->reconnect_param.reconnect_time_interval_ms = IOTX_CONN_RECONNECT_INTERVAL_MAX_MS;
             }
@@ -397,7 +388,7 @@ int IOT_Comm_Yield(void)
 
         /* If network suddenly interrupted, stop pinging packet, try to reconnect network immediately */
         if (IOTX_CONN_STATE_DISCONNECTED == connState) {
-            MOLMC_LOGE(TAG, "network is disconnected!");
+            MOLMC_LOGE(TAG, "comm is disconnected!");
             //iotx_mc_disconnect_callback(pClient);
 
             pconn_info->reconnect_param.reconnect_time_interval_ms = IOTX_CONN_RECONNECT_INTERVAL_MIN_MS;

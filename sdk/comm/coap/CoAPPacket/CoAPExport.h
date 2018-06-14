@@ -16,10 +16,13 @@
  *
  */
 
+
+#include "iot_import.h"
+#include "CoAPNetwork.h"
+#include "lite-utils.h"
 #ifndef __COAP_EXPORT_H__
 #define __COAP_EXPORT_H__
 
-#include "iot_import.h"
 
 
 #ifdef __cplusplus
@@ -28,7 +31,7 @@ extern "C" {
 
 
 #define COAP_MSG_MAX_TOKEN_LEN    8
-#define COAP_MSG_MAX_OPTION_NUM   12
+#define COAP_MSG_MAX_OPTION_NUM   16
 #define COAP_MSG_MAX_PATH_LEN     128
 #define COAP_MSG_MAX_PDU_LEN      1280
 
@@ -42,6 +45,9 @@ extern "C" {
 #define COAP_CT_APP_EXI                   47   /* application/exi  */
 #define COAP_CT_APP_JSON                  50   /* application/json  */
 #define COAP_CT_APP_CBOR                  60   /* application/cbor  */
+
+#define COAP_REGISTERED_OBSERVE             0    /* registered observer*/
+#define COAP_DEREGISTER_OBSERVE             1    /* deregister observer*/
 
 /*CoAP option types. */
 #define COAP_OPTION_IF_MATCH        1   /* C, opaque,  0-8 B, (none) */
@@ -85,18 +91,14 @@ extern "C" {
 #define COAP_SUCCESS                           (0)                    /* Successful */
 #define COAP_ERROR_INVALID_PARAM               (COAP_ERROR_BASE | 1)  /* Invalid Parameter */
 #define COAP_ERROR_NULL                        (COAP_ERROR_BASE | 2)  /* Null Pointer */
-#define COAP_ERROR_MALLOC                      (COAP_ERROR_BASE | 3)
-#define COAP_ERROR_INVALID_LENGTH              (COAP_ERROR_BASE | 4)  /* Invalid Length */
-#define COAP_ERROR_DATA_SIZE                   (COAP_ERROR_BASE | 5)  /* Data size exceeds limit */
-#define COAP_ERROR_INVALID_URI                 (COAP_ERROR_BASE | 6)
-#define COAP_ERROR_NOT_FOUND                   (COAP_ERROR_BASE | 7)
-#define COAP_ERROR_NET_INIT_FAILED             (COAP_ERROR_BASE | 8)
-#define COAP_ERROR_INTERNAL                    (COAP_ERROR_BASE | 9)  /* Internal Error */
-#define COAP_ERROR_WRITE_FAILED                (COAP_ERROR_BASE | 10)
-#define COAP_ERROR_READ_FAILED                 (COAP_ERROR_BASE | 11)
-#define COAP_ERROR_ENCRYPT_FAILED              (COAP_ERROR_BASE | 12)
-#define COAP_ERROR_UNSUPPORTED                 (COAP_ERROR_BASE | 13)
-#define COAP_ERROR_OBJ_ALREADY_EXIST           (COAP_ERROR_BASE | 14)
+#define COAP_ERROR_INVALID_LENGTH              (COAP_ERROR_BASE | 3)  /* Invalid Length */
+#define COAP_ERROR_DATA_SIZE                   (COAP_ERROR_BASE | 4)  /* Data size exceeds limit */
+#define COAP_ERROR_INVALID_URI                 (COAP_ERROR_BASE | 5)
+#define COAP_ERROR_NOT_FOUND                   (COAP_ERROR_BASE | 6)
+#define COAP_ERROR_NET_INIT_FAILED             (COAP_ERROR_BASE | 7)
+#define COAP_ERROR_INTERNAL                    (COAP_ERROR_BASE | 8)  /* Internal Error */
+#define COAP_ERROR_WRITE_FAILED                (COAP_ERROR_BASE | 9)
+#define COAP_ERROR_READ_FAILED                 (COAP_ERROR_BASE | 10)
 
 #define COAP_MSG_CODE_DEF(N) (((N)/100 << 5) | (N)%100)
 
@@ -143,17 +145,6 @@ typedef enum
 
 } CoAPMessageCode;
 
-typedef enum
-{
-    COAP_REQUEST_SUCCESS,
-    COAP_RECV_RESP_TIMEOUT,
-}CoAPReqResult;
-
-typedef struct
-{
-	int len;
-	unsigned char *data;
-}CoAPLenString;
 
 typedef struct
 {
@@ -172,110 +163,78 @@ typedef struct
     unsigned char *val;
 }CoAPMsgOption;
 
-typedef void  CoAPContext;
-typedef struct CoAPMessage  CoAPMessage;
+typedef void (*CoAPRespMsgHandler)(void *data, void *message);
 
-typedef void (*CoAPSendMsgHandler)(CoAPContext *context, CoAPReqResult result, void *userdata, NetworkAddr *remote, CoAPMessage *message);
+typedef void (*CoAPEventNotifier)(unsigned int event, void *p_message);
 
-typedef void (*CoAPEventNotifier)(unsigned int event, NetworkAddr *remote, void *message);
+typedef struct
+{
+    void                    *user;
+    unsigned short           msgid;
+    char                     acked;
+    unsigned char            tokenlen;
+    unsigned char            token[8];
+    unsigned char            retrans_count;
+    unsigned short           timeout;
+    unsigned short           timeout_val;
+    unsigned char           *message;
+    unsigned int             msglen;
+    unsigned char           *topic;
+    uint8_t                  observer;
+    CoAPRespMsgHandler       handler;
+    struct list_head         sendlist;
+} CoAPSendNode;
 
-typedef void (*CoAPRecvMsgHandler) (CoAPContext *context, const char *paths, NetworkAddr *remote, CoAPMessage *message);
+typedef struct
+{
+    unsigned char            count;
+    unsigned char            maxcount;
+    struct list_head         sendlist;
+}CoAPSendList;
 
-typedef int (*CoAPDataEncrypt)(CoAPContext *context, NetworkAddr* addr, CoAPMessage* message, CoAPLenString *src, CoAPLenString *dest);
 
-struct CoAPMessage
+typedef struct
 {
     CoAPMsgHeader   header;
     unsigned char   token[COAP_MSG_MAX_TOKEN_LEN];
     CoAPMsgOption   options[COAP_MSG_MAX_OPTION_NUM];
-    unsigned char   optcount;
+    unsigned char   optnum;
     unsigned char   optdelta;
-    unsigned short  payloadlen;
     unsigned char  *payload;
-    CoAPSendMsgHandler handler;
+    unsigned short  payloadlen;
+    uint8_t         observer;
+    unsigned char  *topic;
+    CoAPRespMsgHandler handler;
     void           *user;
-    int             keep;
-};
+}CoAPMessage;
 
 typedef struct
 {
-    unsigned char        send_maxcount;  /*list maximal count*/
-    unsigned char        obs_maxcount;   /*observe maximal count*/
-    unsigned short       port;           /* Local port */
-    char                 *group;         /* Multicast address */
+    char                *url;
+    unsigned char        maxcount;  /*list maximal count*/
     unsigned int         waittime;
     CoAPEventNotifier    notifier;
-    void                 *appdata;
-    unsigned char        res_maxcount;
 }CoAPInitParam;
 
+typedef struct
+{
+    unsigned short           message_id;
+    coap_network_t           network;
+    CoAPEventNotifier        notifier;
+    unsigned char            *sendbuf;
+    unsigned char            *recvbuf;
+    CoAPSendList             list;
+    unsigned int             waittime;
+}CoAPContext;
+
+#define COAP_TRC
+#define COAP_DUMP
+#define COAP_DEBUG
+#define COAP_INFO
+#define COAP_ERR
 
 CoAPContext *CoAPContext_create(CoAPInitParam *param);
-void CoAPContext_free(CoAPContext *context);
-void *CoAPContextAppdata_get(CoAPContext *context);
-
-/* CoAP message options APIs*/
-extern int CoAPStrOption_add(CoAPMessage *message, unsigned short optnum,
-                unsigned char *data, unsigned short datalen);
-
-extern int CoAPStrOption_get(CoAPMessage *message, unsigned short optnum,
-                unsigned char *data, unsigned short *datalen);
-
-extern int CoAPUintOption_add(CoAPMessage *message, unsigned short  optnum,
-                unsigned int data);
-
-extern int CoAPUintOption_get(CoAPMessage *message,
-                              unsigned short  optnum,
-                              unsigned int *data);
-
-extern int CoAPOption_present(CoAPMessage *message, unsigned short option);
-
-
-/*CoAP Message APIs*/
-extern unsigned short CoAPMessageId_gen(CoAPContext *context);
-
-extern int CoAPMessageId_set(CoAPMessage *message, unsigned short msgid);
-
-extern int CoAPMessageType_set(CoAPMessage *message, unsigned char type);
-
-extern int CoAPMessageCode_set(CoAPMessage *message, CoAPMessageCode code);
-
-extern int CoAPMessageCode_get(CoAPMessage *message, CoAPMessageCode *code);
-
-extern int CoAPMessageToken_set(CoAPMessage *message, unsigned char *token,
-        unsigned char tokenlen);
-
-extern int CoAPMessageUserData_set(CoAPMessage *message, void *userdata);
-
-extern int CoAPMessagePayload_set(CoAPMessage *message, unsigned char *payload,
-        unsigned short payloadlen);
-
-extern int CoAPMessageHandler_set(CoAPMessage *message, CoAPSendMsgHandler handler);
-
-extern int CoAPMessage_init(CoAPMessage *message);
-
-extern int CoAPMessage_destory(CoAPMessage *message);
-
-extern int CoAPMessage_send(CoAPContext *context, NetworkAddr *remote, CoAPMessage *message);
-
-extern int CoAPMessage_cycle(CoAPContext *context);
-
-extern int CoAPMessage_cancel(CoAPContext *context, CoAPMessage *message);
-
-extern int CoAPMessageId_cancel(CoAPContext * context, unsigned short msgid);
-
-extern void CoAPMessage_dump(NetworkAddr * remote, CoAPMessage * message);
-/*CoAP Resource APIs*/
-extern int CoAPResource_register(CoAPContext *context, const char *path,
-                    unsigned short permission, unsigned int ctype,
-                    unsigned int maxage, CoAPRecvMsgHandler callback);
-
-/*CoAP observe APIs*/
-extern int CoAPObsServer_add(CoAPContext *context, const char *path, NetworkAddr *remote, CoAPMessage *request);
-
-extern int CoAPObsServer_notify(CoAPContext *context,
-                            const char *path, unsigned char *payload,
-                            unsigned short payloadlen, CoAPDataEncrypt handler);
+void CoAPContext_free(CoAPContext *p_ctx);
 
 #ifdef __cplusplus
 }

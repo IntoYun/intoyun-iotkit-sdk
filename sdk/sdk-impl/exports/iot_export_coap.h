@@ -29,10 +29,9 @@ typedef struct
 {
     iotx_coap_context_t *(*init)(iotx_coap_config_t *p_config);
     void (*deInit)(iotx_coap_context_t **p_context);
-
-    int (*deviceNameAuth)(iotx_coap_context_t *p_context);
+    int (*deviceNameAuth)(iotx_coap_context_t *p_context, iotx_message_t *message);
     int (*yield)(iotx_coap_context_t *p_context);
-    int (*sendMessage)(iotx_coap_context_t *p_context, char *p_path, iotx_message_t *p_message);
+    int (*sendMessage)(iotx_coap_context_t *p_context, iotx_message_t *p_message);
     int (*getMessagePayload)(void *p_message, unsigned char **pp_payload, int *p_len);
     int (*getMessageCode)(void *p_message, iotx_coap_resp_code_t *p_resp_code);
 } iot_coap_client_if_t;

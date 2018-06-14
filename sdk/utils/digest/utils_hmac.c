@@ -17,9 +17,8 @@
  */
 
 #include <string.h>
-#include "utils_md5.h"
-#include "utils_sha1.h"
-#include "utils_hmac.h"
+#include "iot_import.h"
+
 
 #define KEY_IOPAD_SIZE 64
 
