@@ -19,6 +19,9 @@
 #ifndef __IOTX_COAP_API_H__
 #define __IOTX_COAP_API_H__
 
+#include "CoAPPacket/CoAPExport.h"
+#include "CoAPPacket/CoAPMessage.h"
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -27,6 +30,9 @@ extern "C"
 #define IOTX_DEVICE_ID_LEN       (64)   /* IoTx device ID length */
 #define IOTX_DEVICE_SECRET_LEN   (64)   /* IoTx device secret length */
 #define IOTX_URI_MAX_LEN         (135)  /* IoTx CoAP uri maximal length */
+#define CONFIG_COAP_AUTH_TIMEOUT (10 * 1000)
+#define IOTX_COAP_PING_INTERVAL_S  (60 * 1000)   /* ping包发送间隔时间 */
+#define IOTX_COAP_AUTH_INTERVAL_S  (42 * 60 * 60 * 1000) /** 设备认证token过期时间为48小时*/
 
 
 /*iotx return code definition*/
@@ -84,12 +90,13 @@ typedef struct
 {
     char     device_id[IOTX_DEVICE_ID_LEN + 1];
     char     device_secret[IOTX_DEVICE_SECRET_LEN + 1];
-} iotx_deviceinfo_t;
+} iotx_deviceinfo_t, *iotx_deviceinfo_pt;
 
 /* IoTx initializa parameters */
 typedef struct
 {
-    char                 *p_url;        /*Can be NULL*/
+    char                 *p_host;        /*coap host*/
+    int                   p_port;       /*coap port*/
     int                   wait_time_ms; /*unit is micro second*/
     iotx_deviceinfo_t    *p_devinfo;    /*Device info*/
     iotx_event_handle_t   event_handle; /*TODO, not supported now*/
@@ -103,12 +110,27 @@ typedef struct
 {
     unsigned char           *p_payload;
     unsigned short           payload_len;
+    unsigned char           *p_url;
+    unsigned char           *p_querystr;
+    CoAPMessageCode          method;
     iotx_content_type_t      content_type;
     iotx_msg_type_t          msg_type;
     void                    *user_data;
     iotx_response_callback_t resp_callback;
 } iotx_message_t;
 
+typedef struct {
+  char                *p_auth_token;
+  int                  auth_token_len;
+  char                 is_authed;
+  char                 is_connected;
+  iotx_deviceinfo_t    *p_devinfo;
+  CoAPContext          *p_coap_ctx;
+  unsigned int         coap_token;
+  iotx_time_t          heartbeat_timer;         /* the next time point of ping */
+  iotx_time_t          auth_timer;         /* the next time point of device auth */
+  iotx_event_handle_t  event_handle;
+} iotx_coap_t, *iotx_coap_pt;
 
 /*iotx coap context definition*/
 typedef void iotx_coap_context_t;
@@ -158,14 +180,14 @@ void IOT_CoAP_Deinit(iotx_coap_context_t **p_context);
  * @retval IOTX_ERR_AUTH_FAILED     : Authenticate failed or timeout.
  * @see iotx_ret_code_t.
  */
-int  IOT_CoAP_Auth(iotx_coap_context_t *p_context);
+int  IOT_CoAP_Auth(iotx_coap_context_t *p_context, iotx_message_t *message);
 
 /**
  * @brief   Send a message with specific path to server.
  *        Client must authentication with server before send message.
  *
  * @param [in] p_context : Pointer of contex, specify the CoAP client.
- * @param [in] p_path: Specify the path name.
+ * @param [in] p_topic: Specify the path name.
  * @param [in] p_message: Message to be sent.
  *
  * @retval IOTX_SUCCESS             : Send the message success.
@@ -173,7 +195,14 @@ int  IOT_CoAP_Auth(iotx_coap_context_t *p_context);
  * @retval IOTX_ERR_NOT_AUTHED      : The client hasn't authenticated with server
  * @see iotx_ret_code_t.
  */
-int  IOT_CoAP_SendMessage(iotx_coap_context_t *p_context,   char *p_path, iotx_message_t *p_message);
+int  IOT_CoAP_SendMessage(iotx_coap_context_t *p_context, iotx_message_t *p_message);
+
+
+int IOT_CoAP_Client_Observe_Send(iotx_coap_context_t *p_context, iotx_message_t *p_message);
+
+
+
+int IOT_CoAP_Client_Send(iotx_coap_context_t *p_context, iotx_message_t *message);
 
 /**
 * @brief Retrieves the length and payload pointer of specified message.

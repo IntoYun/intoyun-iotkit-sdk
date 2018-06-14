@@ -35,6 +35,8 @@ extern "C" {
 #include "sdk_config.h"
 #include "iot_import_errno.h"
 #include "iot_import_utils.h"
+#include "iot_import_mqtt.h"
+#include "iot_import_coap.h"
 
 #ifdef __cplusplus
 }

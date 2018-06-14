@@ -33,6 +33,8 @@ extern "C" {
  */
 uint64_t utils_get_epoch_time(char copy[], int len);
 
+uint64_t utils_get_epoch_time_coap(char copy[], int len);
+
 #ifdef __cplusplus
 extern "C" {
 #endif

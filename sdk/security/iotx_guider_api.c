@@ -114,16 +114,19 @@ void print_comm_info(iotx_device_info_pt pdev_info, iotx_conn_info_pt pconn_info
     return;
 }
 
-int iotx_guider_authenticate(void)
+int iotx_guider_authenticate(char time_stamp_str[])
 {
     uint8_t ramdom_hex[4] = {0}, cMac_hex[16] = {0}, device_secret_hex[16] = {0};
-    char cMac_string[33] = {0}, time_stamp_str[16] = {0};
+    char cMac_string[33] = {0}; 
+    /** char time_stamp_str[16] = {0}; */
     SECURE_MODE secure_mode = MODE_TCP_GUIDER_FORMENCRYPT;
 
     iotx_device_info_pt pdev_info = iotx_device_info_get();
     iotx_conn_info_pt pconn_info = iotx_conn_info_get();
 
+#if CONFIG_CLOUD_CHANNEL == 1     //MQTT
     _guider_get_timestamp_str(time_stamp_str, sizeof(time_stamp_str));
+#endif
     MOLMC_LOGD(TAG, "timestamp = %s", time_stamp_str);
     HAL_Srandom(atoi(time_stamp_str));
 

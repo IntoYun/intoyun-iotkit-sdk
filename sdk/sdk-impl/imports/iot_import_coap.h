@@ -25,5 +25,9 @@
 #define coap_malloc(size) HAL_Malloc(size)
 #define coap_free(ptr)    HAL_Free(ptr)
 
+#define IOT_TRUE    (1)     /* indicate boolean value true */
+#define IOT_FALSE   (0)     /* indicate boolean value false */
+
+
 #endif
 

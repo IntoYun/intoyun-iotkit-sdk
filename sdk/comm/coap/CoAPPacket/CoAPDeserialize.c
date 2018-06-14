@@ -90,10 +90,10 @@ int CoAPDeserialize_Options(CoAPMessage *msg, unsigned char *buf, int buflen)
     unsigned short len       = 0;
     unsigned short optdeltas = 0;
 
-    msg->optcount = 0;
+    msg->optnum = 0;
     while ((count < buflen) && (0xFF != *ptr)) {
         len = CoAPDeserialize_Option(&msg->options[index], ptr, &optdeltas);
-        msg->optcount += 1;
+        msg->optnum += 1;
         ptr += len;
         index ++;
         count += len;

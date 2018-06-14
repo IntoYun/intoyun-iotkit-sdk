@@ -26,13 +26,13 @@ extern "C"
 {
 #endif
 
-#define INTOYUN_MQTT_SERVER_DOMAIN        "iot.intoyun.com"
+#define INTOYUN_MQTT_SERVER_DOMAIN        "ghgyliot.intoyun.com"
 #define INTOYUN_MQTT_SERVER_PORT          1883
 
-#define INTOYUN_COAP_SERVER_DOMAIN        "iot.intoyun.com"
-#define INTOYUN_COAP_SERVER_PORT          1883
+#define INTOYUN_COAP_SERVER_DOMAIN        "coap://ghgyliot.intoyun.com"
+#define INTOYUN_COAP_SERVER_PORT          5683
 
-#define INTOYUN_HTTP_SERVER_DOMAIN        "www.intoyun.com"
+#define INTOYUN_HTTP_SERVER_DOMAIN        "ghgylwww.intoyun.com"
 #define INTOYUN_HTTP_SERVER_PORT          80
 
 /* Minimum interval of reconnect in millisecond */
