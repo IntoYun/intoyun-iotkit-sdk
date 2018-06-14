@@ -35,7 +35,7 @@ extern "C" {
  *
  * @return 0, fail; > 0, success, the value is handle of this TCP connection.
  */
-uintptr_t HAL_TCP_Establish(const char *host, uint16_t port);
+intptr_t HAL_TCP_Establish(const char *host, uint16_t port);
 
 
 /**
@@ -45,7 +45,7 @@ uintptr_t HAL_TCP_Establish(const char *host, uint16_t port);
  *
  * @return < 0, fail; 0, success.
  */
-int32_t HAL_TCP_Destroy(uintptr_t fd);
+int32_t HAL_TCP_Destroy(intptr_t fd);
 
 
 /**
@@ -64,7 +64,7 @@ int32_t HAL_TCP_Destroy(uintptr_t fd);
    @endverbatim
  * @see None.
  */
-int32_t HAL_TCP_Write(uintptr_t fd, const char *buf, uint32_t len, uint32_t timeout_ms);
+int32_t HAL_TCP_Write(intptr_t fd, const char *buf, uint32_t len, uint32_t timeout_ms);
 
 
 /**
@@ -84,7 +84,7 @@ int32_t HAL_TCP_Write(uintptr_t fd, const char *buf, uint32_t len, uint32_t time
    @endverbatim
  * @see None.
  */
-int32_t HAL_TCP_Read(uintptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms);
+int32_t HAL_TCP_Read(intptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms);
 
 #ifdef __cplusplus
 }

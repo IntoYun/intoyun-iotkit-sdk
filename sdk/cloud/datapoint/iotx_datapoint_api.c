@@ -18,6 +18,7 @@
 
 #include "iot_import.h"
 #include "iotx_datapoint_api.h"
+#include "iotx_comm_if_api.h"
 
 const static char *TAG = "sdk:ota";
 

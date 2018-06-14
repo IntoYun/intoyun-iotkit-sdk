@@ -227,11 +227,11 @@ typedef struct
     unsigned int             waittime;
 }CoAPContext;
 
-#define COAP_TRC     
-#define COAP_DUMP    
-#define COAP_DEBUG   
-#define COAP_INFO    
-#define COAP_ERR    
+#define COAP_TRC
+#define COAP_DUMP
+#define COAP_DEBUG
+#define COAP_INFO
+#define COAP_ERR
 
 CoAPContext *CoAPContext_create(CoAPInitParam *param);
 void CoAPContext_free(CoAPContext *p_ctx);

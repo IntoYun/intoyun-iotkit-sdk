@@ -22,9 +22,12 @@
 #include <string.h>
 #include "ctype.h"
 #include "iot_import.h"
+#include "iot_import_coap.h"
 
 #include "CoAPNetwork.h"
 #include "CoAPExport.h"
+
+const static char *TAG = "sdk:coappacket";
 
 #define COAP_DEFAULT_PORT           5683 /* CoAP default UDP port */
 #define COAPS_DEFAULT_PORT          5684 /* CoAP default UDP port for secure transmission */
@@ -45,7 +48,7 @@ unsigned int CoAPUri_parse(char *p_uri, coap_endpoint_type *p_endpoint_type,
     len = strlen(p_uri);
     p = p_uri;
     q = (char *)COAP_DEFAULT_SCHEME;
-    while (len && *q && tolower(*p) == *q) {
+    while (len && *q && tolower((uint8_t)*p) == *q) {
         ++p;
         ++q;
         --len;
@@ -54,7 +57,7 @@ unsigned int CoAPUri_parse(char *p_uri, coap_endpoint_type *p_endpoint_type,
     if (*q) {
         return COAP_ERROR_INVALID_URI;
     }
-    if (tolower(*p) == 's') {
+    if (tolower((uint8_t)*p) == 's') {
         ++p;
         --len;
         *p_endpoint_type = COAP_ENDPOINT_DTLS;
@@ -63,10 +66,10 @@ unsigned int CoAPUri_parse(char *p_uri, coap_endpoint_type *p_endpoint_type,
         *p_endpoint_type = COAP_ENDPOINT_NOSEC;
         *port     = COAP_DEFAULT_PORT;
     }
-    COAP_DEBUG("The endpoint type is: %d", *p_endpoint_type);
+    MOLMC_LOGD(TAG, "The endpoint type is: %d", *p_endpoint_type);
 
     q = (char *)"://";
-    while (len && *q && tolower(*p) == *q) {
+    while (len && *q && tolower((uint8_t)*p) == *q) {
         ++p;
         ++q;
         --len;
@@ -91,12 +94,12 @@ unsigned int CoAPUri_parse(char *p_uri, coap_endpoint_type *p_endpoint_type,
         memset(host, 0x00, COAP_DEFAULT_HOST_LEN);
         strncpy(host, p, q - p);
     }
-    COAP_DEBUG("The host name is: %s", host);
+    MOLMC_LOGD(TAG, "The host name is: %s", host);
     if (len && *q == ':') {
         p = ++q;
         --len;
 
-        while (len && isdigit(*q)) {
+        while (len && isdigit((uint8_t)*q)) {
             ++q;
             --len;
         }
@@ -114,7 +117,7 @@ unsigned int CoAPUri_parse(char *p_uri, coap_endpoint_type *p_endpoint_type,
             *port = uri_port;
         }
     }
-    COAP_DEBUG("The port is: %d", *port);
+    MOLMC_LOGD(TAG, "The port is: %d", *port);
 
     return COAP_SUCCESS;
 }
@@ -130,7 +133,7 @@ CoAPContext *CoAPContext_create(CoAPInitParam *param)
     memset(&network_param, 0x00, sizeof(coap_network_init_t));
     p_ctx = coap_malloc(sizeof(CoAPContext));
     if (NULL == p_ctx) {
-        COAP_ERR("malloc for coap context failed");
+        MOLMC_LOGD(TAG, "malloc for coap context failed");
         goto err;
     }
 
@@ -139,13 +142,13 @@ CoAPContext *CoAPContext_create(CoAPInitParam *param)
     p_ctx->notifier = param->notifier;
     p_ctx->sendbuf = coap_malloc(COAP_MSG_MAX_PDU_LEN);
     if (NULL == p_ctx->sendbuf) {
-        COAP_ERR("not enough memory");
+        MOLMC_LOGD(TAG, "not enough memory");
         goto err;
     }
 
     p_ctx->recvbuf = coap_malloc(COAP_MSG_MAX_PDU_LEN);
     if (NULL == p_ctx->recvbuf) {
-        COAP_ERR("not enough memory");
+        MOLMC_LOGD(TAG, "not enough memory");
         goto err;
     }
 

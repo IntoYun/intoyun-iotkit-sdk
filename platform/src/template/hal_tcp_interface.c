@@ -18,22 +18,22 @@
 
 #include "hal_import.h"
 
-uintptr_t HAL_TCP_Establish(const char *host, uint16_t port)
+intptr_t HAL_TCP_Establish(const char *host, uint16_t port)
 {
     return 0;
 }
 
-int HAL_TCP_Destroy(uintptr_t fd)
+int HAL_TCP_Destroy(intptr_t fd)
 {
     return 0;
 }
 
-int32_t HAL_TCP_Write(uintptr_t fd, const char *buf, uint32_t len, uint32_t timeout_ms)
+int32_t HAL_TCP_Write(intptr_t fd, const char *buf, uint32_t len, uint32_t timeout_ms)
 {
     return 0;
 }
 
-int32_t HAL_TCP_Read(uintptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms)
+int32_t HAL_TCP_Read(intptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms)
 {
     return 0;
 }

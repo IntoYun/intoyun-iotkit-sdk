@@ -22,7 +22,10 @@
 #pragma comment (lib, "ws2_32.lib") //加载 ws2_32.dll
 
 #include "hal_import.h"
-#include "iot_import.h"
+
+#define MOLMC_LOGD(tag, format, ...) do { \
+        printf("D [%010u]:[%-12.12s]: "format"\n", HAL_UptimeMs(), tag, ##__VA_ARGS__);\
+    } while(0)
 
 const static char *TAG = "hal:udp";
 
@@ -32,11 +35,11 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
     WSADATA wsaData;
     struct hostent *hp;
     struct sockaddr_in addrServer;
-    int flag = 1;
+    char flag = 1;
 
     WSAStartup(0x202, &wsaData);
 
-    MOLMC_LOGI(TAG, "establish udp connection host : %s, port : %u\n", host, port);
+    MOLMC_LOGD(TAG, "establish udp connection host : %s, port : %u\n", host, port);
 
     hp = gethostbyname(host);
 
@@ -44,7 +47,7 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
     memset(&addrServer, 0, sizeof(addrServer));
     memcpy(&(addrServer.sin_addr), hp->h_addr, hp->h_length);
 
-    MOLMC_LOGI(TAG, "ip = %u.%u.%u.%u",
+    MOLMC_LOGD(TAG, "ip = %u.%u.%u.%u",
     addrServer.sin_addr.S_un.S_un_b.s_b1,
     addrServer.sin_addr.S_un.S_un_b.s_b2,
     addrServer.sin_addr.S_un.S_un_b.s_b3,
@@ -52,19 +55,19 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
 
     addrServer.sin_family = AF_INET;
     addrServer.sin_port = htons((unsigned short)port);
-    
+
     sockfd = socket(addrServer.sin_family, SOCK_DGRAM, 0);   /* socket */
-    
+
     int retr = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
 
-    MOLMC_LOGI(TAG, "connecting to %s", host);
+    MOLMC_LOGD(TAG, "connecting to %s", host);
     if (0 < connect(sockfd, (struct sockaddr *)&addrServer, sizeof(struct sockaddr))) {
-        MOLMC_LOGE(TAG, "connect failed!\n");
+        MOLMC_LOGD(TAG, "connect failed!\n");
         closesocket(sockfd);
-        return -1;
+        return (intptr_t)-1;
     }
 
-    MOLMC_LOGI(TAG, "connect successfully!\n");
+    MOLMC_LOGD(TAG, "connect successfully!\n");
 
     return sockfd;
 }
@@ -97,7 +100,7 @@ int HAL_UDP_read(intptr_t p_socket, unsigned char *p_data, unsigned int datalen)
     long            socket_id = -1;
     int             count = -1;
 
-    if (NULL == p_data || NULL == p_socket) {
+    if (NULL == p_data) {
         return -1;
     }
 
@@ -114,7 +117,7 @@ int HAL_UDP_readTimeout(intptr_t p_socket, unsigned char *p_data, unsigned int d
     fd_set              read_fds;
     long                socket_id = -1;
 
-    if (NULL == p_socket || NULL == p_data) {
+    if (NULL == p_data) {
         return -1;
     }
     socket_id = (long)p_socket;

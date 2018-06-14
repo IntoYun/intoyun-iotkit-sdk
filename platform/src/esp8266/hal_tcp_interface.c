@@ -24,231 +24,127 @@
 #include "lwip/netdb.h"
 
 #include "hal_import.h"
-#include "iot_import.h"
+
+#define MOLMC_LOGD(tag, format, ...) do { \
+        printf("D [%010u]:[%-12.12s]: "format"\n", HAL_UptimeMs(), tag, ##__VA_ARGS__);\
+    } while(0)
 
 const static char *TAG = "hal:tcp";
 
-static uint64_t _esp32_get_time_ms(void)
+intptr_t HAL_TCP_Establish(const char *host, uint16_t port)
 {
-    struct timeval tv = { 0 };
-    uint64_t time_ms;
+    int fd = -1;
+    struct sockaddr_in sAddr;
+    struct hostent* ipAddress;
 
-    mygettimeofday(&tv, NULL);
-    time_ms = tv.tv_sec * 1000 + tv.tv_usec / 1000;
-    return time_ms;
-}
+    MOLMC_LOGD(TAG, "establish tcp connection with server(host=%s port=%u)", host, port);
 
-static uint64_t _esp32_time_left(uint64_t t_end, uint64_t t_now)
-{
-    uint64_t t_left;
-
-    if (t_end > t_now) {
-        t_left = t_end - t_now;
-    } else {
-        t_left = 0;
+    if ((ipAddress = gethostbyname(host)) == 0) {
+        goto exit;
     }
 
-    return t_left;
-}
+    sAddr.sin_family = AF_INET;
+    sAddr.sin_addr.s_addr = ((struct in_addr*)(ipAddress->h_addr))->s_addr;
+    sAddr.sin_port = htons(port);
 
-uintptr_t HAL_TCP_Establish(const char *host, uint16_t port)
-{
-    struct addrinfo hints;
-    struct addrinfo *addrInfoList = NULL;
-    struct addrinfo *cur = NULL;
-    int fd = 0;
-    int rc = 0;
-    char service[6];
-
-    memset(&hints, 0, sizeof(hints));
-
-    MOLMC_LOGI(TAG, "establish tcp connection with server(host=%s port=%u)", host, port);
-
-    hints.ai_family = AF_INET; //only IPv4
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
-    sprintf(service, "%u", port);
-
-    if ((rc = getaddrinfo(host, service, &hints, &addrInfoList)) != 0) {
-        MOLMC_LOGE(TAG, "getaddrinfo error");
-        return 0;
+    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        goto exit;
     }
 
-    for (cur = addrInfoList; cur != NULL; cur = cur->ai_next) {
-        if (cur->ai_family != AF_INET) {
-            MOLMC_LOGE(TAG, "socket type error");
-            rc = 0;
-            continue;
-        }
-
-        fd = socket(cur->ai_family, cur->ai_socktype, cur->ai_protocol);
-        if (fd < 0) {
-            MOLMC_LOGE(TAG, "create socket error");
-            rc = 0;
-            continue;
-        }
-
-        if (connect(fd, cur->ai_addr, cur->ai_addrlen) == 0) {
-            rc = fd;
-            break;
-        }
-
+    if ((connect(fd, (struct sockaddr*)&sAddr, sizeof(sAddr))) < 0) {
         close(fd);
-        MOLMC_LOGE(TAG, "connect error");
-        rc = 0;
+        fd = -1;
+        goto exit;
     }
 
-    if (0 == rc) {
-        MOLMC_LOGI(TAG, "fail to establish tcp");
+exit:
+    if (fd < 0) {
+        MOLMC_LOGD(TAG, "fail to establish tcp");
     } else {
-        MOLMC_LOGI(TAG, "success to establish tcp, fd=%d", rc);
+        MOLMC_LOGD(TAG, "success to establish tcp, fd=%d", fd);
     }
-    freeaddrinfo(addrInfoList);
-
-    return (uintptr_t)rc;
+    return (intptr_t)fd;
 }
 
-
-int HAL_TCP_Destroy(uintptr_t fd)
+int HAL_TCP_Destroy(intptr_t fd)
 {
-    int rc;
-
-    //Shutdown both send and receive operations.
-    rc = shutdown((int) fd, 2);
-    if (0 != rc) {
-        MOLMC_LOGE(TAG, "shutdown error");
-        return -1;
-    }
-
-    rc = close((int) fd);
-    if (0 != rc) {
-        MOLMC_LOGE(TAG, "closesocket error");
-        return -1;
-    }
-
+    MOLMC_LOGD(TAG, "success to destroy tcp, fd=%d", fd);
+    close((int)fd);
     return 0;
 }
 
-
-int32_t HAL_TCP_Write(uintptr_t fd, const char *buf, uint32_t len, uint32_t timeout_ms)
+int32_t HAL_TCP_Write(intptr_t fd, const char *buf, uint32_t len, uint32_t timeout_ms)
 {
-    int ret;
-    uint32_t len_sent;
-    uint64_t t_end, t_left;
-    fd_set sets;
+    portTickType xTicksToWait = timeout_ms / portTICK_RATE_MS; /* convert milliseconds to ticks */
+    xTimeOutType xTimeOut;
+    int sentLen = 0;
+    int rc = 0;
+    int readysock;
 
-    t_end = _esp32_get_time_ms() + timeout_ms;
-    len_sent = 0;
-    ret = 1; //send one time if timeout_ms is value 0
+    struct timeval timeout;
+    fd_set fdset;
+
+    FD_ZERO(&fdset);
+    FD_SET(fd, &fdset);
+
+    timeout.tv_sec = 0;
+    timeout.tv_usec = timeout_ms * 1000;
+
+    vTaskSetTimeOutState(&xTimeOut); /* Record the time at which this function was entered. */
 
     do {
-        t_left = _esp32_time_left(t_end, _esp32_get_time_ms());
+        readysock = select(fd + 1, NULL, &fdset, NULL, &timeout);
+    } while (readysock <= 0);
 
-        if (0 != t_left) {
-            struct timeval timeout;
+    if (FD_ISSET(fd, &fdset)) {
+        do {
+            rc = send(fd, buf + sentLen, len - sentLen, MSG_DONTWAIT);
 
-            FD_ZERO(&sets);
-            FD_SET(fd, &sets);
-
-            timeout.tv_sec = t_left / 1000;
-            timeout.tv_usec = (t_left % 1000) * 1000;
-
-            ret = select(fd + 1, NULL, &sets, NULL, &timeout);
-            if (ret > 0) {
-                if (0 == FD_ISSET(fd, &sets)) {
-                    MOLMC_LOGI(TAG, "Should NOT arrive");
-                    //If timeout in next loop, it will not sent any data
-                    ret = 0;
-                    continue;
-                }
-            } else if (0 == ret) {
-                MOLMC_LOGI(TAG,"select-write timeout %d", (int)fd);
-                break;
-            } else {
-                if (EINTR == errno) {
-                    MOLMC_LOGI(TAG,"EINTR be caught");
-                    continue;
-                }
-
-                MOLMC_LOGE(TAG,"select-write fail");
+            if (rc > 0) {
+                sentLen += rc;
+            } else if (rc < 0) {
+                sentLen = rc;
                 break;
             }
-        }
+        } while (sentLen < len && xTaskCheckForTimeOut(&xTimeOut, &xTicksToWait) == pdFALSE);
+    }
 
-        if (ret > 0) {
-            ret = send(fd, buf + len_sent, len - len_sent, 0);
-            if (ret > 0) {
-                len_sent += ret;
-            } else if (0 == ret) {
-                MOLMC_LOGI(TAG,"No data be sent");
-            } else {
-                if (EINTR == errno) {
-                    MOLMC_LOGI(TAG,"EINTR be caught");
-                    continue;
-                }
-
-                MOLMC_LOGE(TAG,"send fail");
-                break;
-            }
-        }
-    } while ((len_sent < len) && (_esp32_time_left(t_end, _esp32_get_time_ms()) > 0));
-
-    return len_sent;
+    return sentLen;
 }
 
-
-int32_t HAL_TCP_Read(uintptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms)
+int32_t HAL_TCP_Read(intptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms)
 {
-    int ret, err_code;
-    uint32_t len_recv;
-    uint64_t t_end, t_left;
-    fd_set sets;
+    portTickType xTicksToWait = timeout_ms / portTICK_RATE_MS; /* convert milliseconds to ticks */
+    xTimeOutType xTimeOut;
+    int recvLen = 0;
+    int rc = 0;
+
     struct timeval timeout;
+    fd_set fdset;
 
-    t_end = _esp32_get_time_ms() + timeout_ms;
-    len_recv = 0;
-    err_code = 0;
+    FD_ZERO(&fdset);
+    FD_SET(fd, &fdset);
 
-    do {
-        t_left = _esp32_time_left(t_end, _esp32_get_time_ms());
-        if (0 == t_left) {
-            break;
-        }
-        FD_ZERO(&sets);
-        FD_SET(fd, &sets);
+    timeout.tv_sec = 0;
+    timeout.tv_usec = timeout_ms * 1000;
 
-        timeout.tv_sec = t_left / 1000;
-        timeout.tv_usec = (t_left % 1000) * 1000;
+    vTaskSetTimeOutState(&xTimeOut); /* Record the time at which this function was entered. */
 
-        ret = select(fd + 1, &sets, NULL, NULL, &timeout);
-        if (ret > 0) {
-            ret = recv(fd, buf + len_recv, len - len_recv, 0);
-            if (ret > 0) {
-                len_recv += ret;
-            } else if (0 == ret) {
-                MOLMC_LOGE(TAG,"connection is closed");
-                err_code = -1;
-                break;
-            } else {
-                if (EINTR == errno) {
-                    MOLMC_LOGI(TAG,"EINTR be caught");
-                    continue;
+    if (select(fd + 1, &fdset, NULL, NULL, &timeout) > 0) {
+        if (FD_ISSET(fd, &fdset)) {
+            do {
+                rc = recv(fd, buf + recvLen, len - recvLen, MSG_DONTWAIT);
+
+                if (rc > 0) {
+                    recvLen += rc;
+                } else if (rc < 0) {
+                    recvLen = rc;
+                    break;
                 }
-                MOLMC_LOGE(TAG,"send fail");
-                err_code = -2;
-                break;
-            }
-        } else if (0 == ret) {
-            break;
-        } else {
-            MOLMC_LOGE(TAG,"select-recv fail");
-            err_code = -2;
-            break;
+            } while (recvLen < len && xTaskCheckForTimeOut(&xTimeOut, &xTicksToWait) == pdFALSE);
         }
-    } while ((len_recv < len));
+    }
 
-    //priority to return data bytes if any data be received from TCP connection.
-    //It will get error code on next calling
-    return (0 != len_recv) ? len_recv : err_code;
+    return recvLen;
 }
 

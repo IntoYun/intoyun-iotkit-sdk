@@ -22,6 +22,7 @@
 #include "lite-utils.h"
 #include "sdk_impl_internal.h"
 #include "iotx_mqtt_client.h"
+#include "iotx_system_api.h"
 
 const static char *TAG = "sdk:mqtt";
 

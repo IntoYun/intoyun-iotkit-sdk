@@ -20,9 +20,6 @@
 #include <stdlib.h>
 
 #include "iot_import.h"
-#include "iot_export.h"
-
-#include "utils_base64.h"
 
 static int8_t g_encodingTable[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
                                    'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',

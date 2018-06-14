@@ -30,13 +30,13 @@ extern "C" {
 #include <stdarg.h>
 #include <inttypes.h>
 #include <ctype.h>
+#include <limits.h>
 
 #include "hal_import.h"
 #include "sdk_config.h"
+#include "iotx_log_api.h"
 #include "iot_import_errno.h"
 #include "iot_import_utils.h"
-#include "iot_import_mqtt.h"
-#include "iot_import_coap.h"
 
 #ifdef __cplusplus
 }

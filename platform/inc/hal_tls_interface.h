@@ -37,7 +37,7 @@ extern "C" {
  * @see None.
  * @note None.
  */
-uintptr_t HAL_SSL_Establish(const char *host, uint16_t port, const char *ca_crt, size_t ca_crt_len);
+intptr_t HAL_SSL_Establish(const char *host, uint16_t port, const char *ca_crt, size_t ca_crt_len);
 
 
 /**
@@ -47,7 +47,7 @@ uintptr_t HAL_SSL_Establish(const char *host, uint16_t port, const char *ca_crt,
  *
  * @return < 0, fail; 0, success.
  */
-int32_t HAL_SSL_Destroy(uintptr_t handle);
+int32_t HAL_SSL_Destroy(intptr_t handle);
 
 
 /**
@@ -66,7 +66,7 @@ int32_t HAL_SSL_Destroy(uintptr_t handle);
    @endverbatim
  * @see None.
  */
-int32_t HAL_SSL_Write(uintptr_t handle, const char *buf, int len, int timeout_ms);
+int32_t HAL_SSL_Write(intptr_t handle, const char *buf, int len, int timeout_ms);
 
 
 /**
@@ -86,7 +86,7 @@ int32_t HAL_SSL_Write(uintptr_t handle, const char *buf, int len, int timeout_ms
    @endverbatim
  * @see None.
  */
-int32_t HAL_SSL_Read(uintptr_t handle, char *buf, int len, int timeout_ms);
+int32_t HAL_SSL_Read(intptr_t handle, char *buf, int len, int timeout_ms);
 
 #ifdef __cplusplus
 }

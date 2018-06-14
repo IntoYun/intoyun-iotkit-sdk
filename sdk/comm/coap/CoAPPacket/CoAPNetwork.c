@@ -111,7 +111,7 @@ unsigned int CoAPNetwork_write(coap_network_t *p_network,
         rc = CoAPNetworkDTLS_write(p_network->context, p_data, &datalen);
     } else {
 #endif
-        rc = HAL_UDP_write((void *)p_network->context, p_data, datalen);
+        rc = HAL_UDP_write((intptr_t)p_network->context, p_data, datalen);
         /** MOLMC_LOGD("network", "[CoAP-NWK]: Network write return %d", rc); */
 
         if (-1 == rc) {
@@ -138,7 +138,7 @@ int CoAPNetwork_read(coap_network_t *network, unsigned char  *data,
     } else {
 #endif
         memset(data, 0x00, datalen);
-        len = HAL_UDP_readTimeout((void *)network->context,
+        len = HAL_UDP_readTimeout((intptr_t)network->context,
                                   data, COAP_MSG_MAX_PDU_LEN, timeout);
 #ifdef COAP_DTLS_SUPPORT
     }
@@ -169,7 +169,7 @@ unsigned int CoAPNetwork_init(const coap_network_init_t *p_param, coap_network_t
 #endif
     if (COAP_ENDPOINT_NOSEC == p_param->ep_type) {
         /*Create udp socket*/
-        p_network->context = HAL_UDP_create(p_param->p_host, p_param->port);
+        p_network->context = (void *)HAL_UDP_create(p_param->p_host, p_param->port);
         if ((void *) - 1 == p_network->context) {
             return COAP_ERROR_NET_INIT_FAILED;
         }
@@ -189,7 +189,7 @@ unsigned int CoAPNetwork_deinit(coap_network_t *p_network)
     }
 #endif
     if (COAP_ENDPOINT_NOSEC == p_network->ep_type) {
-        HAL_UDP_close(p_network->context);
+        HAL_UDP_close((intptr_t)p_network->context);
     }
 
     return err_code;

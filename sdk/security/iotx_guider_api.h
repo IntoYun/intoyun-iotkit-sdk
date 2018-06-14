@@ -31,7 +31,7 @@ typedef enum {
 
 
 SECURE_MODE iotx_guider_get_secure_mode(void);
-int iotx_guider_authenticate(char time_stamp_str[]);
+int iotx_guider_authenticate(void);
 int iotx_guider_auth_gen_keys(void);
 
 #if defined(__cplusplus)

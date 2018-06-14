@@ -28,7 +28,10 @@
 #include <memory.h>
 
 #include "hal_import.h"
-#include "iot_import.h"
+
+#define MOLMC_LOGD(tag, format, ...) do { \
+        printf("D [%010u]:[%-12.12s]: "format"\n", HAL_UptimeMs(), tag, ##__VA_ARGS__);\
+    } while(0)
 
 const static char *TAG = "hal:os";
 
@@ -37,7 +40,7 @@ void *HAL_MutexCreate(void)
     HANDLE mutex;
 
     if (NULL == (mutex = CreateMutex(NULL, FALSE, NULL))) {
-        MOLMC_LOGE(TAG, "create mutex error");
+        MOLMC_LOGD(TAG, "create mutex error");
     }
 
     return mutex;
@@ -46,21 +49,21 @@ void *HAL_MutexCreate(void)
 void HAL_MutexDestroy(void *mutex)
 {
     if (0 == CloseHandle(mutex)) {
-        MOLMC_LOGE(TAG, "destroy mutex error");
+        MOLMC_LOGD(TAG, "destroy mutex error");
     }
 }
 
 void HAL_MutexLock(void *mutex)
 {
     if (WAIT_FAILED == WaitForSingleObject(mutex, INFINITE)) {
-        MOLMC_LOGE(TAG, "lock mutex error");
+        MOLMC_LOGD(TAG, "lock mutex error");
     }
 }
 
 void HAL_MutexUnlock(void *mutex)
 {
     if (WAIT_FAILED == WaitForSingleObject(mutex, INFINITE)) {
-        MOLMC_LOGE(TAG, "lock mutex error");
+        MOLMC_LOGD(TAG, "lock mutex error");
     }
 }
 

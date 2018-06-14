@@ -16,26 +16,29 @@
  *
  */
 
-#include "hal_import.h"
+#ifndef __IOTX_COMM_IF_H__
+#define __IOTX_COMM_IF_H__
 
+/* send type */
+typedef enum {
+    IOTX_CONN_SEND_DATA = 0,               /* 发送数据 */
+    IOTX_CONN_SEND_ACTION_REPLY = 1,       /* 发送指令回复 */
+} iotx_conn_send_t;
 
-intptr_t HAL_SSL_Establish(const char *host, uint16_t port, const char *ca_crt, size_t ca_crt_len)
+#ifdef __cplusplus
+extern "C"
 {
-    return 0;
-}
+#endif
 
-int32_t HAL_SSL_Destroy(intptr_t handle)
-{
-    return 0;
-}
+int iotx_comm_connect(void);
+bool iotx_comm_isconnected(void);
+int iotx_comm_disconnect(void);
+int iotx_comm_send(iotx_conn_send_t type, const uint8_t *data, uint16_t datalen);
+int iotx_comm_yield(void);
 
-int HAL_SSL_Read(intptr_t handle, char *buf, int len, int timeout_ms)
-{
-    return 0;
+#ifdef __cplusplus
 }
+#endif
 
-int HAL_SSL_Write(intptr_t handle, const char *buf, int len, int timeout_ms)
-{
-    return 0;
-}
+#endif
 
