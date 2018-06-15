@@ -76,6 +76,11 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK( esp_wifi_start() );
 }
 
+static void intoyun_iot_task(void *param)
+{
+    userMain();
+}
+
 void app_main(void)
 {
     esp_err_t err = nvs_flash_init();
@@ -85,11 +90,11 @@ void app_main(void)
     }
     ESP_ERROR_CHECK( err );
 
-    //Log.setLogLevel("*", MOLMC_LOG_VERBOSE);
+    Log.setLogLevel("*", MOLMC_LOG_VERBOSE);
     Log.setLogLevel("user:project", MOLMC_LOG_VERBOSE);
     Log.setLogLevel("user:ota", MOLMC_LOG_VERBOSE);
 
     initialise_wifi();
-    xTaskCreate(&userMain, "user_main_task", 4096 * 2, NULL, 2, NULL);
+    xTaskCreate(&intoyun_iot_task, "intoyun_iot_task", 4096 * 2, NULL, 5, NULL);
 }
 

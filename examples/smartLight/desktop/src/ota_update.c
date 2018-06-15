@@ -25,7 +25,7 @@ static void otaProgressCallback(void *handle, uint8_t *data, size_t len, uint32_
     static uint8_t last_percent = 0;
     uint8_t percent = 0;
 
-    MOLMC_LOGI(TAG, "otaProgressCallback len = %d, currentSize = %d, totalSize = %d", len, currentSize, totalSize);
+    MOLMC_LOGI(TAG, "otaProgressCallback len = %d, currentSize = %d, totalSize = %d", (int)len, currentSize, totalSize);
     //烧写FLASH
 
     //上送OTA进度

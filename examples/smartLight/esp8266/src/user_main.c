@@ -16,10 +16,24 @@
  *
  */
 
-#include "esp_common.h"
-#include "iot_export.h"
+#include <stdbool.h>
+#include <stddef.h>
+#include <string.h>
 
-#define CONFIG_WIFI_SSID      "TP-LINK_3816"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+#include "esp_misc.h"
+#include "esp_sta.h"
+#include "esp_softap.h"
+#include "esp_system.h"
+#include "esp_timer.h"
+
+#include "iot_export.h"
+#include "network.h"
+
+//#define CONFIG_WIFI_SSID      "TP-LINK_3816"
+#define CONFIG_WIFI_SSID      "MOLMC_HUAWEI"
 #define CONFIG_WIFI_PASSWORD  "26554422"
 
 static os_timer_t timer;
@@ -37,10 +51,10 @@ extern int userMain(void);
  * Parameters   : none
  * Returns      : rf cal sector
 *******************************************************************************/
-uint32 user_rf_cal_sector_set(void)
+uint32_t user_rf_cal_sector_set(void)
 {
     flash_size_map size_map = system_get_flash_size_map();
-    uint32 rf_cal_sec = 0;
+    uint32_t rf_cal_sec = 0;
 
     switch (size_map) {
         case FLASH_SIZE_4M_MAP_256_256:
@@ -60,12 +74,15 @@ uint32 user_rf_cal_sector_set(void)
         case FLASH_SIZE_32M_MAP_1024_1024:
             rf_cal_sec = 1024 - 5;
             break;
+
         case FLASH_SIZE_64M_MAP_1024_1024:
             rf_cal_sec = 2048 - 5;
             break;
+
         case FLASH_SIZE_128M_MAP_1024_1024:
             rf_cal_sec = 4096 - 5;
             break;
+
         default:
             rf_cal_sec = 0;
             break;
@@ -74,28 +91,39 @@ uint32 user_rf_cal_sector_set(void)
     return rf_cal_sec;
 }
 
-LOCAL void ICACHE_FLASH_ATTR wait_for_connection_ready(uint8 flag)
+static void wait_for_connection_ready(uint8_t flag)
 {
     os_timer_disarm(&timer);
-    if(wifi_station_connected()){
-        os_printf("connected\n");
+
+    if (wifi_station_connected()) {
+        printf("connected\n");
         Network.setState(IOTX_NETWORK_STATE_CONNECTED);
     } else {
-        os_printf("reconnect after 2s\n");
-        os_timer_setfn(&timer, (os_timer_func_t *)wait_for_connection_ready, NULL);
+        printf("reconnect after 2s\n");
+        os_timer_setfn(&timer, (os_timer_func_t*)wait_for_connection_ready, NULL);
         os_timer_arm(&timer, 2000, 0);
     }
 }
 
-LOCAL void ICACHE_FLASH_ATTR on_wifi_connect(){
+static void on_wifi_connect(void)
+{
     os_timer_disarm(&timer);
     os_timer_setfn(&timer, (os_timer_func_t *)wait_for_connection_ready, NULL);
     os_timer_arm(&timer, 100, 0);
 }
 
-LOCAL void ICACHE_FLASH_ATTR on_wifi_disconnect(uint8_t reason){
-    os_printf("disconnect %d\n", reason);
+static void on_wifi_disconnect(uint8_t reason)
+{
+    printf("disconnect %d\n", reason);
     Network.setState(IOTX_NETWORK_STATE_DISCONNECTED);
+}
+
+static void intoyun_iot_task(void *param)
+{
+    while(!wifi_station_connected()) {
+        vTaskDelay(100);
+    }
+    userMain();
 }
 
 /******************************************************************************
@@ -114,12 +142,12 @@ void user_init(void)
     stop_wifi_ap();
     start_wifi_station(CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
 
-    //Log.setLogLevel("*", MOLMC_LOG_VERBOSE);
+    Log.setLogLevel("*", MOLMC_LOG_VERBOSE);
     Log.setLogLevel("user:project", MOLMC_LOG_VERBOSE);
     Log.setLogLevel("user:ota", MOLMC_LOG_VERBOSE);
-	
-    if (xTaskCreate(&userMain, "user_main_task", 4096*2, NULL, 5, NULL) != pdPASS) {
-        os_printf("user_main_task");
+
+    if (xTaskCreate(&intoyun_iot_task, "intoyun_iot_task", 4096, NULL, 5, NULL) != pdPASS) {
+        printf("create intoyun_iot_task task error!");
     }
 }
 
