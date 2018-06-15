@@ -62,35 +62,16 @@ int getUdpAddrInfo(char *host, unsigned short port, struct addrinfo **ainfo)
 
 intptr_t HAL_UDP_create(const char *host, unsigned short port)
 {
-
     struct sockaddr_in saddr;
     int socket_id = -1;
     int rc = -1;
-
-    struct addrinfo hints;
-    struct addrinfo *res, ainfo;
-    char p_port[6];
-    int flag = 1;
 
     s_host = HAL_Malloc(strlen(host) + 1);
     memset(s_host, 0, strlen(host) + 1);
     memcpy(s_host, host, strlen(host));
     sprintf(s_port, "%u", port);
 
-    /** memset(&hints, 0, sizeof(hints)); */
-
     ESP_LOGI(TAG, "establish udp connection with server(host=%s port=%u)", host, port);
-
-/**     hints.ai_family = AF_INET; //only IPv4
-  *     hints.ai_socktype = SOCK_DGRAM;
-  *     hints.ai_protocol = IPPROTO_UDP;
-  *     sprintf(p_port, "%u", port);
-  *
-  *     if ((rc = getaddrinfo(host, p_port, &hints, &res)) != 0) {
-  *         ESP_LOGI(TAG, "getaddrinfo error");
-  *         return 0;
-  *     } */
-
 
     socket_id = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if(socket_id < 0) {
@@ -102,13 +83,6 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
     saddr.sin_port = htons(9200);
     saddr.sin_addr.s_addr = INADDR_ANY;
 
-    /** rc = setsockopt(socket_id, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
-      * if (rc < 0) {
-      *     ESP_LOGI(TAG, "socket set opt error, rc=%d", rc);
-      *     return -1;
-      * } */
-
-
     rc = bind(socket_id, (struct sockaddr *) &saddr, sizeof(saddr));
     if(rc < 0) {
         ESP_LOGI(TAG, "bind socket failed");
@@ -118,68 +92,6 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
     ESP_LOGI(TAG, "create socket success socket id: %d", socket_id);
 
     return (intptr_t)socket_id;
-
-
-
-/**     struct addrinfo hints;
-  *     struct addrinfo *addrInfoList = NULL;
-  *     struct addrinfo *cur = NULL;
-  *     int fd = -1;
-  *     int rc = -1;
-  *     char service[6];
-  *     bool flag = true;
-  *
-  *     memset(&hints, 0, sizeof(hints));
-  *
-  *     ESP_LOGI(TAG, "establish udp connection with server(host=%s port=%u)", host, port);
-  *
-  *     hints.ai_family = AF_INET; //only IPv4
-  *     hints.ai_socktype = SOCK_DGRAM;
-  *     hints.ai_protocol = IPPROTO_UDP;
-  *     sprintf(service, "%u", port);
-  *
-  *     if ((rc = getaddrinfo(host, service, &hints, &addrInfoList)) != 0) {
-  *         ESP_LOGI(TAG, "getaddrinfo error");
-  *         return -1;
-  *     }
-  *
-  *     for (cur = addrInfoList; cur != NULL; cur = cur->ai_next) {
-  *         if (cur->ai_family == AF_INET) {
-  *
-  *           fd = socket(cur->ai_family, cur->ai_socktype, cur->ai_protocol);
-  *           ESP_LOGI(TAG, "sockfd = %d", fd);
-  *
-  *           if (fd < 0) {
-  *               ESP_LOGI(TAG, "create socket error");
-  *               rc = -1;
-  *               continue;
-  *           }
-  *
-  *           rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
-  *           if (rc < 0) {
-  *               ESP_LOGI(TAG, "socket set opt error, rc=%d", rc);
-  *               continue;
-  *           }
-  *
-  *           if (0 == connect(fd, cur->ai_addr, cur->ai_addrlen)) {
-  *               break;
-  *           }
-  *
-  *           close(fd);
-  *           ESP_LOGI(TAG, "connect error");
-  *           rc = -1;
-  *         }
-  *     }
-  *
-  *     if (rc < 0) {
-  *         ESP_LOGI(TAG, "fail to establish udp");
-  *         return (void *)(-1);
-  *     } else {
-  *         ESP_LOGI(TAG, "success to establish udp, fd = %d", fd);
-  *     }
-  *     freeaddrinfo(addrInfoList);
-  *
-  *     return (intptr_t)fd; */
 }
 
 void HAL_UDP_close(intptr_t p_socket)
@@ -248,7 +160,7 @@ int HAL_UDP_read(intptr_t p_socket, unsigned char *p_data, unsigned int datalen)
     inet_ntop(AF_INET, &sa->sin_addr, addr, NETWORK_ADDR_LEN);
     ESP_LOGI(TAG, "The host IP %s, port is %d", addr, ntohs(sa->sin_port));
 
-    count = recvfrom(socket_id, p_data, (size_t)datalen, 0, &ainfo->ai_addr, &ainfo->ai_addrlen);
+    count = recvfrom(socket_id, p_data, (size_t)datalen, 0, ainfo->ai_addr, &ainfo->ai_addrlen);
 
     ESP_LOGI(TAG, "read data count: %d", count);
     HAL_Free(ainfo);
