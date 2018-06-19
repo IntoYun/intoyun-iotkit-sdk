@@ -33,34 +33,6 @@
     } while(0)
 
 typedef xSemaphoreHandle osi_mutex_t;
-static os_timer_t hal_micros_overflow_timer;
-static uint32_t hal_micros_at_last_overflow_tick = 0;
-static uint32_t hal_micros_overflow_count = 0;
-
-static void hal_micros_overflow_tick(void *arg)
-{
-    uint32_t m = system_get_time();
-
-    if (m < hal_micros_at_last_overflow_tick) {
-        hal_micros_overflow_count ++;
-    }
-
-    hal_micros_at_last_overflow_tick = m;
-}
-
-void hal_micros_set_default_time(void)
-{
-    os_timer_disarm(&hal_micros_overflow_timer);
-    os_timer_setfn(&hal_micros_overflow_timer, (os_timer_func_t *)hal_micros_overflow_tick, 0);
-    os_timer_arm(&hal_micros_overflow_timer, 60 * 1000, 1);
-}
-
-unsigned long hal_millis(void)
-{
-    uint32_t m = system_get_time();
-    uint32_t c = hal_micros_overflow_count + ((m < hal_micros_at_last_overflow_tick) ? 1 : 0);
-    return c * 4294967 + m / 1000;
-}
 
 /**
  * @brief  gain millisecond time
@@ -128,7 +100,14 @@ void HAL_SystemReboot(void)
 
 uint32_t HAL_UptimeMs(void)
 {
-    return hal_millis();
+    struct timeval tv = { 0 };
+    uint32_t time_ms;
+
+    mygettimeofday(&tv, NULL);
+
+    time_ms = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+
+    return time_ms;
 }
 
 void HAL_Srandom(uint32_t seed)

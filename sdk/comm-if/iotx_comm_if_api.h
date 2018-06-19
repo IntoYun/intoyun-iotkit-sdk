@@ -20,20 +20,36 @@
 #define __IOTX_COMM_IF_API_H__
 
 #include "utils_timer.h"
+#include "sdk_config.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#define INTOYUN_MQTT_SERVER_DOMAIN        "iot.intoyun.com"
+#if CONFIG_CLOUD_SELECT == 1     //生产平台
+
+#define INTOYUN_MQTT_SERVER_DOMAIN        "www.intoyun.com"
+#define INTOYUN_MQTT_SERVER_PORT          1883
+
+#define INTOYUN_COAP_SERVER_DOMAIN        "coap://iot.intoyun.com"
+#define INTOYUN_COAP_SERVER_PORT          5683
+
+#define INTOYUN_HTTP_SERVER_DOMAIN        "www.intoyun.com"
+#define INTOYUN_HTTP_SERVER_PORT          80
+
+#else  //测试平台
+
+#define INTOYUN_MQTT_SERVER_DOMAIN        "ghgylwww.intoyun.com"
 #define INTOYUN_MQTT_SERVER_PORT          1883
 
 #define INTOYUN_COAP_SERVER_DOMAIN        "coap://ghgyliot.intoyun.com"
 #define INTOYUN_COAP_SERVER_PORT          5683
 
-#define INTOYUN_HTTP_SERVER_DOMAIN        "www.intoyun.com"
+#define INTOYUN_HTTP_SERVER_DOMAIN        "ghgylwww.intoyun.com"
 #define INTOYUN_HTTP_SERVER_PORT          80
+
+#endif
 
 /* Minimum interval of reconnect in millisecond */
 #define IOTX_CONN_RECONNECT_INTERVAL_MIN_MS       (1000)
