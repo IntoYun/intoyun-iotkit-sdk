@@ -19,7 +19,7 @@
 #ifndef __SDK_CONFIG_H__
 #define __SDK_CONFIG_H__
 
-#define SDK_VERSION                        "1.3.1"
+#define SDK_VERSION                        "1.3.0"
 
 #define CONFIG_CLOUD_SELECT                1   //选择平台类型  1: 生产平台  2: 测试平台
 
