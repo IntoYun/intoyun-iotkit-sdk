@@ -27,12 +27,7 @@ IntoYun平台是一个开放的物联网平台，允许第三方设备接入并�
 +-- examples            : 项目示例
 +-- platform            : 硬件HAL层
     +-- inc             : 硬件HAL层头文件
-    +-- src             : 硬件HAL层实现
-        +-- esp32       : ESP32 HAL层实现
-        +-- esp8266     : ESP8266 HAL层实现
-        +-- linux       : Linux HAL层实现
-        +-- osx         : MacOS HAL层实现
-        +-- windows     : Windows HAL层实现
+    +-- src             : 硬件HAL层实现，每个目录对应于一个平台
 +-- sdk                 : SDK代码实现
     +-- cloud           : 云端应用层实现
         +-- datapoint   : 数据点功能
@@ -59,6 +54,7 @@ IntoYun平台是一个开放的物联网平台，允许第三方设备接入并�
 | windows    | platform/src/windows |
 | esp32      | platform/src/esp32   |
 | esp8266    | platform/src/esp8266 |
+| rtl8710    | platform/src/rtl8710 |
 
 ## 开发指南
 
