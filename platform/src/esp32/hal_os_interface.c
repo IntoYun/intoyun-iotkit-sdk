@@ -30,12 +30,6 @@
 
 #include "hal_import.h"
 
-void mygettimeofday(struct timeval *tv, void *tz)
-{
-    struct _reent r;
-    _gettimeofday_r(&r, tv, tz);
-}
-
 void *HAL_MutexCreate(void)
 {
     return xSemaphoreCreateMutex();
@@ -66,6 +60,10 @@ void HAL_Free(void *ptr)
     return free(ptr);
 }
 
+void HAL_SystemInit(void)
+{
+}
+
 void HAL_SystemReboot(void)
 {
 
@@ -73,14 +71,11 @@ void HAL_SystemReboot(void)
 
 uint32_t HAL_UptimeMs(void)
 {
+    struct _reent r;
     struct timeval tv = { 0 };
-    uint32_t time_ms;
 
-    mygettimeofday(&tv, NULL);
-
-    time_ms = tv.tv_sec * 1000 + tv.tv_usec / 1000;
-
-    return time_ms;
+    _gettimeofday_r(&r, tv, NULL);
+    return tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
 
 void HAL_Srandom(uint32_t seed)

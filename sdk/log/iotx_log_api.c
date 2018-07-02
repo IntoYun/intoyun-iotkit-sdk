@@ -287,6 +287,7 @@ void molmc_log_buffer_hex_internal(const char *tag, const void *buffer, uint16_t
     char temp_buffer[BYTES_PER_LINE+3];   //for not-byte-accessible memory
     char hex_buffer[3*BYTES_PER_LINE+1];
     const char *ptr_line;
+    const char *ptr_buffer = buffer;
     int bytes_cur_line;
 
     do {
@@ -295,19 +296,19 @@ void molmc_log_buffer_hex_internal(const char *tag, const void *buffer, uint16_t
         } else {
             bytes_cur_line = buff_len;
         }
-        if ( !molmc_ptr_byte_accessible(buffer) ) {
+        if ( !molmc_ptr_byte_accessible(ptr_buffer) ) {
             //use memcpy to get around alignment issue
-            memcpy( temp_buffer, buffer, (bytes_cur_line+3)/4*4 );
+            memcpy( temp_buffer, ptr_buffer, (bytes_cur_line+3)/4*4 );
             ptr_line = temp_buffer;
         } else {
-            ptr_line = buffer;
+            ptr_line = ptr_buffer;
         }
 
         for( int i = 0; i < bytes_cur_line; i ++ ) {
             sprintf( hex_buffer + 3*i, "%02x ", (uint8_t)ptr_line[i] );
         }
         MOLMC_LOG_LEVEL( log_level, tag, "%s", hex_buffer );
-        buffer += bytes_cur_line;
+        ptr_buffer += bytes_cur_line;
         buff_len -= bytes_cur_line;
     } while( buff_len );
 }
@@ -319,6 +320,7 @@ void molmc_log_buffer_char_internal(const char *tag, const void *buffer, uint16_
     char temp_buffer[BYTES_PER_LINE+3];   //for not-byte-accessible memory
     char char_buffer[BYTES_PER_LINE+1];
     const char *ptr_line;
+    const char *ptr_buffer = buffer;
     int bytes_cur_line;
 
     do {
@@ -327,19 +329,19 @@ void molmc_log_buffer_char_internal(const char *tag, const void *buffer, uint16_
         } else {
             bytes_cur_line = buff_len;
         }
-        if ( !molmc_ptr_byte_accessible(buffer) ) {
+        if ( !molmc_ptr_byte_accessible(ptr_buffer) ) {
             //use memcpy to get around alignment issue
-            memcpy( temp_buffer, buffer, (bytes_cur_line+3)/4*4 );
+            memcpy( temp_buffer, ptr_buffer, (bytes_cur_line+3)/4*4 );
             ptr_line = temp_buffer;
         } else {
-            ptr_line = buffer;
+            ptr_line = ptr_buffer;
         }
 
         for( int i = 0; i < bytes_cur_line; i ++ ) {
             sprintf( char_buffer + i, "%c", ptr_line[i] );
         }
         MOLMC_LOG_LEVEL( log_level, tag, "%s", char_buffer );
-        buffer += bytes_cur_line;
+        ptr_buffer += bytes_cur_line;
         buff_len -= bytes_cur_line;
     } while( buff_len );
 }
@@ -349,6 +351,7 @@ void molmc_log_buffer_hexdump_internal( const char *tag, const void *buffer, uin
     if ( buff_len == 0 ) return;
     char temp_buffer[BYTES_PER_LINE+3];   //for not-byte-accessible memory
     const char *ptr_line;
+    const char *ptr_buffer = buffer;
     //format: field[length]
     // ADDR[10]+"   "+DATA_HEX[8*3]+" "+DATA_HEX[8*3]+"  |"+DATA_CHAR[8]+"|"
     char hd_buffer[10+3+BYTES_PER_LINE*3+3+BYTES_PER_LINE+1+1];
@@ -361,16 +364,16 @@ void molmc_log_buffer_hexdump_internal( const char *tag, const void *buffer, uin
         } else {
             bytes_cur_line = buff_len;
         }
-        if ( !molmc_ptr_byte_accessible(buffer) ) {
+        if ( !molmc_ptr_byte_accessible(ptr_buffer) ) {
             //use memcpy to get around alignment issue
-            memcpy( temp_buffer, buffer, (bytes_cur_line+3)/4*4 );
+            memcpy( temp_buffer, ptr_buffer, (bytes_cur_line+3)/4*4 );
             ptr_line = temp_buffer;
         } else {
-            ptr_line = buffer;
+            ptr_line = ptr_buffer;
         }
         ptr_hd = hd_buffer;
 
-        ptr_hd += sprintf( ptr_hd, "%p ", buffer );
+        ptr_hd += sprintf( ptr_hd, "%p ", ptr_buffer );
         for( int i = 0; i < BYTES_PER_LINE; i ++ ) {
             if ( (i&7)==0 ) {
                 ptr_hd += sprintf( ptr_hd, " " );
@@ -392,7 +395,7 @@ void molmc_log_buffer_hexdump_internal( const char *tag, const void *buffer, uin
         ptr_hd += sprintf( ptr_hd, "|" );
 
         MOLMC_LOG_LEVEL( log_level, tag, "%s", hd_buffer );
-        buffer += bytes_cur_line;
+        ptr_buffer += bytes_cur_line;
         buff_len -= bytes_cur_line;
     } while( buff_len );
 }

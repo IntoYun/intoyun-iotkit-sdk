@@ -21,7 +21,7 @@
 
 #define SDK_VERSION                        "1.3.0"
 
-#define CONFIG_CLOUD_SELECT                2   //选择平台类型  1: 生产平台  2: 测试平台
+#define CONFIG_CLOUD_SELECT                1   //选择平台类型  1: 生产平台  2: 测试平台
 
 #define CONFIG_CLOUD_CHANNEL               1   //选择云端通讯通道  1: MQTT  2: COAP
 #define CONFIG_CLOUD_DATAPOINT_ENABLED     1   //是否使能数据点通讯接口

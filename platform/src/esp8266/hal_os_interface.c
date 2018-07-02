@@ -34,26 +34,33 @@
 
 typedef xSemaphoreHandle osi_mutex_t;
 
-/**
- * @brief  gain millisecond time
- * gettimeofday in libcirom.a cannot get a accuracy time, redefine it and for time calculation
- *
- * */
-void mygettimeofday(struct timeval *tv, void *tz)
+static os_timer_t hal_micros_overflow_timer;
+static uint32_t hal_micros_at_last_overflow_tick = 0;
+static uint32_t hal_micros_overflow_count = 0;
+
+static void hal_micros_overflow_tick(void *arg)
 {
-    uint32_t current_time_us = system_get_time();
+    uint32_t m = system_get_time();
 
-    if (tv == NULL) {
-        return;
+    if (m < hal_micros_at_last_overflow_tick) {
+        hal_micros_overflow_count ++;
     }
 
-    if (tz != NULL) {
-        tv->tv_sec = *(time_t *)tz + current_time_us / 1000000;
-    } else {
-        tv->tv_sec = current_time_us / 1000000;
-    }
+    hal_micros_at_last_overflow_tick = m;
+}
 
-    tv->tv_usec = current_time_us % 1000000;
+static void hal_micros_set_default_time(void)
+{
+    os_timer_disarm(&hal_micros_overflow_timer);
+    os_timer_setfn(&hal_micros_overflow_timer, (os_timer_func_t *)hal_micros_overflow_tick, 0);
+    os_timer_arm(&hal_micros_overflow_timer, 60 * 1000, 1);
+}
+
+static uint32_t hal_millis(void)
+{
+    uint32_t m = system_get_time();
+    uint32_t c = hal_micros_overflow_count + ((m < hal_micros_at_last_overflow_tick) ? 1 : 0);
+    return c * 4294967LL + m / 1000;
 }
 
 void *HAL_MutexCreate(void)
@@ -93,6 +100,11 @@ void HAL_Free(void *ptr)
     return free(ptr);
 }
 
+void HAL_SystemInit(void)
+{
+    hal_micros_set_default_time();
+}
+
 void HAL_SystemReboot(void)
 {
 
@@ -100,14 +112,7 @@ void HAL_SystemReboot(void)
 
 uint32_t HAL_UptimeMs(void)
 {
-    struct timeval tv = { 0 };
-    uint32_t time_ms;
-
-    mygettimeofday(&tv, NULL);
-
-    time_ms = tv.tv_sec * 1000 + tv.tv_usec / 1000;
-
-    return time_ms;
+    return hal_millis();
 }
 
 void HAL_Srandom(uint32_t seed)

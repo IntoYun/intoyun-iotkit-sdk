@@ -18,11 +18,12 @@
 
 #include <string.h>
 
+#include "iot_import.h"
 #include "iotx_log_api.h"
 #include "iotx_system_api.h"
 #include "iotx_comm_if_api.h"
 
-//const static char *TAG = "esp_ota_ops";
+//const static char *TAG = "sdk:system";
 
 static iotx_device_info_t   iotx_device_info;
 static int                  iotx_devinfo_inited = 0;
@@ -61,6 +62,7 @@ void IOT_SYSTEM_SetDeviceInfo(char *deviceId, char *deviceSecret, char *productI
 
 void IOT_SYSTEM_Init(void)
 {
+    HAL_SystemInit();
     IOT_SYSTEM_DeviceInit();
     IOT_Comm_Init();
 }

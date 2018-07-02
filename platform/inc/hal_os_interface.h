@@ -108,6 +108,16 @@ void HAL_Free(void *ptr);
  */
 
 /**
+ * @brief system init.
+ *
+ * @param None.
+ * @return None.
+ * @see None.
+ * @note None.
+ */
+void HAL_SystemInit(void);
+
+/**
  * @brief system reboot.
  *
  * @param None.
@@ -116,10 +126,6 @@ void HAL_Free(void *ptr);
  * @note None.
  */
 void HAL_SystemReboot(void);
-
-/** @defgroup group_platform_other other
- *  @{
- */
 
 /**
  * @brief Retrieves the number of milliseconds that have elapsed since the system was boot.
@@ -160,6 +166,8 @@ uint32_t HAL_Random(uint32_t region);
  * @note None.
  */
 void HAL_Print(const char * output);
+
+/** @} */ /* group_platform_other other */
 
 #ifdef __cplusplus
 }

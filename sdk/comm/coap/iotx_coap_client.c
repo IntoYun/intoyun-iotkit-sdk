@@ -241,6 +241,8 @@ int IOT_CoAP_Client_Send(iotx_coap_context_t *p_context, iotx_message_t *p_messa
 iotx_coap_context_t *IOT_CoAP_Init(iotx_coap_config_t *p_config)
 {
     iotx_coap_t *p_iotx_coap = NULL;
+    CoAPInitParam param;
+    char url[128] = {0};
 
     if (NULL == p_config) {
         MOLMC_LOGE(TAG, "Invalid paramter p_config %p", p_config);
@@ -288,8 +290,6 @@ iotx_coap_context_t *IOT_CoAP_Init(iotx_coap_config_t *p_config)
     p_iotx_coap->coap_token = IOTX_COAP_INIT_TOKEN;
 
     /*Create coap context*/
-    CoAPInitParam param;
-    char url[128] = {0};
     snprintf(url, sizeof(url), "%s:%d", p_config->p_host, p_config->p_port);
     memset(&param, 0x00, sizeof(CoAPInitParam));
     param.url = url;

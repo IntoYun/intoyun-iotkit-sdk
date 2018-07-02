@@ -37,6 +37,7 @@ void *HAL_MutexCreate(void)
 {
     int err_num;
     pthread_mutex_t *mutex = (pthread_mutex_t *)HAL_Malloc(sizeof(pthread_mutex_t));
+
     if (NULL == mutex) {
         return NULL;
     }
@@ -53,16 +54,17 @@ void *HAL_MutexCreate(void)
 void HAL_MutexDestroy(void *mutex)
 {
     int err_num;
+
     if (0 != (err_num = pthread_mutex_destroy((pthread_mutex_t *)mutex))) {
         MOLMC_LOGD(TAG, "destroy mutex failed");
     }
-
     HAL_Free(mutex);
 }
 
 void HAL_MutexLock(void *mutex)
 {
     int err_num;
+
     if (0 != (err_num = pthread_mutex_lock((pthread_mutex_t *)mutex))) {
         MOLMC_LOGD(TAG, "lock mutex failed");
     }
@@ -71,6 +73,7 @@ void HAL_MutexLock(void *mutex)
 void HAL_MutexUnlock(void *mutex)
 {
     int err_num;
+
     if (0 != (err_num = pthread_mutex_unlock((pthread_mutex_t *)mutex))) {
         MOLMC_LOGD(TAG, "unlock mutex failed");
     }
@@ -84,6 +87,10 @@ void *HAL_Malloc(uint32_t size)
 void HAL_Free(void *ptr)
 {
     free(ptr);
+}
+
+void HAL_SystemInit(void)
+{
 }
 
 void HAL_SystemReboot(void)

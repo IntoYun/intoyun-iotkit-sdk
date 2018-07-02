@@ -29,31 +29,27 @@
 
 const static char *TAG = "hal:tcp";
 
-extern void mygettimeofday(struct timeval *tv, void *tz);
-
-static uint64_t _esp32_get_time_ms(void)
+static uint32_t timer_get_id(void)
 {
-    struct timeval tv = { 0 };
-    uint64_t time_ms;
-
-    mygettimeofday(&tv, NULL);
-
-    time_ms = tv.tv_sec * 1000 + tv.tv_usec / 1000;
-
-    return time_ms;
+    return HAL_UptimeMs();
 }
 
-static uint64_t _esp32_time_left(uint64_t t_end, uint64_t t_now)
+static bool timer_is_end(uint32_t timerID, uint32_t time)
 {
-    uint64_t t_left;
+    uint32_t current_millis = HAL_UptimeMs();
+    uint32_t elapsed_millis = 0;
 
-    if (t_end > t_now) {
-        t_left = t_end - t_now;
+    //Check for wrapping
+    if (current_millis < timerID){
+        elapsed_millis =  UINT_MAX - timerID + current_millis;
     } else {
-        t_left = 0;
+        elapsed_millis = current_millis - timerID;
     }
 
-    return t_left;
+    if (elapsed_millis >= time) {
+        return true;
+    }
+    return false;
 }
 
 intptr_t HAL_TCP_Establish(const char *host, uint16_t port)
@@ -135,47 +131,38 @@ int HAL_TCP_Destroy(intptr_t fd)
 
 int32_t HAL_TCP_Write(intptr_t fd, const char *buf, uint32_t len, uint32_t timeout_ms)
 {
-    int ret;
-    uint32_t len_sent;
-    uint64_t t_end, t_left;
+    int ret = 1;
+    uint32_t len_sent = 0;
+    uint32_t timer_id = timer_get_id();
+    uint32_t t_left = 0;
+    struct timeval timeout;
     fd_set sets;
 
-    t_end = _esp32_get_time_ms() + timeout_ms;
-    len_sent = 0;
-    ret = 1; //send one time if timeout_ms is value 0
-
     do {
-        t_left = _esp32_time_left(t_end, _esp32_get_time_ms());
+        FD_ZERO(&sets);
+        FD_SET(fd, &sets);
 
-        if (0 != t_left) {
-            struct timeval timeout;
+        timeout.tv_sec = t_left / 1000;
+        timeout.tv_usec = (t_left % 1000) * 1000;
 
-            FD_ZERO(&sets);
-            FD_SET(fd, &sets);
-
-            timeout.tv_sec = t_left / 1000;
-            timeout.tv_usec = (t_left % 1000) * 1000;
-
-            ret = select(fd + 1, NULL, &sets, NULL, &timeout);
-            if (ret > 0) {
-                if (0 == FD_ISSET(fd, &sets)) {
-                    ESP_LOGI(TAG, "Should NOT arrive");
-                    //If timeout in next loop, it will not sent any data
-                    ret = 0;
-                    continue;
-                }
-            } else if (0 == ret) {
-                ESP_LOGI(TAG,"select-write timeout %d", (int)fd);
-                break;
-            } else {
-                if (EINTR == errno) {
-                    ESP_LOGI(TAG,"EINTR be caught");
-                    continue;
-                }
-
-                ESP_LOGE(TAG,"select-write fail");
-                break;
+        ret = select(fd + 1, NULL, &sets, NULL, &timeout);
+        if (ret > 0) {
+            if (0 == FD_ISSET(fd, &sets)) {
+                ESP_LOGI(TAG, "Should NOT arrive");
+                //If timeout in next loop, it will not sent any data
+                ret = 0;
+                continue;
             }
+        } else if (0 == ret) {
+            ESP_LOGI(TAG,"select-write timeout %d", (int)fd);
+            break;
+        } else {
+            if (EINTR == errno) {
+                ESP_LOGI(TAG,"EINTR be caught");
+                continue;
+            }
+            ESP_LOGE(TAG,"select-write fail");
+            break;
         }
 
         if (ret > 0) {
@@ -189,33 +176,30 @@ int32_t HAL_TCP_Write(intptr_t fd, const char *buf, uint32_t len, uint32_t timeo
                     ESP_LOGI(TAG,"EINTR be caught");
                     continue;
                 }
-
                 ESP_LOGE(TAG,"send fail");
                 break;
             }
         }
-    } while ((len_sent < len) && (_esp32_time_left(t_end, _esp32_get_time_ms()) > 0));
+    } while ((len_sent < len) && (timer_get_left(timer_id, timeout_ms) > 0));
 
     return len_sent;
 }
 
 int32_t HAL_TCP_Read(intptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms)
 {
-    int ret, err_code;
-    uint32_t len_recv;
-    uint64_t t_end, t_left;
-    fd_set sets;
+    int ret = 1, err_code = 0;
+    uint32_t len_recv = 0;
+    uint32_t timer_id = timer_get_id();
+    uint32_t t_left = 0;
     struct timeval timeout;
-
-    t_end = _esp32_get_time_ms() + timeout_ms;
-    len_recv = 0;
-    err_code = 0;
+    fd_set sets;
 
     do {
-        t_left = _esp32_time_left(t_end, _esp32_get_time_ms());
+        t_left = timer_get_left(timer_id, timeout_ms);
         if (0 == t_left) {
             break;
         }
+
         FD_ZERO(&sets);
         FD_SET(fd, &sets);
 

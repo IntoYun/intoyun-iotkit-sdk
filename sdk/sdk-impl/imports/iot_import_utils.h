@@ -28,7 +28,7 @@
 #include "utils_timer.h"
 #include "utils_aes.h"
 #include "utils_base64.h"
-#include "cJSON_Utils.h"
+#include "utils_cjson.h"
 #include "utils_cmac.h"
 #include "utils_hmac.h"
 #include "utils_md5.h"

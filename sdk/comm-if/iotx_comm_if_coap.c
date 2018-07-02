@@ -29,7 +29,7 @@
 
 #if CONFIG_CLOUD_CHANNEL == 2     //COAP
 
-const static char *TAG = "sdk:comm-if-mqtt";
+const static char *TAG = "sdk:comm-if-coap";
 
 #define SUB_TX_TOPIC                  "tx"
 #define PUB_RX_TOPIC                  "rx"

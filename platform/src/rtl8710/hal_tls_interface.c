@@ -18,55 +18,24 @@
 
 #include "hal_import.h"
 
-void *HAL_MutexCreate(void)
-{
-    return NULL;
-}
 
-void HAL_MutexDestroy(void *mutex)
-{
-}
-
-void HAL_MutexLock(void *mutex)
-{
-}
-
-void HAL_MutexUnlock(void *mutex)
-{
-}
-
-void *HAL_Malloc(uint32_t size)
-{
-    return NULL;
-}
-
-void HAL_Free(void *ptr)
-{
-}
-
-void HAL_SystemInit(void)
-{
-}
-
-void HAL_SystemReboot(void)
-{
-}
-
-uint32_t HAL_UptimeMs(void)
+intptr_t HAL_SSL_Establish(const char *host, uint16_t port, const char *ca_crt, size_t ca_crt_len)
 {
     return 0;
 }
 
-void HAL_Srandom(uint32_t seed)
-{
-}
-
-uint32_t HAL_Random(uint32_t region)
+int32_t HAL_SSL_Destroy(intptr_t handle)
 {
     return 0;
 }
 
-void HAL_Print(const char * output)
+int HAL_SSL_Read(intptr_t handle, char *buf, int len, int timeout_ms)
 {
+    return 0;
+}
+
+int HAL_SSL_Write(intptr_t handle, const char *buf, int len, int timeout_ms)
+{
+    return 0;
 }
 

@@ -131,9 +131,9 @@ void IOT_DataPoint_DefineNumber(const uint16_t dpID, dp_permission_t permission,
         }
 
         if(resolution == 0) {
-            properties[properties_count]->numberIntValue=value;
+            properties[properties_count]->numberIntValue = (int32_t)value;
         } else {
-            properties[properties_count]->numberDoubleValue=value;
+            properties[properties_count]->numberDoubleValue = value;
         }
         properties[properties_count]->numberProperty.minValue = minValue;
         properties[properties_count]->numberProperty.maxValue = maxValue;
@@ -302,9 +302,9 @@ static void writeDatapointNumberInt32(const uint16_t dpID, int32_t value, uint8_
     } else {
         int32_t tmp = value;
         if(tmp < properties[index]->numberProperty.minValue) {
-            tmp = properties[index]->numberProperty.minValue;
+            tmp = (int32_t)properties[index]->numberProperty.minValue;
         } else if(tmp > properties[index]->numberProperty.maxValue) {
-            tmp = properties[index]->numberProperty.maxValue;
+            tmp = (int32_t)properties[index]->numberProperty.maxValue;
         }
 
         if(properties[index]->numberIntValue != value) {
@@ -683,7 +683,7 @@ void IOT_DataPoint_ParseReceiveDatapoints(const uint8_t *payload, uint32_t len)
                     uint8_t id = getPropertyIndex(dpID);
                     if(properties[id]->numberProperty.resolution == 0) {
                         //此数据点为int
-                        value = value + properties[id]->numberProperty.minValue;
+                        value = value + (int32_t)properties[id]->numberProperty.minValue;
                         if(getPropertyIndex(dpID) != -1) {
                             //数据点存在
                             writeDatapointNumberInt32(dpID, value, 0);
@@ -799,8 +799,8 @@ static uint16_t intoyunFormDataPointBinary(int property_index, uint8_t* buffer)
                 if(properties[property_index]->numberProperty.resolution == 0) {
                     value = (int32_t)properties[property_index]->numberIntValue;
                 } else {
-                    value = (properties[property_index]->numberDoubleValue - properties[property_index]->numberProperty.minValue) \
-                            * _pow(10, properties[property_index]->numberProperty.resolution);
+                    value = (int32_t)((properties[property_index]->numberDoubleValue - properties[property_index]->numberProperty.minValue) \
+                            * _pow(10, properties[property_index]->numberProperty.resolution));
                 }
 
                 if(value & 0xFFFF0000) {

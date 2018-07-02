@@ -18,6 +18,10 @@
 
 #include "hal_import.h"
 
+#define MOLMC_LOGD(tag, format, ...) do { \
+        printf("D [%010u]:[%-12.12s]: "format"\n", HAL_UptimeMs(), tag, ##__VA_ARGS__);\
+    } while(0)
+
 void *HAL_MutexCreate(void)
 {
     return NULL;
@@ -25,23 +29,27 @@ void *HAL_MutexCreate(void)
 
 void HAL_MutexDestroy(void *mutex)
 {
+
 }
 
 void HAL_MutexLock(void *mutex)
 {
+
 }
 
 void HAL_MutexUnlock(void *mutex)
 {
+
 }
 
 void *HAL_Malloc(uint32_t size)
 {
-    return NULL;
+    return malloc(size);
 }
 
 void HAL_Free(void *ptr)
 {
+    free(ptr);
 }
 
 void HAL_SystemInit(void)
@@ -50,6 +58,7 @@ void HAL_SystemInit(void)
 
 void HAL_SystemReboot(void)
 {
+
 }
 
 uint32_t HAL_UptimeMs(void)
@@ -68,5 +77,6 @@ uint32_t HAL_Random(uint32_t region)
 
 void HAL_Print(const char * output)
 {
+    printf("%s", output);
 }
 

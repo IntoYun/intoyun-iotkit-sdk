@@ -16,10 +16,14 @@
  *
  */
 
-#ifndef __LINUX_LIST_H__
-#define __LINUX_LIST_H__
+#ifndef __LITE_LIST_H__
+#define __LITE_LIST_H__
 
+#if defined ( __CC_ARM )
+#ifndef inline
 #define inline __inline
+#endif
+#endif 
 
 typedef struct list_head list_head_t;
 

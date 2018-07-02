@@ -32,11 +32,10 @@ const static char *TAG = "hal:udp";
 char *s_host;
 char s_port[6];
 struct addrinfo s_hints = {
-  .ai_family = AF_INET,
-  .ai_socktype = SOCK_DGRAM,
-  .ai_protocol = IPPROTO_UDP,
+    .ai_family = AF_INET,
+    .ai_socktype = SOCK_DGRAM,
+    .ai_protocol = IPPROTO_UDP,
 };
-
 
 int getUdpAddrInfo(char *host, unsigned short port, struct addrinfo **ainfo)
 {
@@ -214,106 +213,106 @@ int HAL_UDP_readTimeout(intptr_t p_socket, unsigned char *p_data, unsigned int d
 
 int HAL_UDP_recvfrom(intptr_t sockfd, NetworkAddr *p_remote, unsigned char *p_data, unsigned int datalen, unsigned int timeout_ms)
 {
-  int socket_id = -1;
-  struct sockaddr from;
-  int count = -1, ret = -1;
-  socklen_t addrlen = 0;
-  struct timeval      tv;
-  fd_set              read_fds;
+    int socket_id = -1;
+    struct sockaddr from;
+    int count = -1, ret = -1;
+    socklen_t addrlen = 0;
+    struct timeval      tv;
+    fd_set              read_fds;
 
-  if(NULL == p_remote  || NULL == p_data){
-    return -1;
-  }
-
-  socket_id = (int)sockfd;
-
-  FD_ZERO(&read_fds);
-  FD_SET(socket_id, &read_fds);
-
-  tv.tv_sec  = timeout_ms / 1000;
-  tv.tv_usec = (timeout_ms % 1000) * 1000;
-
-  ret = select(socket_id + 1, &read_fds, NULL, NULL, timeout_ms == 0 ? NULL : &tv);
-
-  /* Zero fds ready means we timed out */
-  if (ret == 0) {
-    return -2;    /* receive timeout */
-  }
-
-  if (ret < 0) {
-    if (errno == EINTR) {
-      return -3;    /* want read */
+    if(NULL == p_remote  || NULL == p_data){
+        return -1;
     }
 
-    return -4; /* receive failed */
-  }
+    socket_id = (int)sockfd;
 
-  addrlen = sizeof(struct sockaddr);
-  count = recvfrom(socket_id, p_data, (size_t)datalen, 0, &from, &addrlen);
-  if(-1 == count) {
-    return -1;
-  }
-  if (from.sa_family == AF_INET) {
-    struct sockaddr_in *sin = (struct sockaddr_in *)&from;
-    inet_ntop(AF_INET, &sin->sin_addr, p_remote->addr, NETWORK_ADDR_LEN);
-    p_remote->port = ntohs(sin->sin_port);
-  }
-  return count;
+    FD_ZERO(&read_fds);
+    FD_SET(socket_id, &read_fds);
+
+    tv.tv_sec  = timeout_ms / 1000;
+    tv.tv_usec = (timeout_ms % 1000) * 1000;
+
+    ret = select(socket_id + 1, &read_fds, NULL, NULL, timeout_ms == 0 ? NULL : &tv);
+
+    /* Zero fds ready means we timed out */
+    if (ret == 0) {
+        return -2;    /* receive timeout */
+    }
+
+    if (ret < 0) {
+        if (errno == EINTR) {
+            return -3;    /* want read */
+        }
+
+        return -4; /* receive failed */
+    }
+
+    addrlen = sizeof(struct sockaddr);
+    count = recvfrom(socket_id, p_data, (size_t)datalen, 0, &from, &addrlen);
+    if(-1 == count) {
+        return -1;
+    }
+    if (from.sa_family == AF_INET) {
+        struct sockaddr_in *sin = (struct sockaddr_in *)&from;
+        inet_ntop(AF_INET, &sin->sin_addr, p_remote->addr, NETWORK_ADDR_LEN);
+        p_remote->port = ntohs(sin->sin_port);
+    }
+    return count;
 }
 
 int HAL_UDP_sendto(intptr_t sockfd, const NetworkAddr *p_remote, const unsigned char *p_data, unsigned int datalen, unsigned int timeout_ms)
 {
-  int rc = -1;
-  int socket_id = -1;
-  struct sockaddr_in remote_addr;
+    int rc = -1;
+    int socket_id = -1;
+    struct sockaddr_in remote_addr;
 
-  if(NULL == p_remote || NULL == p_data) {
-    return -1;
-  }
+    if(NULL == p_remote || NULL == p_data) {
+        return -1;
+    }
 
-  socket_id = (int)sockfd;
-  remote_addr.sin_family = AF_INET;
-  if(1 != (rc = inet_pton(remote_addr.sin_family, p_remote->addr, &remote_addr.sin_addr.s_addr))) {
-    return -1;
-  }
-  remote_addr.sin_port = htons(p_remote->port);
-  rc = sendto(socket_id, p_data, (size_t)datalen, 0,
-  (const struct sockaddr *)&remote_addr, sizeof(remote_addr));
-  if(-1 == rc) {
-    return -1;
-  }
-  return rc;
+    socket_id = (int)sockfd;
+    remote_addr.sin_family = AF_INET;
+    if(1 != (rc = inet_pton(remote_addr.sin_family, p_remote->addr, &remote_addr.sin_addr.s_addr))) {
+        return -1;
+    }
+    remote_addr.sin_port = htons(p_remote->port);
+    rc = sendto(socket_id, p_data, (size_t)datalen, 0,
+            (const struct sockaddr *)&remote_addr, sizeof(remote_addr));
+    if(-1 == rc) {
+        return -1;
+    }
+    return rc;
 }
 
 int HAL_UDP_joinmulticast(intptr_t sockfd, const char *p_group)
 {
-  int err = -1;
-  int socket_id = -1;
+    int err = -1;
+    int socket_id = -1;
 
-  if(NULL == p_group) {
-    return -1;
-  }
+    if(NULL == p_group) {
+        return -1;
+    }
 
-  /*set loopback*/
-  int loop = 1;
-  socket_id = (int)sockfd;
-  err = setsockopt(socket_id, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof(loop));
-  if(err < 0) {
-    fprintf(stderr,"setsockopt():IP_MULTICAST_LOOP failed\r\n");
-    return err;
-  }
+    /*set loopback*/
+    int loop = 1;
+    socket_id = (int)sockfd;
+    err = setsockopt(socket_id, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof(loop));
+    if(err < 0) {
+        fprintf(stderr,"setsockopt():IP_MULTICAST_LOOP failed\r\n");
+        return err;
+    }
 
-  struct ip_mreq mreq;
-  mreq.imr_multiaddr.s_addr = inet_addr(p_group);
-  mreq.imr_interface.s_addr = htonl(INADDR_ANY); /*default networt interface*/
+    struct ip_mreq mreq;
+    mreq.imr_multiaddr.s_addr = inet_addr(p_group);
+    mreq.imr_interface.s_addr = htonl(INADDR_ANY); /*default networt interface*/
 
-  /*join to the mutilcast group*/
-  err = setsockopt(socket_id, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq));
-  if (err < 0) {
-    fprintf(stderr,"setsockopt():IP_ADD_MEMBERSHIP failed\r\n");
-    return err;
-  }
+    /*join to the mutilcast group*/
+    err = setsockopt(socket_id, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq));
+    if (err < 0) {
+        fprintf(stderr,"setsockopt():IP_ADD_MEMBERSHIP failed\r\n");
+        return err;
+    }
 
-  return 0;
+    return 0;
 }
 

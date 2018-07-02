@@ -77,6 +77,10 @@ void HAL_Free(void *ptr)
     free(ptr);
 }
 
+void HAL_SystemInit(void)
+{
+}
+
 void HAL_SystemReboot(void)
 {
 

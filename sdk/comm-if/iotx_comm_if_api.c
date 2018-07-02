@@ -37,7 +37,7 @@ int iotx_get_device_info(char *buf, uint16_t buflen)
 
     root = cJSON_CreateObject();
     cJSON_AddItemToObject(root, "productId", cJSON_CreateString(pdev_info->product_id));
-    //cJSON_AddItemToObject(root, "bc", cJSON_CreateNumber(1));  //暂时去掉， esp8266 JSON处理有问题
+    cJSON_AddItemToObject(root, "bc", cJSON_CreateNumber(1));  //暂时去掉， esp8266 JSON处理有问题
     cJSON_AddItemToObject(root, "swVer", cJSON_CreateString(pdev_info->software_version));
     cJSON_AddItemToObject(root, "hwVer", cJSON_CreateString(pdev_info->hardware_version));
     cJSON_AddItemToObject(root, "online", cJSON_CreateBool(true));

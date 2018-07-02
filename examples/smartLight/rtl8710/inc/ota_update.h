@@ -16,57 +16,10 @@
  *
  */
 
-#include "hal_import.h"
+#ifndef OTA_UPDATE_H_
+#define OTA_UPDATE_H_
 
-void *HAL_MutexCreate(void)
-{
-    return NULL;
-}
+bool otaUpdate(uint8_t *data, uint32_t len);
 
-void HAL_MutexDestroy(void *mutex)
-{
-}
-
-void HAL_MutexLock(void *mutex)
-{
-}
-
-void HAL_MutexUnlock(void *mutex)
-{
-}
-
-void *HAL_Malloc(uint32_t size)
-{
-    return NULL;
-}
-
-void HAL_Free(void *ptr)
-{
-}
-
-void HAL_SystemInit(void)
-{
-}
-
-void HAL_SystemReboot(void)
-{
-}
-
-uint32_t HAL_UptimeMs(void)
-{
-    return 0;
-}
-
-void HAL_Srandom(uint32_t seed)
-{
-}
-
-uint32_t HAL_Random(uint32_t region)
-{
-    return 0;
-}
-
-void HAL_Print(const char * output)
-{
-}
+#endif
 
