@@ -60,7 +60,7 @@ intptr_t HAL_TCP_Establish(const char *host, uint16_t port)
     struct addrinfo *addrInfoList = NULL;
     struct addrinfo *cur = NULL;
     int fd = 0;
-    int rc = 0;
+    int rc = -1;
     char service[6];
     int sockopt = 1;
     memset(&hints, 0, sizeof(hints));
@@ -87,7 +87,7 @@ intptr_t HAL_TCP_Establish(const char *host, uint16_t port)
         fd = socket(cur->ai_family, cur->ai_socktype, cur->ai_protocol);
         if (fd < 0) {
             MOLMC_LOGD(TAG, "create socket error");
-            rc = 0;
+            rc = -1;
             continue;
         }
 
@@ -101,10 +101,10 @@ intptr_t HAL_TCP_Establish(const char *host, uint16_t port)
 
         close(fd);
         MOLMC_LOGD(TAG, "connect error");
-        rc = 0;
+        rc = -1;
     }
 
-    if (0 == rc) {
+    if (-1 == rc) {
         MOLMC_LOGD(TAG, "fail to establish tcp");
     } else {
         MOLMC_LOGD(TAG, "success to establish tcp, fd=%d", rc);
