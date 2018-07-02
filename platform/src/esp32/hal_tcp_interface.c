@@ -34,7 +34,7 @@ static uint32_t timer_get_id(void)
     return HAL_UptimeMs();
 }
 
-static bool timer_is_end(uint32_t timerID, uint32_t time)
+static uint32_t timer_get_left(uint32_t timerID, uint32_t time)
 {
     uint32_t current_millis = HAL_UptimeMs();
     uint32_t elapsed_millis = 0;
@@ -47,9 +47,9 @@ static bool timer_is_end(uint32_t timerID, uint32_t time)
     }
 
     if (elapsed_millis >= time) {
-        return true;
+        return 0;
     }
-    return false;
+    return time - elapsed_millis;
 }
 
 intptr_t HAL_TCP_Establish(const char *host, uint16_t port)

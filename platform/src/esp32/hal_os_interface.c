@@ -74,7 +74,7 @@ uint32_t HAL_UptimeMs(void)
     struct _reent r;
     struct timeval tv = { 0 };
 
-    _gettimeofday_r(&r, tv, NULL);
+    _gettimeofday_r(&r, &tv, NULL);
     return tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
 
