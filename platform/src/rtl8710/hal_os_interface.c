@@ -15,64 +15,84 @@
  * limitations under the License.
  *
  */
-
+    
+#include <stdlib.h>
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
+#include "device.h"
 #include "hal_import.h"
 
 #define MOLMC_LOGD(tag, format, ...) do { \
         printf("D [%010u]:[%-12.12s]: "format"\n", HAL_UptimeMs(), tag, ##__VA_ARGS__);\
     } while(0)
 
+typedef xSemaphoreHandle osi_mutex_t;
+
 void *HAL_MutexCreate(void)
 {
-    return NULL;
+    osi_mutex_t *p_mutex = NULL;
+    p_mutex = (osi_mutex_t *)pvPortMalloc(sizeof(osi_mutex_t));
+    if(p_mutex == NULL)
+        return NULL;
+
+    *p_mutex = xSemaphoreCreateMutex();
+    return p_mutex;
 }
 
 void HAL_MutexDestroy(void *mutex)
 {
-
+    vSemaphoreDelete(*((osi_mutex_t*)mutex));
+    free(mutex);
 }
 
 void HAL_MutexLock(void *mutex)
 {
-
+    xSemaphoreTake(*((osi_mutex_t*)mutex), portMAX_DELAY);
 }
 
 void HAL_MutexUnlock(void *mutex)
 {
-
+    xSemaphoreGive(*((osi_mutex_t*)mutex));
 }
 
 void *HAL_Malloc(uint32_t size)
 {
-    return malloc(size);
+	return pvPortMalloc(size);
 }
 
 void HAL_Free(void *ptr)
 {
-    free(ptr);
+	vPortFree(ptr);
 }
 
 void HAL_SystemInit(void)
 {
+
 }
 
 void HAL_SystemReboot(void)
 {
+	CPU_ClkSet(CLK_31_25M);
+	osDelay(100);
 
+	/* CPU reset: Cortex-M3 SCB->AIRCR*/
+	NVIC_SystemReset();
 }
 
 uint32_t HAL_UptimeMs(void)
 {
-    return 0;
+    return (__get_IPSR() == 0) ? xTaskGetTickCount() : xTaskGetTickCountFromISR();
 }
 
 void HAL_Srandom(uint32_t seed)
 {
+    srand(seed);
 }
 
 uint32_t HAL_Random(uint32_t region)
 {
-    return 0;
+    return rand();
 }
 
 void HAL_Print(const char * output)

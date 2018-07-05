@@ -90,6 +90,7 @@ uint32_t molmc_log_timestamp(void);
  * This function or these macros should not be used from an interrupt.
  */
 void molmc_log_write(molmc_log_level_t level, const char* tag, const char* format, ...);
+
 #include "iotx_log_internal.h"
 
 #ifndef MOLMC_LOG_LOCAL_LEVEL
