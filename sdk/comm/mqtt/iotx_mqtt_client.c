@@ -2305,7 +2305,7 @@ int IOT_MQTT_Yield(void *handle, int timeout_ms)
     do {
         if (SUCCESS_RETURN != rc) {
             unsigned int left_t = iotx_time_left(&time);
-            MOLMC_LOGI(TAG, "error occur ");
+            //MOLMC_LOGI(TAG, "error occur ");
             if (left_t < 20)
                 delay(left_t);
             else

@@ -43,7 +43,6 @@ void delay(uint32_t ms)
         if (elapsed_millis > ms) {
             break;
         }
-        IOT_SYSTEM_Loop();
     }
 }
 
