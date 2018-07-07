@@ -22,10 +22,7 @@
 #pragma comment (lib, "ws2_32.lib") //加载 ws2_32.dll
 
 #include "hal_import.h"
-
-#define MOLMC_LOGD(tag, format, ...) do { \
-        printf("D [%010u]:[%-12.12s]: "format"\n", HAL_UptimeMs(), tag, ##__VA_ARGS__);\
-    } while(0)
+#include "iotx_log_api.h"
 
 const static char *TAG = "hal:udp";
 
@@ -42,7 +39,6 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
     MOLMC_LOGD(TAG, "establish udp connection host : %s, port : %u\n", host, port);
 
     hp = gethostbyname(host);
-
 
     memset(&addrServer, 0, sizeof(addrServer));
     memcpy(&(addrServer.sin_addr), hp->h_addr, hp->h_length);

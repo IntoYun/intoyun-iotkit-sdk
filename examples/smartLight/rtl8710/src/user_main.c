@@ -16,138 +16,69 @@
  *
  */
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <string.h>
-
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-
-#include "esp_misc.h"
-#include "esp_sta.h"
-#include "esp_softap.h"
-#include "esp_system.h"
-#include "esp_timer.h"
-
 #include "iot_export.h"
-#include "network.h"
+#include "device.h"
+#include "wifi_constants.h"
+#include "lwip_netconf.h"
 
 //#define CONFIG_WIFI_SSID      "TP-LINK_3816"
 #define CONFIG_WIFI_SSID      "MOLMC_HUAWEI"
 #define CONFIG_WIFI_PASSWORD  "26554422"
 
-static os_timer_t timer;
 extern int userMain(void);
 
-/******************************************************************************
- * FunctionName : user_rf_cal_sector_set
- * Description  : SDK just reversed 4 sectors, used for rf init data and paramters.
- *                We add this function to force users to set rf cal sector, since
- *                we don't know which sector is free in user's application.
- *                sector map for last several sectors : ABCCC
- *                A : rf cal
- *                B : rf init data
- *                C : sdk parameters
- * Parameters   : none
- * Returns      : rf cal sector
-*******************************************************************************/
-uint32_t user_rf_cal_sector_set(void)
+static void on_wifi_no_network(char* buf, int buf_len, int flags, void* userdata)
 {
-    flash_size_map size_map = system_get_flash_size_map();
-    uint32_t rf_cal_sec = 0;
+    printf("on_wifi_no_network\n");
+    Network.setState(IOTX_NETWORK_STATE_DISCONNECTED);
 
-    switch (size_map) {
-        case FLASH_SIZE_4M_MAP_256_256:
-            rf_cal_sec = 128 - 5;
-            break;
-
-        case FLASH_SIZE_8M_MAP_512_512:
-            rf_cal_sec = 256 - 5;
-            break;
-
-        case FLASH_SIZE_16M_MAP_512_512:
-        case FLASH_SIZE_16M_MAP_1024_1024:
-            rf_cal_sec = 512 - 5;
-            break;
-
-        case FLASH_SIZE_32M_MAP_512_512:
-        case FLASH_SIZE_32M_MAP_1024_1024:
-            rf_cal_sec = 1024 - 5;
-            break;
-
-        case FLASH_SIZE_64M_MAP_1024_1024:
-            rf_cal_sec = 2048 - 5;
-            break;
-
-        case FLASH_SIZE_128M_MAP_1024_1024:
-            rf_cal_sec = 4096 - 5;
-            break;
-
-        default:
-            rf_cal_sec = 0;
-            break;
-    }
-
-    return rf_cal_sec;
 }
 
-static void wait_for_connection_ready(uint8_t flag)
+static void on_wifi_connect( char* buf, int buf_len, int flags, void* userdata)
 {
-    os_timer_disarm(&timer);
-
-    if (wifi_station_connected()) {
-        printf("connected\n");
-        Network.setState(IOTX_NETWORK_STATE_CONNECTED);
-    } else {
-        printf("reconnect after 2s\n");
-        os_timer_setfn(&timer, (os_timer_func_t*)wait_for_connection_ready, NULL);
-        os_timer_arm(&timer, 2000, 0);
-    }
+    printf("on_wifi_connect\n");
+    Network.setState(IOTX_NETWORK_STATE_CONNECTED);
 }
 
-static void on_wifi_connect(void)
+static void on_wifi_disconnect( char* buf, int buf_len, int flags, void* userdata)
 {
-    os_timer_disarm(&timer);
-    os_timer_setfn(&timer, (os_timer_func_t *)wait_for_connection_ready, NULL);
-    os_timer_arm(&timer, 100, 0);
-}
-
-static void on_wifi_disconnect(uint8_t reason)
-{
-    printf("disconnect %d\n", reason);
+    printf("disconnect\n");
     Network.setState(IOTX_NETWORK_STATE_DISCONNECTED);
 }
 
 static void intoyun_iot_task(void *param)
 {
-    while(!wifi_station_connected()) {
-        vTaskDelay(100);
+    wlan_network();     
+
+    vTaskDelay(2000);	
+
+    wifi_reg_event_handler(WIFI_EVENT_NO_NETWORK, on_wifi_no_network, NULL);
+	wifi_reg_event_handler(WIFI_EVENT_CONNECT, on_wifi_connect, NULL);
+	wifi_reg_event_handler(WIFI_EVENT_DISCONNECT, on_wifi_disconnect, NULL);
+   
+    if(wifi_connect(CONFIG_WIFI_SSID, RTW_SECURITY_WPA2_AES_PSK, \
+            CONFIG_WIFI_PASSWORD, strlen(CONFIG_WIFI_SSID), strlen(CONFIG_WIFI_PASSWORD), -1, NULL) == RTW_SUCCESS) {
+        LwIP_DHCP(0, DHCP_START);
     }
+
     userMain();
 }
 
-/******************************************************************************
- * FunctionName : user_init
- * Description  : entry of user application, init user function here
- * Parameters   : none
- * Returns      : none
-*******************************************************************************/
-void user_init(void)
+int main(void)
 {
-    printf("SDK version:%s\n", system_get_sdk_version());
-
-    set_on_station_connect(on_wifi_connect);
-    set_on_station_disconnect(on_wifi_disconnect);
-    init_esp_wifi();
-    stop_wifi_ap();
-    start_wifi_station(CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
+/*
+	ReRegisterPlatformLogUart();
+    wlan_network();   
+*/
 
     Log.setLogLevel("*", MOLMC_LOG_VERBOSE);
     Log.setLogLevel("user:project", MOLMC_LOG_VERBOSE);
     Log.setLogLevel("user:ota", MOLMC_LOG_VERBOSE);
 
-    if (xTaskCreate(&intoyun_iot_task, "intoyun_iot_task", 4096, NULL, 5, NULL) != pdPASS) {
-        printf("create intoyun_iot_task task error!");
-    }
+	if(xTaskCreate(intoyun_iot_task, (char const *)"intoyun_iot_task", 4096 * 2, NULL, tskIDLE_PRIORITY + 1, NULL) != pdPASS){
+		printf("\n\r[%s] Create update task failed", __FUNCTION__);
+	}
+
+	vTaskStartScheduler();
 }
 

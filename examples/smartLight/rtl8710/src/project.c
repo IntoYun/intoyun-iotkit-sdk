@@ -19,19 +19,26 @@
 #include "iot_export.h"
 #include "project_config.h"
 #include "ota_update.h"
+#include "device.h"
+#include "gpio_api.h"   // mbed
+#include "analogin_api.h"
 
 const static char *TAG = "user:project";
 
 #define DEVICE_ID_DEF                   "0dvo0bdoy00000000000068f"         //设备标识
 #define DEVICE_SECRET_DEF               "c08e66a8b08fd8436dac0dce9cc3bca9" //设备密钥
 
+
 #define DPID_BOOL_SWITCH                1  //布尔型            开关
 #define DPID_DOUBLE_ILLUMINATION        2  //数值型            光照强度
+
+#define GPIO_LED_PIN                    PA_0
 
 bool dpBoolSwitch;                      // 开关
 double dpDoubleIllumination = 100;      // 光照强度
 
 uint32_t timerID;
+gpio_t gpio_led;
 
 void eventProcess(int event, int param, uint8_t *data, uint32_t datalen)
 {
@@ -40,6 +47,11 @@ void eventProcess(int event, int param, uint8_t *data, uint32_t datalen)
             case ep_cloud_comm_data:
                 if (RESULT_DATAPOINT_NEW == Cloud.readDatapointBool(DPID_BOOL_SWITCH, &dpBoolSwitch)) {
                     MOLMC_LOGI(TAG, "dpBoolSwitch = %d", dpBoolSwitch);
+                    if(dpBoolSwitch) {
+                        gpio_write(&gpio_led, 0);
+                    } else {
+                        gpio_write(&gpio_led, 1);
+                    }
                 }
                 break;
             case ep_cloud_comm_ota:
@@ -87,7 +99,28 @@ void userInit(void)
     /*************此处修改和添加用户初始化代码**************/
     Cloud.connect();
     timerID = timerGetId();
+
+    //初始化led管脚
+    gpio_init(&gpio_led, GPIO_LED_PIN);
+    gpio_dir(&gpio_led, PIN_OUTPUT);    // Direction: Output
+    gpio_mode(&gpio_led, PullNone);     // No pull
+    gpio_write(&gpio_led, 1);           
     /*******************************************************/
+}
+
+/* Vbat channel */
+#define OFFSET		0x492							
+double getLightSensor(void)
+{
+	uint16_t adc_read = 0;
+	analogin_t   adc_vbat;
+
+	analogin_init(&adc_vbat, AD_2);
+    adc_read = (analogin_read_u16(&adc_vbat) >> 4) - OFFSET ;
+	analogin_deinit(&adc_vbat);
+
+    MOLMC_LOGI(TAG, "adc_read = %d\n", adc_read); 
+    return adc_read;
 }
 
 void userHandle(void)
@@ -95,8 +128,8 @@ void userHandle(void)
     if(Cloud.connected()) {
         if(timerIsEnd(timerID, 10000)) {
             timerID = timerGetId();
-
-            dpDoubleIllumination += 1;
+            
+            dpDoubleIllumination = getLightSensor();
             Cloud.writeDatapointNumberDouble(DPID_DOUBLE_ILLUMINATION, dpDoubleIllumination);
         }
     }
@@ -109,6 +142,5 @@ int userMain(void)
         userHandle();
         System.loop();
     }
-    return 0;
 }
 

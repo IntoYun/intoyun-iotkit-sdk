@@ -26,6 +26,7 @@
 #include "lwip/netdb.h"
 
 #include "hal_import.h"
+#include "iotx_log_api.h"
 
 const static char *TAG = "hal:udp";
 
@@ -48,10 +49,10 @@ int getUdpAddrInfo(char *host, unsigned short port, struct addrinfo **ainfo)
     hints.ai_protocol = IPPROTO_UDP;
     sprintf(p_port, "%u", port);
 
-    ESP_LOGI(TAG, "host: %s; port: %s", host, p_port);
+    MOLMC_LOGI(TAG, "host: %s; port: %s", host, p_port);
 
     if (getaddrinfo(host, p_port, &hints, ainfo) < 0) {
-        ESP_LOGI(TAG, "getaddrinfo error");
+        MOLMC_LOGI(TAG, "getaddrinfo error");
         HAL_Free(&hints);
         return -1;
     }
@@ -70,11 +71,11 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
     memcpy(s_host, host, strlen(host));
     sprintf(s_port, "%u", port);
 
-    ESP_LOGI(TAG, "establish udp connection with server(host=%s port=%u)", host, port);
+    MOLMC_LOGI(TAG, "establish udp connection with server(host=%s port=%u)", host, port);
 
     socket_id = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if(socket_id < 0) {
-        ESP_LOGI(TAG, "create socket failed");
+        MOLMC_LOGI(TAG, "create socket failed");
         return -1;
     }
 
@@ -84,11 +85,11 @@ intptr_t HAL_UDP_create(const char *host, unsigned short port)
 
     rc = bind(socket_id, (struct sockaddr *) &saddr, sizeof(saddr));
     if(rc < 0) {
-        ESP_LOGI(TAG, "bind socket failed");
+        MOLMC_LOGI(TAG, "bind socket failed");
         return -1;
     }
 
-    ESP_LOGI(TAG, "create socket success socket id: %d", socket_id);
+    MOLMC_LOGI(TAG, "create socket success socket id: %d", socket_id);
 
     return (intptr_t)socket_id;
 }
@@ -109,20 +110,20 @@ int HAL_UDP_write(intptr_t p_socket, const unsigned char *p_data, unsigned int d
     struct addrinfo *ainfo;
 
     socket_id = (long)p_socket;
-    ESP_LOGI(TAG, "send data %d", p_socket);
+    MOLMC_LOGI(TAG, "send data %d", p_socket);
 
     if (getaddrinfo(s_host, s_port, &s_hints, &ainfo) < 0) {
-        ESP_LOGI(TAG, "getaddrinfo error");
+        MOLMC_LOGI(TAG, "getaddrinfo error");
         return -1;
     }
 
     struct sockaddr_in *sa = (struct sockaddr_in *) ainfo->ai_addr;
     inet_ntop(AF_INET, &sa->sin_addr, addr, NETWORK_ADDR_LEN);
-    ESP_LOGI(TAG, "send The host IP %s, port is %d", addr, ntohs(sa->sin_port));
+    MOLMC_LOGI(TAG, "send The host IP %s, port is %d", addr, ntohs(sa->sin_port));
 
     rc = sendto(socket_id, (char *)p_data, (int)datalen, 0, ainfo->ai_addr, ainfo->ai_addrlen);
 
-    ESP_LOGI(TAG, "send data result rc: %d", rc);
+    MOLMC_LOGI(TAG, "send data result rc: %d", rc);
     HAL_Free(ainfo);
 
     if (rc < 0) {
@@ -146,22 +147,22 @@ int HAL_UDP_read(intptr_t p_socket, unsigned char *p_data, unsigned int datalen)
     socket_id = (long)p_socket;
 
     if (socket_id < 0) {
-        ESP_LOGI(TAG, "socket error");
+        MOLMC_LOGI(TAG, "socket error");
         return -1;
     }
 
     if (getaddrinfo(s_host, s_port, &s_hints, &ainfo) < 0) {
-        ESP_LOGI(TAG, "getaddrinfo error");
+        MOLMC_LOGI(TAG, "getaddrinfo error");
         return -1;
     }
 
     struct sockaddr_in *sa = (struct sockaddr_in *) ainfo->ai_addr;
     inet_ntop(AF_INET, &sa->sin_addr, addr, NETWORK_ADDR_LEN);
-    ESP_LOGI(TAG, "The host IP %s, port is %d", addr, ntohs(sa->sin_port));
+    MOLMC_LOGI(TAG, "The host IP %s, port is %d", addr, ntohs(sa->sin_port));
 
     count = recvfrom(socket_id, p_data, (size_t)datalen, 0, ainfo->ai_addr, &ainfo->ai_addrlen);
 
-    ESP_LOGI(TAG, "read data count: %d", count);
+    MOLMC_LOGI(TAG, "read data count: %d", count);
     HAL_Free(ainfo);
 
     return count;
@@ -175,14 +176,14 @@ int HAL_UDP_readTimeout(intptr_t p_socket, unsigned char *p_data, unsigned int d
     long                socket_id = -1;
 
     if (NULL == p_data) {
-        ESP_LOGI(TAG, "p_data is NULL");
+        MOLMC_LOGI(TAG, "p_data is NULL");
         return -1;
     }
     socket_id = (long)p_socket;
 
 
     if (socket_id < 0) {
-        ESP_LOGI(TAG, "socket_id error");
+        MOLMC_LOGI(TAG, "socket_id error");
         return -1;
     }
 

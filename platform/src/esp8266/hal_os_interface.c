@@ -27,10 +27,7 @@
 #include "esp_system.h"
 
 #include "hal_import.h"
-
-#define MOLMC_LOGD(tag, format, ...) do { \
-        printf("D [%010u]:[%-12.12s]: "format"\n", HAL_UptimeMs(), tag, ##__VA_ARGS__);\
-    } while(0)
+#include "iotx_log_api.h"
 
 typedef xSemaphoreHandle osi_mutex_t;
 

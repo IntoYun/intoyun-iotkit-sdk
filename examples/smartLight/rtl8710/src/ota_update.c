@@ -25,7 +25,7 @@ static void otaProgressCallback(void *handle, uint8_t *data, size_t len, uint32_
     static uint8_t last_percent = 0;
     uint8_t percent = 0;
 
-    MOLMC_LOGI(TAG, "otaProgressCallback len = %d, currentSize = %d, totalSize = %d", len, currentSize, totalSize);
+    MOLMC_LOGI(TAG, "otaProgressCallback len = %d, currentSize = %d, totalSize = %d", (int)len, currentSize, totalSize);
     //烧写FLASH
 
     //上送OTA进度
@@ -40,6 +40,7 @@ bool otaUpdate(uint8_t *data, uint32_t len)
 {
     void *h_ota = NULL;
     bool ret = false;
+    cJSON *cmdObject; 
 
     MOLMC_LOGI(TAG, "action data : %s\r\n", data);
     cJSON *actionJson=cJSON_Parse((char *)data);
@@ -47,7 +48,7 @@ bool otaUpdate(uint8_t *data, uint32_t len)
         goto do_exit;
     }
 
-    cJSON *cmdObject = cJSON_GetObjectItem(actionJson, "cmd");
+    cmdObject = cJSON_GetObjectItem(actionJson, "cmd");
     if(NULL == cmdObject) {
         goto do_exit;
     }

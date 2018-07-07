@@ -26,6 +26,7 @@
 #include "lwip/netdb.h"
 
 #include "hal_import.h"
+#include "iotx_log_api.h"
 
 const static char *TAG = "hal:tcp";
 
@@ -63,7 +64,7 @@ intptr_t HAL_TCP_Establish(const char *host, uint16_t port)
 
     memset(&hints, 0, sizeof(hints));
 
-    ESP_LOGI(TAG, "establish tcp connection with server(host=%s port=%u)", host, port);
+    MOLMC_LOGI(TAG, "establish tcp connection with server(host=%s port=%u)", host, port);
 
     hints.ai_family = AF_INET; //only IPv4
     hints.ai_socktype = SOCK_STREAM;
@@ -71,20 +72,20 @@ intptr_t HAL_TCP_Establish(const char *host, uint16_t port)
     sprintf(service, "%u", port);
 
     if ((rc = getaddrinfo(host, service, &hints, &addrInfoList)) != 0) {
-        ESP_LOGE(TAG, "getaddrinfo error");
+        MOLMC_LOGE(TAG, "getaddrinfo error");
         return 0;
     }
 
     for (cur = addrInfoList; cur != NULL; cur = cur->ai_next) {
         if (cur->ai_family != AF_INET) {
-            ESP_LOGE(TAG, "socket type error");
+            MOLMC_LOGE(TAG, "socket type error");
             rc = 0;
             continue;
         }
 
         fd = socket(cur->ai_family, cur->ai_socktype, cur->ai_protocol);
         if (fd < 0) {
-            ESP_LOGE(TAG, "create socket error");
+            MOLMC_LOGE(TAG, "create socket error");
             rc = 0;
             continue;
         }
@@ -95,14 +96,14 @@ intptr_t HAL_TCP_Establish(const char *host, uint16_t port)
         }
 
         close(fd);
-        ESP_LOGE(TAG, "connect error");
+        MOLMC_LOGE(TAG, "connect error");
         rc = 0;
     }
 
     if (0 == rc) {
-        ESP_LOGI(TAG, "fail to establish tcp");
+        MOLMC_LOGI(TAG, "fail to establish tcp");
     } else {
-        ESP_LOGI(TAG, "success to establish tcp, fd=%d", rc);
+        MOLMC_LOGI(TAG, "success to establish tcp, fd=%d", rc);
     }
     freeaddrinfo(addrInfoList);
 
@@ -116,13 +117,13 @@ int HAL_TCP_Destroy(intptr_t fd)
     //Shutdown both send and receive operations.
     rc = shutdown((int) fd, 2);
     if (0 != rc) {
-        ESP_LOGE(TAG, "shutdown error");
+        MOLMC_LOGE(TAG, "shutdown error");
         return -1;
     }
 
     rc = close((int) fd);
     if (0 != rc) {
-        ESP_LOGE(TAG, "closesocket error");
+        MOLMC_LOGE(TAG, "closesocket error");
         return -1;
     }
 
@@ -148,20 +149,20 @@ int32_t HAL_TCP_Write(intptr_t fd, const char *buf, uint32_t len, uint32_t timeo
         ret = select(fd + 1, NULL, &sets, NULL, &timeout);
         if (ret > 0) {
             if (0 == FD_ISSET(fd, &sets)) {
-                ESP_LOGI(TAG, "Should NOT arrive");
+                MOLMC_LOGI(TAG, "Should NOT arrive");
                 //If timeout in next loop, it will not sent any data
                 ret = 0;
                 continue;
             }
         } else if (0 == ret) {
-            ESP_LOGI(TAG,"select-write timeout %d", (int)fd);
+            MOLMC_LOGI(TAG,"select-write timeout %d", (int)fd);
             break;
         } else {
             if (EINTR == errno) {
-                ESP_LOGI(TAG,"EINTR be caught");
+                MOLMC_LOGI(TAG,"EINTR be caught");
                 continue;
             }
-            ESP_LOGE(TAG,"select-write fail");
+            MOLMC_LOGE(TAG,"select-write fail");
             break;
         }
 
@@ -170,13 +171,13 @@ int32_t HAL_TCP_Write(intptr_t fd, const char *buf, uint32_t len, uint32_t timeo
             if (ret > 0) {
                 len_sent += ret;
             } else if (0 == ret) {
-                ESP_LOGI(TAG,"No data be sent");
+                MOLMC_LOGI(TAG,"No data be sent");
             } else {
                 if (EINTR == errno) {
-                    ESP_LOGI(TAG,"EINTR be caught");
+                    MOLMC_LOGI(TAG,"EINTR be caught");
                     continue;
                 }
-                ESP_LOGE(TAG,"send fail");
+                MOLMC_LOGE(TAG,"send fail");
                 break;
             }
         }
@@ -212,22 +213,22 @@ int32_t HAL_TCP_Read(intptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms)
             if (ret > 0) {
                 len_recv += ret;
             } else if (0 == ret) {
-                ESP_LOGE(TAG,"connection is closed");
+                MOLMC_LOGE(TAG,"connection is closed");
                 err_code = -1;
                 break;
             } else {
                 if (EINTR == errno) {
-                    ESP_LOGI(TAG,"EINTR be caught");
+                    MOLMC_LOGI(TAG,"EINTR be caught");
                     continue;
                 }
-                ESP_LOGE(TAG,"send fail");
+                MOLMC_LOGE(TAG,"send fail");
                 err_code = -2;
                 break;
             }
         } else if (0 == ret) {
             break;
         } else {
-            ESP_LOGE(TAG,"select-recv fail");
+            MOLMC_LOGE(TAG,"select-recv fail");
             err_code = -2;
             break;
         }
